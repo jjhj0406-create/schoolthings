@@ -854,7 +854,7 @@
     .gate__box { width: min(420px, 100%); }
     .gate__brand { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
     .gate__mark { width: 44px; height: 44px; border-radius: 13px; background: var(--marker); color: var(--navy); display: grid; place-items: center; flex: none; }
-    .gate__name { font-size: 19px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.25; }
+    .gate__name { font-size: 19px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.25; white-space: nowrap; }
     .gate__card { background: var(--card); border-radius: 22px; box-shadow: var(--shadow); padding: 26px 24px; }
     .gate__title { font-size: 24px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.25; }
     .gate__desc { font-size: 15px; color: var(--ink-2); line-height: 1.55; margin-top: 8px; }
@@ -884,6 +884,13 @@
     .gate__who-mail { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .gate__who button { font-size: 13px; font-weight: 700; color: var(--ink-2); padding: 6px 8px; border-radius: 8px; flex: none; }
     .gate__who button:hover { background: #e4e8f0; color: var(--ink); }
+
+    .gform { display: grid; gap: 14px; margin-top: 20px; }
+    .gform .field + .field, .gform .row + .field { margin-top: 0; }
+    .gform .input { height: 50px; font-size: 16px; }
+    .gform__hint { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+    .gform .bigbtn { margin-top: 4px; }
+    .gform .bigbtn + .bigbtn { margin-top: -8px; }
 
     .codebox { display: grid; gap: 8px; margin-top: 18px; }
     .codebox input {
@@ -1128,7 +1135,7 @@
 
   <script type="module">
     /* ════════ 데이터 (→ src/data) ════════ */
-    const DEFAULT_SCHOOL = { name: '우리 학교', teacher: '', place: '행정실', tel: '' };
+    const DEFAULT_SCHOOL = { name: '우리 학교', teacher: '', position: '교사', place: '행정실', tel: '' };
     const school = () => ({ ...DEFAULT_SCHOOL, ...(state.school || {}) });
     const CATEGORIES = ['수업 기기', '체육', '과학 실험', '방송·행사', '사무·행정', '기타'];
     const FLOORS = [
@@ -1136,6 +1143,9 @@
       { value: '3층', short: '3' }, { value: '4층', short: '4' }, { value: '5층', short: '5' },
     ];
     const BUILDING_HINTS = ['본관', '별관', '체육관'];
+
+    // 학교에서 쓰는 직위
+    const POSITIONS = ['교사', '부장교사', '수석교사', '교감', '교장', '행정실장', '행정직원', '교육공무직', '기타'];
 
     // 비품 대장에 적는 칸. wide=true면 한 줄을 다 쓴다.
     const ASSET_FIELDS = [
@@ -1299,7 +1309,7 @@
         items: (items.data || []).map(fromRowItem),
         loans: (loans.data || []).map(fromRowLoan),
         school: me.school
-          ? { name: me.school.name, teacher: me.school.teacher, place: me.school.place, tel: me.school.tel }
+          ? { name: me.school.name, teacher: me.school.teacher, position: me.school.position || '교사', place: me.school.place, tel: me.school.tel }
           : state.school,
       };
     }
@@ -1350,7 +1360,7 @@
 
       if (JSON.stringify(prev.school) !== JSON.stringify(next.school) && next.school && isAdmin()) {
         jobs.push(sb.from('schools').update({
-          name: next.school.name, teacher: next.school.teacher,
+          name: next.school.name, teacher: next.school.teacher, position: next.school.position || '',
           place: next.school.place, tel: next.school.tel,
         }).eq('id', me.schoolId));
       }
@@ -1377,7 +1387,7 @@
           <span class="gate__mark" aria-hidden="true">
             <svg class="icon" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0113 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>
           </span>
-          <span class="gate__name">학교 물품<br>어디 있지?</span>
+          <span class="gate__name">학교 물품 어디 있지?</span>
         </div>
         <div class="gate__card">${inner}</div>
       </div>`;
@@ -1409,20 +1419,40 @@
             <button class="bigbtn bigbtn--navy" type="button" id="g-join">합류 신청</button>
           </div>
           <p class="gate__err" id="g-err"></p>
-          <p class="gate__foot">아직 아무도 시작하지 않았나요?<br><button type="button" id="g-new">우리 학교를 새로 만들기</button></p>`);
+          <p class="gate__foot">소속된 그룹이 없다면, 관리자로 새 공간을 만들어 보세요.<br><button type="button" id="g-new">우리 학교를 새로 만들기</button></p>`);
       }
       if (kind === 'create') {
         return gateShell(`
           ${whoStrip()}
           <h1 class="gate__title">학교를 만들어요</h1>
-          <p class="gate__desc">만든 분이 관리자가 돼요. 다른 선생님은 코드로 합류하고, 관리자가 승인해요.</p>
-          <div class="codebox">
-            <input class="input" id="g-name" type="text" placeholder="예: 한빛중학교" autocomplete="off" aria-label="학교 이름" style="text-align:left;font-size:17px;letter-spacing:normal;text-indent:0;height:52px;padding:0 16px">
+          <p class="gate__desc">학교를 최초로 개설한 선생님이 관리자로 지정됩니다. 동료 선생님들은 초대 코드로 합류를 요청하고, 관리자의 승인 후 최종 가입됩니다.</p>
+          <div class="gform">
+            <div class="field">
+              <label class="field__label" for="g-name">학교 이름</label>
+              <input class="input" id="g-name" type="text" placeholder="예: 전주화정초등학교" autocomplete="off">
+              <p class="gform__hint">줄여 쓰지 말고 정식 이름으로 적어 주세요. 전주화정초(X) · 전주화정초등학교(O)</p>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label class="field__label" for="g-teacher">관리자 이름</label>
+                <input class="input" id="g-teacher" type="text" placeholder="예: 김하늘" autocomplete="off" value="${esc(myName())}">
+              </div>
+              <div class="field">
+                <label class="field__label" for="g-pos">직위</label>
+                <div class="selectbox">
+                  <select class="input" id="g-pos">
+                    ${POSITIONS.map((v) => `<option value="${esc(v)}" ${v === '교사' ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+                  </select>
+                  ${icon(ICONS.caret, 'icon selectbox__caret')}
+                </div>
+              </div>
+            </div>
             <button class="bigbtn bigbtn--navy" type="button" id="g-make">학교 만들기</button>
             <button class="bigbtn bigbtn--ghost" type="button" id="g-back">코드로 합류하기</button>
           </div>
           <p class="gate__err" id="g-err"></p>`);
       }
+
       if (kind === 'error') {
         return gateShell(`
           <h1 class="gate__title">서버에 연결하지 못했어요</h1>
@@ -1495,9 +1525,12 @@
 
       root.querySelector('#g-make')?.addEventListener('click', async (e) => {
         const name = root.querySelector('#g-name').value.trim();
-        if (!name) { say('학교 이름을 적어 주세요.'); return; }
+        const who = root.querySelector('#g-teacher').value.trim();
+        const pos = root.querySelector('#g-pos').value;
+        if (!name) { say('학교 이름을 적어 주세요.'); root.querySelector('#g-name').focus(); return; }
+        if (!who) { say('관리자 이름을 적어 주세요.'); root.querySelector('#g-teacher').focus(); return; }
         busy(e.currentTarget, true); say('');
-        const { error } = await sb.rpc('create_school', { school_name: name });
+        const { error } = await sb.rpc('create_school', { school_name: name, teacher_name: who, position_name: pos });
         busy(e.currentTarget, false);
         if (error) {
           say(String(error.message).includes('ALREADY_JOINED')
@@ -1806,7 +1839,8 @@
       document.getElementById('rail-nav').innerHTML = menu.map((m) => item(m, 'rail__item', true)).join('');
       document.getElementById('tabbar').innerHTML = menu.filter((m) => m.tab !== false).map((m) => item(m, 'tabbar__item', false)).join('');
       const s = school();
-      const line = [s.place, s.teacher ? `${s.teacher} 선생님` : '물품 담당'].filter(Boolean).join(' · ');
+      const who = s.teacher ? `${s.teacher} ${s.position || '선생님'}` : '물품 담당';
+      const line = [s.place, who].filter(Boolean).join(' · ');
       const whoCard = isAdmin()
         ? `<a class="rail__who" href="#/manager"><strong>${esc(s.name)}${online() && me?.role === 'admin' ? '<span class="rolechip">관리자</span>' : ''}</strong>${esc(line)}${s.tel ? `<br>${esc(s.tel)}` : ''}</a>`
         : `<div class="rail__who"><strong>${esc(s.name)}</strong>${esc(line)}${s.tel ? `<br>${esc(s.tel)}` : ''}</div>`;
@@ -3504,9 +3538,20 @@
               <label class="field__label" for="w-name">학교 이름</label>
               <input class="input" id="w-name" name="name" placeholder="예: 한빛중학교" autocomplete="off" value="${esc(s.name)}">
             </div>
-            <div class="field">
-              <label class="field__label" for="w-teacher">담당 선생님</label>
-              <input class="input" id="w-teacher" name="teacher" placeholder="예: 김하늘" autocomplete="off" value="${esc(s.teacher)}">
+            <div class="row" style="margin-top:16px">
+              <div class="field">
+                <label class="field__label" for="w-teacher">담당 선생님</label>
+                <input class="input" id="w-teacher" name="teacher" placeholder="예: 김하늘" autocomplete="off" value="${esc(s.teacher)}">
+              </div>
+              <div class="field">
+                <label class="field__label" for="w-pos">직위</label>
+                <div class="selectbox">
+                  <select class="input" id="w-pos" name="position">
+                    ${POSITIONS.map((v) => `<option value="${esc(v)}" ${s.position === v ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+                  </select>
+                  ${icon(ICONS.caret, 'icon selectbox__caret')}
+                </div>
+              </div>
             </div>
             <div class="row" style="margin-top:16px">
               <div class="field">
@@ -3592,6 +3637,7 @@
         const next = {
           name: (fd.get('name') || '').trim() || DEFAULT_SCHOOL.name,
           teacher: (fd.get('teacher') || '').trim(),
+          position: fd.get('position') || DEFAULT_SCHOOL.position,
           place: (fd.get('place') || '').trim() || DEFAULT_SCHOOL.place,
           tel: (fd.get('tel') || '').trim(),
         };
