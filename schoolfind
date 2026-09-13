@@ -1,3 +1,5 @@
+const SUPABASE = { url: 'https://zhytrtgnedatjwflfgkj.supabase.co', anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoeXRydGduZWRhdGp3ZmxmZ2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDAwMTksImV4cCI6MjEwNDg3NjAxOX0.q4A5M70jFDDrmY-Mtdx0QXRNsQzkDASoZgBGX7TA0QE' };
+
 <!doctype html>
 <html lang="ko">
 <head>
