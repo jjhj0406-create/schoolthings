@@ -426,9 +426,6 @@
     .tip code { font-family: inherit; font-size: 15px; font-weight: 800; color: var(--navy); }
     .tip span { font-size: 13px; color: var(--ink-2); line-height: 1.4; }
 
-    .sample-note { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--ink-2); line-height: 1.45; }
-    .stock__sample { display: block; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
-    .stock__sample:hover { color: var(--ink); }
 
     .savebar { display: none; }
     /* ───────── 장소별 보기 ───────── */
@@ -885,6 +882,25 @@
     .gate__who button { font-size: 13px; font-weight: 700; color: var(--ink-2); padding: 6px 8px; border-radius: 8px; flex: none; }
     .gate__who button:hover { background: #e4e8f0; color: var(--ink); }
 
+    .findrow { display: flex; gap: 8px; }
+    .findrow .input { flex: 1; min-width: 0; }
+    .findrow__go { flex: none; height: 50px; padding: 0 16px; border-radius: 12px; background: var(--navy); color: #fff; font-size: 15px; font-weight: 700; white-space: nowrap; }
+    .findrow__go:hover { background: var(--navy-2); }
+    .findrow__go[disabled] { opacity: .55; }
+    .hits__wait { font-size: 14px; color: var(--ink-2); line-height: 1.5; padding: 2px; }
+    .hits2 { list-style: none; display: grid; gap: 4px; max-height: 210px; overflow: auto; margin: 0 -8px; }
+    .hit2 { width: 100%; display: grid; gap: 2px; text-align: left; padding: 10px 8px; border-radius: 11px; }
+    .hit2:hover { background: var(--field); }
+    .hit2__name { font-size: 15px; font-weight: 700; }
+    .hit2__addr { font-size: 13px; color: var(--ink-2); line-height: 1.4; }
+
+    .found { margin-top: 18px; padding: 18px; border-radius: 16px; background: var(--field); }
+    .found__name { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.3; overflow-wrap: anywhere; }
+    .found__addr { font-size: 14px; color: var(--ink-2); line-height: 1.5; margin-top: 6px; overflow-wrap: anywhere; }
+    .found__again { margin-top: 12px; font-size: 13px; font-weight: 700; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
+    .found__again:hover { color: var(--ink); }
+    .waitmark.is-done { background: #e8f2ed; color: var(--board); }
+
     .gform { display: grid; gap: 14px; margin-top: 20px; }
     .gform .field + .field, .gform .row + .field { margin-top: 0; }
     .gform .input { height: 50px; font-size: 16px; }
@@ -923,6 +939,7 @@
     .mrow__mail { font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
     .mrow__acts { display: flex; align-items: center; gap: 4px; flex: none; }
     .mrow__tag { font-size: 12px; font-weight: 700; color: var(--ink-3); }
+    .mrow__pos { font-size: 13px; font-weight: 600; color: var(--ink-2); }
     .placebar { display: none; }
     .tabbar { display: none; }
 
@@ -1135,7 +1152,7 @@
 
   <script type="module">
     /* ════════ 데이터 (→ src/data) ════════ */
-    const DEFAULT_SCHOOL = { name: '우리 학교', teacher: '', position: '교사', place: '행정실', tel: '' };
+    const DEFAULT_SCHOOL = { name: '우리 학교', address: '', teacher: '', position: '교사', place: '행정실', tel: '' };
     const school = () => ({ ...DEFAULT_SCHOOL, ...(state.school || {}) });
     const CATEGORIES = ['수업 기기', '체육', '과학 실험', '방송·행사', '사무·행정', '기타'];
     const FLOORS = [
@@ -1186,28 +1203,6 @@
       ['확성기', '메가폰', '메가폰스피커'],
     ];
 
-    // 원할 때만 넣는 예시 물품. sample 표시가 있어서 한 번에 지울 수 있다.
-    const SAMPLE_ITEMS = [
-      ['휴대용 빔프로젝터', '수업 기기', 2, true, '본관', '3층', '과학 준비실', '2번 캐비닛', '위에서 2칸', '파란 상자 안에 있어요. 리모컨도 같이 들어 있어요.'],
-      ['HDMI 케이블 10m', '수업 기기', 3, true, '본관', '3층', '과학 준비실', '2번 캐비닛', '맨 아래 칸', ''],
-      ['디지털 현미경', '과학 실험', 6, true, '본관', '3층', '과학 준비실', '1번 캐비닛', '맨 위 칸', ''],
-      ['보안경', '과학 실험', 30, false, '본관', '3층', '과학 준비실', '실험 도구함', '둘째 칸', ''],
-      ['무선 마이크', '방송·행사', 4, true, '본관', '2층', '방송실', '장비 선반', '가운데 칸', '충전기는 책상 서랍 첫째 칸에 있어요.'],
-      ['카메라 삼각대', '방송·행사', 3, true, '본관', '2층', '방송실', '장비 선반', '맨 아래 칸', ''],
-      ['블루투스 스피커', '방송·행사', 2, true, '본관', '2층', '방송실', '장비 선반', '가운데 칸', ''],
-      ['수업용 노트북', '수업 기기', 15, true, '본관', '2층', '교무실', '충전 보관함', '', '빌리기 전에 교무부에 말씀해 주세요.'],
-      ['레이저 포인터', '수업 기기', 5, true, '본관', '2층', '교무실', '공용 서랍', '첫째 칸', ''],
-      ['멀티탭 5구', '사무·행정', 8, true, '본관', '1층', '행정실', '비품 캐비닛', '3칸', ''],
-      ['태블릿 (아이패드)', '수업 기기', 20, true, '별관', '2층', '컴퓨터실', '충전 카트', '', '카트 열쇠는 정보 선생님께 있어요.'],
-      ['줄넘기', '체육', 40, true, '체육관', '1층', '체육 창고', '왼쪽 바구니', '', ''],
-      ['배구공', '체육', 12, true, '체육관', '1층', '체육 창고', '공 수레', '', '바람이 빠진 공은 수레 옆 상자에 모아 주세요.'],
-      ['확성기', '방송·행사', 2, true, '체육관', '1층', '체육 창고', '문 옆 선반', '', '건전지를 확인하고 가져가세요.'],
-      ['뜀틀', '체육', 2, false, '체육관', '1층', '무대 옆 창고', '', '', ''],
-    ].map(([name, category, qty, loanable, building, floor, room, storage, shelf, memo], i) => ({
-      id: 'smp_' + i, sample: true, name, category, qty, loanable, building, floor, room, storage, shelf, memo,
-      createdAt: new Date(Date.now() - (15 - i) * 3600e3).toISOString(),
-    }));
-
     // 저장소: localStorage를 쓰고, 막혀 있으면(미리보기 환경 등) 메모리에만 둔다.
     const STORE_KEY = 'school-items:v1';
     const blank = () => ({ items: [], loans: [], recent: [] });
@@ -1236,9 +1231,6 @@
     };
 
     const newId = () => 'itm_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    const hasSamples = () => state.items.some((i) => i.sample);
-    const addSamples = () => commit({ ...state, items: [...state.items.filter((i) => !i.sample), ...SAMPLE_ITEMS] });
-    const removeSamples = () => commit({ ...state, items: state.items.filter((i) => !i.sample) });
     const addRecent = (q) => {
       q = q.trim();
       if (!q) return;
@@ -1252,6 +1244,10 @@
       url: 'https://zhytrtgnedatjwflfgkj.supabase.co',
       anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoeXRydGduZWRhdGp3ZmxmZ2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDAwMTksImV4cCI6MjEwNDg3NjAxOX0.q4A5M70jFDDrmY-Mtdx0QXRNsQzkDASoZgBGX7TA0QE',
     };
+
+    // 학교 이름으로 주소를 찾아 주는 나이스 교육정보 개방 포털 인증키.
+    // open.neis.go.kr 에서 무료로 바로 받을 수 있어요. 비워 두면 주소를 직접 적으면 돼요.
+    const NEIS_KEY = '619ceb6595654ae1ab781003ee16fcb3';
 
     let sb = null;        // Supabase 연결. 설정이 없으면 null
     let session = null;   // 로그인한 사람
@@ -1292,7 +1288,7 @@
 
     async function loadMembers() {
       const { data, error } = await sb.from('members')
-        .select('id,user_id,email,name,role,status,created_at')
+        .select('id,user_id,email,name,position,role,status,created_at')
         .order('created_at', { ascending: true });
       if (!error) members = data || [];
     }
@@ -1309,7 +1305,8 @@
         items: (items.data || []).map(fromRowItem),
         loans: (loans.data || []).map(fromRowLoan),
         school: me.school
-          ? { name: me.school.name, teacher: me.school.teacher, position: me.school.position || '교사', place: me.school.place, tel: me.school.tel }
+          ? { name: me.school.name, address: me.school.address || '', teacher: me.school.teacher,
+              position: me.school.position || '교사', place: me.school.place, tel: me.school.tel }
           : state.school,
       };
     }
@@ -1320,14 +1317,13 @@
       building: r.building, floor: r.floor, room: r.room, storage: r.storage, shelf: r.shelf,
       memo: r.memo, ...(r.photo ? { photo: r.photo } : {}),
       asset: r.asset, ...(r.asset_info ? { assetInfo: r.asset_info } : {}),
-      ...(r.sample ? { sample: true } : {}),
       createdAt: r.created_at, ...(r.updated_at ? { updatedAt: r.updated_at } : {}),
     });
     const toRowItem = (i) => ({
       id: i.id, school_id: me.schoolId, name: i.name, category: i.category || '', qty: i.qty,
       loanable: !!i.loanable, building: i.building || '', floor: i.floor || '', room: i.room || '',
       storage: i.storage || '', shelf: i.shelf || '', memo: i.memo || '', photo: i.photo || null,
-      asset: !!i.asset, asset_info: i.assetInfo || null, sample: !!i.sample,
+      asset: !!i.asset, asset_info: i.assetInfo || null,
       created_at: i.createdAt, updated_at: i.updatedAt || null,
     });
     const fromRowLoan = (r) => ({
@@ -1360,7 +1356,8 @@
 
       if (JSON.stringify(prev.school) !== JSON.stringify(next.school) && next.school && isAdmin()) {
         jobs.push(sb.from('schools').update({
-          name: next.school.name, teacher: next.school.teacher, position: next.school.position || '',
+          name: next.school.name, address: next.school.address || '',
+          teacher: next.school.teacher, position: next.school.position || '',
           place: next.school.place, tel: next.school.tel,
         }).eq('id', me.schoolId));
       }
@@ -1371,6 +1368,24 @@
         console.error(bad.error);
         flash('저장하지 못했어요. 인터넷을 확인해 주세요.');
       }
+    }
+
+    // 나이스에서 학교를 찾아 이름과 주소를 가져온다
+    async function findSchools(name) {
+      if (!NEIS_KEY) throw new Error('NO_KEY');
+      const url = 'https://open.neis.go.kr/hub/schoolInfo'
+        + `?KEY=${encodeURIComponent(NEIS_KEY)}&Type=json&pIndex=1&pSize=20`
+        + `&SCHUL_NM=${encodeURIComponent(name)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.RESULT) throw new Error(data.RESULT.CODE === 'INFO-200' ? 'NONE' : data.RESULT.CODE);
+      const rows = data.schoolInfo?.[1]?.row || [];
+      return rows.map((r) => ({
+        name: r.SCHUL_NM,
+        address: [r.ORG_RDNMA, r.ORG_RDNDA].filter(Boolean).map((v) => v.trim()).join(' '),
+        area: r.ATPT_OFCDC_SC_NM || '',
+        kind: r.SCHUL_KND_SC_NM || '',
+      }));
     }
 
     /* ── 로그인 화면들 ── */
@@ -1410,17 +1425,48 @@
           <p class="gate__err" id="g-err"></p>`);
       }
       if (kind === 'start') {
+        if (!found) {
+          return gateShell(`
+            ${whoStrip()}
+            <h1 class="gate__title">어느 학교인가요</h1>
+            <p class="gate__desc">담당 선생님께 받은 6자리 코드를 넣고 확인해 주세요.</p>
+            <div class="codebox">
+              <input id="g-code" type="text" inputmode="latin" maxlength="6" placeholder="A1B2C3" autocomplete="off" aria-label="학교 코드" value="${esc(codeTyped)}">
+              <button class="bigbtn bigbtn--navy" type="button" id="g-check">확인하기</button>
+            </div>
+            <p class="gate__err" id="g-err"></p>
+            <p class="gate__foot">소속된 그룹이 없다면, 관리자로 새 공간을 만들어 보세요.<br><button type="button" id="g-new">우리 학교를 새로 만들기</button></p>`);
+        }
         return gateShell(`
           ${whoStrip()}
-          <h1 class="gate__title">어느 학교인가요</h1>
-          <p class="gate__desc">이미 쓰고 있는 학교라면 담당 선생님께 받은 6자리 코드를 넣어 주세요.</p>
-          <div class="codebox">
-            <input id="g-code" type="text" inputmode="latin" maxlength="6" placeholder="A1B2C3" autocomplete="off" aria-label="학교 코드">
-            <button class="bigbtn bigbtn--navy" type="button" id="g-join">합류 신청</button>
+          <h1 class="gate__title">이 학교가 맞나요</h1>
+          <div class="found">
+            <p class="found__name">${esc(found.name)}</p>
+            <p class="found__addr">${esc(found.address || '주소가 아직 적혀 있지 않아요')}</p>
+            <button class="found__again" type="button" id="g-again">다른 코드 넣기</button>
+          </div>
+          <div class="gform">
+            <div class="row">
+              <div class="field">
+                <label class="field__label" for="g-me">내 이름</label>
+                <input class="input" id="g-me" type="text" placeholder="예: 김하늘" autocomplete="name" value="${esc(myName())}">
+              </div>
+              <div class="field">
+                <label class="field__label" for="g-mypos">직위</label>
+                <div class="selectbox">
+                  <select class="input" id="g-mypos">
+                    ${POSITIONS.map((v) => `<option value="${esc(v)}" ${v === '교사' ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+                  </select>
+                  ${icon(ICONS.caret, 'icon selectbox__caret')}
+                </div>
+              </div>
+            </div>
+            <button class="bigbtn bigbtn--navy" type="button" id="g-join">신청하기</button>
           </div>
           <p class="gate__err" id="g-err"></p>
-          <p class="gate__foot">소속된 그룹이 없다면, 관리자로 새 공간을 만들어 보세요.<br><button type="button" id="g-new">우리 학교를 새로 만들기</button></p>`);
+          <p class="gate__foot">신청하면 관리 담당 선생님이 확인하고 승인해요.</p>`);
       }
+
       if (kind === 'create') {
         return gateShell(`
           ${whoStrip()}
@@ -1429,8 +1475,17 @@
           <div class="gform">
             <div class="field">
               <label class="field__label" for="g-name">학교 이름</label>
-              <input class="input" id="g-name" type="text" placeholder="예: 전주화정초등학교" autocomplete="off">
+              <div class="findrow">
+                <input class="input" id="g-name" type="text" placeholder="예: 전주화정초등학교" autocomplete="off" value="${esc(picked ? picked.name : '')}">
+                ${NEIS_KEY ? '<button class="findrow__go" type="button" id="g-find">학교 찾기</button>' : ''}
+              </div>
               <p class="gform__hint">줄여 쓰지 말고 정식 이름으로 적어 주세요. 전주화정초(X) · 전주화정초등학교(O)</p>
+            </div>
+            <div id="g-hits"></div>
+            <div class="field">
+              <label class="field__label" for="g-addr">학교 주소</label>
+              <input class="input" id="g-addr" type="text" placeholder="예: 전북특별자치도 전주시 덕진구 화정1길 15" autocomplete="off" value="${esc(picked ? picked.address : '')}">
+              <p class="gform__hint">${NEIS_KEY ? '학교 찾기를 쓰면 자동으로 채워져요.' : '다른 선생님이 학교가 맞는지 확인할 때 보여요.'}</p>
             </div>
             <div class="row">
               <div class="field">
@@ -1448,7 +1503,7 @@
               </div>
             </div>
             <button class="bigbtn bigbtn--navy" type="button" id="g-make">학교 만들기</button>
-            <button class="bigbtn bigbtn--ghost" type="button" id="g-back">코드로 합류하기</button>
+            <button class="bigbtn bigbtn--ghost" type="button" id="g-back">코드로 가입하기</button>
           </div>
           <p class="gate__err" id="g-err"></p>`);
       }
@@ -1464,11 +1519,22 @@
       }
 
       // 승인 대기
+      if (justApplied) {
+        return gateShell(`
+          ${whoStrip()}
+          <span class="waitmark is-done" aria-hidden="true">${icon(ICONS.check)}</span>
+          <h1 class="gate__title">신청을 보냈어요</h1>
+          <p class="gate__desc"><b>${esc(me?.school?.name || '')}</b>에 가입을 신청했어요.<br>관리 담당 선생님이 승인하면 바로 쓸 수 있어요.<br>승인되면 이 화면에서 다시 확인해 주세요.</p>
+          <div class="gate__acts">
+            <button class="bigbtn bigbtn--navy" type="button" id="g-recheck">승인됐는지 확인</button>
+          </div>
+          <p class="gate__err" id="g-err"></p>`);
+      }
       return gateShell(`
         ${whoStrip()}
         <span class="waitmark" aria-hidden="true">${icon(ICONS.clock)}</span>
         <h1 class="gate__title">승인을 기다리고 있어요</h1>
-        <p class="gate__desc"><b>${esc(me?.school?.name || '')}</b>에 합류를 신청했어요.<br>관리 담당 선생님이 승인하면 바로 쓸 수 있어요.</p>
+        <p class="gate__desc"><b>${esc(me?.school?.name || '')}</b>에 가입을 신청했어요.<br>관리 담당 선생님이 승인하면 바로 쓸 수 있어요.</p>
         <div class="gate__acts">
           <button class="bigbtn bigbtn--navy" type="button" id="g-recheck">승인됐는지 확인</button>
         </div>
@@ -1476,6 +1542,10 @@
     }
 
     let gateMode = 'start';   // start | create
+    let found = null;         // 코드로 확인한 학교 { name, address }
+    let codeTyped = '';       // 다시 그릴 때 코드가 사라지지 않게
+    let justApplied = false;  // 방금 신청을 보냈는지
+    let picked = null;       // 나이스에서 고른 학교
 
     function mountGate(root, kind) {
       const err = root.querySelector('#g-err');
@@ -1498,29 +1568,87 @@
         me = null; session = null; render();
       });
 
-      root.querySelector('#g-new')?.addEventListener('click', () => { gateMode = 'create'; render(); });
+      root.querySelector('#g-new')?.addEventListener('click', () => { gateMode = 'create'; found = null; render(); });
       root.querySelector('#g-back')?.addEventListener('click', () => { gateMode = 'start'; render(); });
 
       const code = root.querySelector('#g-code');
       if (code) {
-        code.addEventListener('input', () => { code.value = code.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
-        code.addEventListener('keydown', (e) => { if (e.key === 'Enter') root.querySelector('#g-join').click(); });
+        code.addEventListener('input', () => {
+          code.value = code.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+          codeTyped = code.value;
+        });
+        code.addEventListener('keydown', (e) => { if (e.key === 'Enter') root.querySelector('#g-check').click(); });
         code.focus();
       }
 
-      root.querySelector('#g-join')?.addEventListener('click', async (e) => {
+      // 1단계: 코드로 어느 학교인지 확인
+      root.querySelector('#g-check')?.addEventListener('click', async (e) => {
         const v = code.value.trim();
         if (v.length < 6) { say('코드 6자리를 모두 넣어 주세요.'); code.focus(); return; }
         busy(e.currentTarget, true); say('');
-        const { error } = await sb.rpc('join_school', { code: v });
+        const { data, error } = await sb.rpc('find_school', { code: v });
+        busy(e.currentTarget, false);
+        if (error || !data) {
+          say('그런 코드를 가진 학교가 없어요. 코드를 다시 확인해 주세요.');
+          code.select();
+          return;
+        }
+        found = { name: data.name, address: data.address, code: v };
+        render();
+      });
+
+      root.querySelector('#g-again')?.addEventListener('click', () => { found = null; render(); });
+
+      // 2단계: 이름과 직위를 적고 신청
+      root.querySelector('#g-join')?.addEventListener('click', async (e) => {
+        const nameBox = root.querySelector('#g-me');
+        const who = nameBox.value.trim();
+        const pos = root.querySelector('#g-mypos').value;
+        if (!who) { say('내 이름을 적어 주세요.'); nameBox.focus(); return; }
+        busy(e.currentTarget, true); say('');
+        const { error } = await sb.rpc('join_school', { code: found.code, member_name: who, position_name: pos });
         busy(e.currentTarget, false);
         if (error) {
           say(String(error.message).includes('NO_SCHOOL')
-            ? '그런 코드를 가진 학교가 없어요. 코드를 다시 확인해 주세요.'
+            ? '학교를 찾지 못했어요. 코드를 다시 확인해 주세요.'
             : '신청하지 못했어요. 잠시 뒤 다시 해 주세요.');
           return;
         }
-        await loadMe(); render();
+        found = null; codeTyped = ''; justApplied = true;
+        await loadMe();
+        render();
+        flash('신청을 보냈어요');
+      });
+
+      const hits = root.querySelector('#g-hits');
+      root.querySelector('#g-find')?.addEventListener('click', async (e) => {
+        const q = root.querySelector('#g-name').value.trim();
+        if (q.length < 2) { say('학교 이름을 두 글자 이상 적어 주세요.'); return; }
+        busy(e.currentTarget, true); say('');
+        hits.innerHTML = '<p class="hits__wait">찾는 중이에요…</p>';
+        try {
+          const list = await findSchools(q);
+          hits.innerHTML = list.length
+            ? `<ul class="hits2">${list.map((h, i2) => `
+                <li><button class="hit2" type="button" data-hit="${i2}">
+                  <span class="hit2__name">${esc(h.name)}</span>
+                  <span class="hit2__addr">${esc(h.address || '주소 없음')}</span>
+                </button></li>`).join('')}</ul>`
+            : '<p class="hits__wait">그런 이름의 학교를 찾지 못했어요. 직접 적어 주세요.</p>';
+          hits.querySelectorAll('[data-hit]').forEach((btn) => btn.addEventListener('click', () => {
+            const h = list[Number(btn.dataset.hit)];
+            root.querySelector('#g-name').value = h.name;
+            root.querySelector('#g-addr').value = h.address;
+            hits.innerHTML = '';
+          }));
+        } catch (err) {
+          const code = String(err.message);
+          hits.innerHTML = `<p class="hits__wait">${
+            code === 'NONE' ? '그런 이름의 학교를 찾지 못했어요. 직접 적어 주세요.'
+            : code === 'NO_KEY' ? '학교 찾기를 쓰려면 나이스 인증키가 필요해요. 주소를 직접 적어 주세요.'
+            : '지금은 학교 찾기가 되지 않아요. 주소를 직접 적어 주세요.'}</p>`;
+        }
+        busy(e.currentTarget, false);
       });
 
       root.querySelector('#g-make')?.addEventListener('click', async (e) => {
@@ -1530,7 +1658,8 @@
         if (!name) { say('학교 이름을 적어 주세요.'); root.querySelector('#g-name').focus(); return; }
         if (!who) { say('관리자 이름을 적어 주세요.'); root.querySelector('#g-teacher').focus(); return; }
         busy(e.currentTarget, true); say('');
-        const { error } = await sb.rpc('create_school', { school_name: name, teacher_name: who, position_name: pos });
+        const addr = root.querySelector('#g-addr').value.trim();
+        const { error } = await sb.rpc('create_school', { school_name: name, school_address: addr, teacher_name: who, position_name: pos });
         busy(e.currentTarget, false);
         if (error) {
           say(String(error.message).includes('ALREADY_JOINED')
@@ -1545,8 +1674,8 @@
         busy(e.currentTarget, true); say('');
         await loadMe();
         busy(e.currentTarget, false);
-        if (me?.status === 'active') { await loadData(); render(); }
-        else say('아직 승인 전이에요.');
+        if (me?.status === 'active') { justApplied = false; await loadData(); render(); flash('승인됐어요. 이제 함께 쓸 수 있어요'); }
+        else say('아직 승인 전이에요. 조금 뒤에 다시 눌러 주세요.');
       });
     }
 
@@ -1932,12 +2061,9 @@
 
       const stockBody = total === 0
         ? `<div class="stock__bar" aria-hidden="true"></div>
-           <div>
-             <div class="stock__cta">
-               <p>아직 등록된 물품이 없어요. 등록하면 여기서 세어 드려요.</p>
-               <a class="btn btn--solid" href="#/add">첫 물품 등록</a>
-             </div>
-             <button class="stock__sample" type="button" data-samples="add">예시 물품으로 먼저 둘러보기</button>
+           <div class="stock__cta">
+             <p>아직 등록된 물품이 없어요. 등록하면 여기서 세어 드려요.</p>
+             <a class="btn btn--solid" href="#/add">첫 물품 등록</a>
            </div>`
         : `<div class="stock__bar" aria-hidden="true">${stock.filter((s) => s.count > 0).map((s) => `<span style="flex:${s.count} 0 0;background:${s.color}"></span>`).join('')}</div>
            <div class="legend">${stock.map((s) => `
@@ -2161,7 +2287,6 @@
             <div class="card__head"><h2 class="card__title" id="tips-title">이렇게도 찾을 수 있어요</h2></div>
             <ul class="tips">${TIPS.map((t) => `<li><button class="tip" type="button" data-q="${esc(t.q)}"><code>${esc(t.q)}</code><span>${esc(t.text)}</span></button></li>`).join('')}</ul>
           </section>
-          <section class="card" id="sample-card" aria-label="예시 물품"></section>
         </aside>`;
     }
 
@@ -2219,12 +2344,6 @@
                 <button class="recent__x" type="button" data-recent-remove="${esc(r)}" aria-label="${esc(r)} 지우기">${icon(ICONS.close)}</button>
               </li>`).join('')}</ul>`
           : '<p class="side-empty">찾아본 말이 여기에 남아요.</p>';
-        const sample = view.querySelector('#sample-card');
-        sample.hidden = !hasSamples();
-        sample.style.display = hasSamples() ? '' : 'none';
-        sample.innerHTML = hasSamples()
-          ? `<div class="sample-note"><span>예시 물품 ${SAMPLE_ITEMS.length}개가 들어 있어요.</span><button class="btn btn--ghost" type="button" data-samples="remove">예시 지우기</button></div>`
-          : '';
       }
 
       function update() {
@@ -2244,7 +2363,6 @@
               <span>물품을 등록하면 이름, 장소, 초성으로 찾을 수 있어요.</span>
               <div class="nohit__actions">
                 <a class="btn btn--solid" href="#/add">물품 등록</a>
-                <button class="btn btn--ghost" type="button" data-samples="add">예시 물품으로 둘러보기</button>
               </div>
             </div>`;
           return;
@@ -2443,7 +2561,6 @@
               <span>물품을 등록하면 건물과 층, 실이 여기에 자동으로 쌓여요.</span>
               <div class="nohit__actions">
                 <a class="btn btn--solid" href="#/add">물품 등록</a>
-                <button class="btn btn--ghost" type="button" data-samples="add">예시 물품으로 둘러보기</button>
               </div>
             </div>
           </section>`}`;
@@ -3536,7 +3653,11 @@
           <form id="who-form">
             <div class="field">
               <label class="field__label" for="w-name">학교 이름</label>
-              <input class="input" id="w-name" name="name" placeholder="예: 한빛중학교" autocomplete="off" value="${esc(s.name)}">
+              <input class="input" id="w-name" name="name" placeholder="예: 전주화정초등학교" autocomplete="off" value="${esc(s.name)}">
+            </div>
+            <div class="field">
+              <label class="field__label" for="w-addr">학교 주소</label>
+              <input class="input" id="w-addr" name="address" placeholder="예: 전북특별자치도 전주시 덕진구 화정1길 15" autocomplete="off" value="${esc(s.address || '')}">
             </div>
             <div class="row" style="margin-top:16px">
               <div class="field">
@@ -3574,7 +3695,7 @@
             <h2 class="card__title" id="team-title">우리 학교 선생님</h2>
             <span class="card__meta" id="team-meta"></span>
           </div>
-          <p class="sheet__desc">이 코드를 알려 주면 합류를 신청할 수 있어요. 승인해야 자료가 보여요.</p>
+          <p class="sheet__desc">이 코드를 알려 주면 가입을 신청할 수 있어요. 승인해야 자료가 보여요.</p>
           <div class="code">
             <span class="code__val" id="team-code">${esc(me?.school?.join_code || '------')}</span>
             <button class="mini mini--quiet" type="button" id="code-copy">복사</button>
@@ -3636,6 +3757,7 @@
         const fd = new FormData(e.target);
         const next = {
           name: (fd.get('name') || '').trim() || DEFAULT_SCHOOL.name,
+          address: (fd.get('address') || '').trim(),
           teacher: (fd.get('teacher') || '').trim(),
           position: fd.get('position') || DEFAULT_SCHOOL.position,
           place: (fd.get('place') || '').trim() || DEFAULT_SCHOOL.place,
@@ -3674,7 +3796,7 @@
         const row = (m2) => `
           <li class="mrow ${m2.status === 'pending' ? 'is-pending' : ''}">
             <div>
-              <p class="mrow__name">${esc(m2.name || m2.email.split('@')[0])}${m2.role === 'admin' ? '<span class="rolechip">관리자</span>' : ''}</p>
+              <p class="mrow__name">${esc(m2.name || m2.email.split('@')[0])}${m2.position ? ` <span class="mrow__pos">${esc(m2.position)}</span>` : ''}${m2.role === 'admin' ? '<span class="rolechip">관리자</span>' : ''}</p>
               <p class="mrow__mail">${esc(m2.email)}</p>
             </div>
             <div class="mrow__acts">
@@ -3692,7 +3814,7 @@
 
         list.innerHTML = members.length
           ? `<ul class="mlist">${[...pending, ...active].map(row).join('')}</ul>`
-          : '<p class="side-empty">아직 합류한 선생님이 없어요.</p>';
+          : '<p class="side-empty">아직 가입한 선생님이 없어요.</p>';
       }
 
       view.addEventListener('click', async (e) => {
@@ -4250,13 +4372,6 @@
         return;
       }
 
-      const samples = e.target.closest('[data-samples]');
-      if (samples) {
-        samples.dataset.samples === 'add' ? addSamples() : removeSamples();
-        const view = document.getElementById('view');
-        view.refresh ? view.refresh() : render();
-        return;
-      }
       if (e.target.closest('[data-soon]')) {
         const view = document.getElementById('view');
         if (view.notify) view.notify('이 기능은 다음 단계에서 연결돼요');
