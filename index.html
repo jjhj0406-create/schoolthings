@@ -369,7 +369,8 @@
     .hit__path > span { white-space: nowrap; }
     .hit__path > span + span::before { content: "›"; margin: 0 7px; color: var(--ink-3); font-weight: 400; }
     .hit__end { color: var(--board); font-weight: 700; }
-    .hit__end .icon { display: inline-block; vertical-align: -3px; width: 16px; height: 16px; margin-right: 2px; stroke-width: 2.2; }
+    .hit__none { color: var(--ink-3); font-weight: 600; }
+        .hit__end .icon { display: inline-block; vertical-align: -3px; width: 16px; height: 16px; margin-right: 2px; stroke-width: 2.2; }
     .hit__memo { font-size: 14px; color: var(--ink-2); line-height: 1.45; }
     .hit__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 2px; }
     /* 보관 위치 사진은 대개 가로로 찍혀서, 정사각형보다 4:3이 덜 잘린다 */
@@ -712,6 +713,7 @@
     .preview__v.is-empty { color: rgba(255, 255, 255, .35); font-weight: 500; }
     /* ───────── 관리 담당 ───────── */
     .todo { grid-column: span 8; min-height: 0; }
+    .spot { grid-column: 1 / -1; }
     .todo__body { flex: 1; min-height: 0; overflow: auto; display: grid; gap: 20px; align-content: start; margin: 0 -4px; padding: 0 4px; }
     .group__head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
     .group__dot { width: 9px; height: 9px; border-radius: 3px; flex: none; align-self: center; }
@@ -739,6 +741,31 @@
     .allclear__mark .icon { width: 26px; height: 26px; stroke-width: 2.4; }
     .allclear strong { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
     .allclear span { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+
+    .danger--flat { background: #fff; color: var(--late); box-shadow: inset 0 0 0 1.5px rgba(229, 72, 77, .4); height: 48px; font-size: 16px; }
+    .danger--flat:hover { background: #fdeaea; }
+    .wipe__row { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+    .wipe__row + .wipe__row { border-top: 1px solid var(--line); }
+    .wipe__what { flex: 1; min-width: 0; }
+    .wipe__name { font-size: 15px; font-weight: 700; }
+    .wipe__count { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+    .wipe__pick { background: #fdeaea; color: var(--late); }
+    .wipe__pick:hover { background: #fbdcdc; }
+    .wipe__pick[disabled] { background: var(--field); color: var(--ink-3); cursor: default; }
+    .wipe__head { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+    .wipe__desc { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+    .wipe__warn {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 12px 14px; border-radius: 12px; background: #fdf0f0;
+      font-size: 14px; font-weight: 600; color: var(--late); line-height: 1.5;
+    }
+    .wipe__warn .icon { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+    .wipe__ask { display: grid; gap: 8px; }
+    .wipe__input { text-transform: uppercase; letter-spacing: .1em; font-weight: 700; }
+    .wipe__acts { display: flex; gap: 8px; margin-top: 4px; }
+    .wipe__acts .mini { flex: 1; height: 44px; }
+    .wipe__go { background: var(--late); color: #fff; }
+    .wipe__go:hover { background: #d13c41; }
 
     .signlist { list-style: none; display: grid; gap: 6px; max-height: 320px; overflow: auto; margin: 0 -8px; }
     .signrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 8px; border-radius: 12px; }
@@ -954,6 +981,7 @@
     .rail__out { font-size: 12px; font-weight: 700; color: rgba(255, 255, 255, .6); padding: 6px 8px; border-radius: 8px; flex: none; }
     .rail__out:hover { background: rgba(255, 255, 255, .1); color: #fff; }
     .rolechip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 6px; background: var(--marker); color: var(--navy); font-size: 11px; font-weight: 800; margin-left: 6px; }
+    .rolechip--soft { background: #e3e8f5; color: var(--navy); }
 
     /* 구성원 관리 */
     .code { display: flex; align-items: center; gap: 10px; padding: 14px; border-radius: 14px; background: var(--field); }
@@ -967,6 +995,62 @@
     .mrow__acts { display: flex; align-items: center; gap: 4px; flex: none; }
     .mrow__tag { font-size: 12px; font-weight: 700; color: var(--ink-3); }
     .mrow__pos { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+    /* 파일 가져오기 */
+    .impbox { width: min(560px, 100%); }
+    .drop {
+      display: flex; align-items: center; gap: 14px;
+      margin-top: 16px; padding: 18px; border-radius: 16px;
+      border: 1.5px dashed #c9cfdd; cursor: pointer;
+      transition: border-color 120ms, background-color 120ms;
+    }
+    .drop:hover { border-color: var(--navy); background: #fafbfd; }
+    .drop input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    .drop__icon { width: 26px; height: 26px; color: var(--navy); flex: none; stroke-width: 2; }
+    .drop__text { font-size: 16px; font-weight: 700; line-height: 1.35; }
+    .drop__text small { display: block; font-size: 13px; font-weight: 500; color: var(--ink-2); margin-top: 2px; }
+
+    .imp__wait { padding: 18px 2px; font-size: 15px; color: var(--ink-2); }
+    .imp__file { margin-top: 16px; font-size: 14px; font-weight: 700; color: var(--ink-2); overflow-wrap: anywhere; }
+    .imp__sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+    .imp__fig { padding: 12px 14px; border-radius: 13px; background: var(--field); display: grid; gap: 3px; }
+    .imp__k { font-size: 13px; font-weight: 600; color: var(--ink-3); }
+    .imp__v { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; }
+    .imp__note { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; padding: 12px 14px; border-radius: 13px; background: #fff7e6; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+    .imp__note .icon { width: 18px; height: 18px; flex: none; margin-top: 1px; color: #b8860b; }
+    .imp__peek { list-style: none; display: grid; gap: 4px; margin-top: 12px; }
+    .imp__peek li { padding: 9px 12px; border-radius: 11px; background: #f6f7fb; }
+    .imp__name { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; }
+    .imp__sub { display: block; font-size: 13px; color: var(--ink-2); margin-top: 2px; overflow-wrap: anywhere; }
+    .imp__more { font-size: 13px; color: var(--ink-3); background: none !important; padding-left: 2px !important; }
+
+    /* 묶어서 보이는 찾기 결과 */
+    .hit__count { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 7px; background: var(--navy); color: #fff; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .hit__each { font-size: 13px; font-weight: 700; color: var(--ink-2); padding: 5px 9px; border-radius: 8px; margin-left: -9px; }
+    .hit__each:hover { background: #e8ebf3; color: var(--ink); }
+    .hit__kids { list-style: none; display: grid; gap: 4px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); max-height: 260px; overflow: auto; }
+    .kid { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 10px; background: #fff; }
+    .kid__no { font-size: 13px; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+    .kid__sub { grid-column: 1; font-size: 12px; color: var(--ink-3); }
+
+    /* 장소 미지정 */
+    .fold { width: 100%; display: flex; align-items: center; gap: 8px; padding: 0; font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+    .fold__caret { width: 16px; height: 16px; color: var(--ink-2); stroke-width: 2.6; transition: transform 140ms; }
+    .fold[aria-expanded="true"] .fold__caret { transform: rotate(180deg); }
+    .fold__count { font-size: 13px; font-weight: 700; color: var(--ink-3); }
+    .spotbox { margin-top: 14px; }
+    .spotbox[hidden] { display: none; }
+    .spotpick { display: grid; gap: 10px; padding: 14px; border-radius: 14px; background: var(--field); }
+    .spotpick__row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .spotpick .input { height: 44px; font-size: 15px; background: #fff; }
+    .spotlist { list-style: none; display: grid; gap: 4px; margin-top: 12px; max-height: 300px; overflow: auto; }
+    .spotrow { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 11px; }
+    .spotrow:hover { background: var(--field); }
+    .spotrow input { width: 18px; height: 18px; accent-color: var(--navy); }
+    .spotrow__name { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+    .spotrow__sub { grid-column: 2; font-size: 13px; color: var(--ink-2); }
+    .spotrow__qty { font-size: 14px; font-weight: 700; color: var(--ink-2); }
+    .spotbar { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+    .spotbar__info { flex: 1; font-size: 14px; color: var(--ink-2); font-weight: 600; }
     .placebar { display: none; }
     .tabbar { display: none; }
 
@@ -1099,7 +1183,8 @@
       .rrow { padding: 12px 14px; }
       .rrow__acts .act__label { display: none; }
       .pick__results { max-height: none; }
-      .todo, .side { grid-column: 1 / -1; }
+      .todo, .side, .spot { grid-column: 1 / -1; }
+      .spotpick__row { grid-template-columns: 1fr; }
       .signlist { max-height: none; }
       .todo__body { overflow: visible; }
       .todorow { grid-template-columns: minmax(0, 1fr); }
@@ -1240,6 +1325,7 @@
     const STORE_KEY = 'school-items:v1';
     const blank = () => ({ items: [], loans: [], recent: [] });
     let memoryStore = blank();
+    let cacheOff = false;   // 기기 사본을 접었는지
     const store = {
       load() {
         try {
@@ -1248,9 +1334,21 @@
         } catch { return structuredClone(memoryStore); }
       },
       save(next) {
-        try { localStorage.setItem(STORE_KEY, JSON.stringify(next)); }
-        catch (e) {
-          if (e && e.name === 'QuotaExceededError') throw e;
+        // 기기 사본은 '있으면 좋은 것'이다. 실패해도 서버 저장은 막지 않는다.
+        try {
+          const text = JSON.stringify(next);
+          if (text.length > 3_000_000) {
+            // 자료가 아주 많으면 사본을 접는다
+            try { localStorage.removeItem(STORE_KEY); } catch {}
+            cacheOff = true;
+            if (!online()) memoryStore = structuredClone(next);
+            return;
+          }
+          localStorage.setItem(STORE_KEY, text);
+          cacheOff = false;
+        } catch (e) {
+          try { localStorage.removeItem(STORE_KEY); } catch {}
+          cacheOff = true;
           memoryStore = structuredClone(next);
         }
       },
@@ -1289,6 +1387,7 @@
 
     const online = () => Boolean(sb);
     const isAdmin = () => !online() || me?.role === 'admin';
+    const canImport = () => isAdmin() || Boolean(me?.canImport);
     const myEmail = () => session?.user?.email || '';
     const myName = () => session?.user?.user_metadata?.full_name || '';
 
@@ -1315,28 +1414,39 @@
       const { data, error } = await sb.rpc('my_membership');
       if (error) { console.error(error); return; }
       if (!data) return;
-      me = { schoolId: data.school_id, role: data.role, status: data.status, school: data.school };
+      me = { schoolId: data.school_id, role: data.role, status: data.status,
+             canImport: Boolean(data.can_import), school: data.school };
       if (me.role === 'admin' && me.status === 'active') await loadMembers();
     }
 
     async function loadMembers() {
       const { data, error } = await sb.from('members')
-        .select('id,user_id,email,name,position,role,status,created_at')
+        .select('id,user_id,email,name,position,role,status,can_import,created_at')
         .order('created_at', { ascending: true });
       if (!error) members = data || [];
     }
 
     // 서버에 있는 우리 학교 자료를 통째로 읽어 와서 화면 상태로 만든다
+    // PostgREST는 한 번에 1000줄까지만 준다. 끝까지 나눠서 읽는다.
+    async function fetchAll(table) {
+      const size = 1000;
+      const out = [];
+      for (let from = 0; ; from += size) {
+        const { data, error } = await sb.from(table).select('*').range(from, from + size - 1);
+        if (error) throw error;
+        out.push(...data);
+        if (data.length < size) break;
+      }
+      return out;
+    }
+
     async function loadData() {
       if (!sb || me?.status !== 'active') return;
-      const [items, loans] = await Promise.all([
-        sb.from('items').select('*'),
-        sb.from('loans').select('*'),
-      ]);
+      const [items, loans] = await Promise.all([fetchAll('items'), fetchAll('loans')]);
       state = {
         ...state,
-        items: (items.data || []).map(fromRowItem),
-        loans: (loans.data || []).map(fromRowLoan),
+        items: items.map(fromRowItem),
+        loans: loans.map(fromRowLoan),
         school: me.school
           ? { name: me.school.name, address: me.school.address || '', teacher: me.school.teacher,
               position: me.school.position || '교사', place: me.school.place, tel: me.school.tel }
@@ -1350,13 +1460,14 @@
       building: r.building, floor: r.floor, room: r.room, storage: r.storage, shelf: r.shelf,
       memo: r.memo, ...(r.photo ? { photo: r.photo } : {}),
       asset: r.asset, ...(r.asset_info ? { assetInfo: r.asset_info } : {}),
+      ...(r.disused ? { disused: true } : {}),
       createdAt: r.created_at, ...(r.updated_at ? { updatedAt: r.updated_at } : {}),
     });
     const toRowItem = (i) => ({
       id: i.id, school_id: me.schoolId, name: i.name, category: i.category || '', qty: i.qty,
       loanable: !!i.loanable, building: i.building || '', floor: i.floor || '', room: i.room || '',
       storage: i.storage || '', shelf: i.shelf || '', memo: i.memo || '', photo: i.photo || null,
-      asset: !!i.asset, asset_info: i.assetInfo || null,
+      asset: !!i.asset, asset_info: i.assetInfo || null, disused: !!i.disused,
       created_at: i.createdAt, updated_at: i.updatedAt || null,
     });
     const fromRowLoan = (r) => ({
@@ -1372,6 +1483,13 @@
       out_at: l.outAt, returned_at: l.returnedAt,
     });
 
+    // 한 번에 다 보내면 요청이 너무 커진다. 400줄씩 끊어 보낸다.
+    const chunk = (arr, size = 400) => {
+      const out = [];
+      for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+      return out;
+    };
+
     // 바뀐 줄만 골라 서버에 보낸다. 화면은 먼저 바뀌고 저장은 뒤따라간다.
     async function pushDiff(prev, next) {
       if (!sb || me?.status !== 'active') return;
@@ -1381,8 +1499,8 @@
         const after = new Map(b.map((x) => [x.id, x]));
         const changed = [...after.values()].filter((x) => JSON.stringify(before.get(x.id)) !== JSON.stringify(x));
         const gone = [...before.keys()].filter((id) => !after.has(id));
-        if (changed.length) jobs.push(sb.from(table).upsert(changed.map(toRow)));
-        if (gone.length) jobs.push(sb.from(table).delete().in('id', gone));
+        for (const part of chunk(changed)) jobs.push(sb.from(table).upsert(part.map(toRow)));
+        for (const part of chunk(gone)) jobs.push(sb.from(table).delete().in('id', part));
       };
       diff(prev.items || [], next.items || [], 'items', toRowItem);
       diff(prev.loans || [], next.loans || [], 'loans', toRowLoan);
@@ -1768,6 +1886,7 @@
       up: 'M12 6l6 7H6z',
       caret: 'M6 9l6 6 6-6',
       lock: 'M7 10.5V8a5 5 0 0110 0v2.5 M5.5 10.5h13v9h-13z M12 14v2.5',
+      upload: 'M12 16V5 M8 8.5l4-4 4 4 M5 19.5h14',
       manager: 'M12 12.5a4 4 0 100-8 4 4 0 000 8z M4.5 20.5a7.5 7.5 0 0115 0',
       edit: 'M4 20h4L18.5 9.5l-4-4L4 16z M14 6l4 4',
       trash: 'M5 7h14 M9.5 7V4.5h5V7 M7 7l1 12.5h8L17 7 M10.5 10.5v6 M13.5 10.5v6',
@@ -2342,6 +2461,20 @@
         </aside>`;
     }
 
+    // 같은 이름·같은 자리에 있는 물품은 한 줄로 묶는다
+    let openGroups = new Set();
+    function groupHits(list) {
+      const groups = new Map();
+      for (const r of list) {
+        const it = r.item;
+        const key = [it.name, it.category, it.building, it.floor, it.room, it.storage, it.shelf].join('|');
+        const g = groups.get(key);
+        if (g) { g.rows.push(r); g.qty += it.qty; }
+        else groups.set(key, { key, head: r, rows: [r], qty: it.qty });
+      }
+      return [...groups.values()];
+    }
+
     function hitHTML(r) {
       const it = r.item;
       const m = r.marks;
@@ -2356,6 +2489,7 @@
       const tags = [
         it.category ? `<span class="tag">${highlight(it.category, m.category)}</span>` : '',
         it.asset ? '<span class="tag tag--asset">비품</span>' : '',
+        it.disused ? '<span class="tag tag--no">불용</span>' : '',
         it.loanable ? '' : '<span class="tag tag--no">대여 안 함</span>',
         r.why && r.why !== FIELD_WHY.memo ? `<span class="hit__why">${esc(r.why)}</span>` : '',
       ].filter(Boolean).join('');
@@ -2366,12 +2500,47 @@
               <p class="hit__name">${highlight(it.name, m.name)}</p>
               ${rowActions(it.id)}
             </div>
-            <p class="hit__path" aria-label="위치: ${esc(pathOf(it).join(', '))}">${path}</p>
+            <p class="hit__path" aria-label="위치: ${esc(pathOf(it).join(', ') || '미지정')}">${path || '<span class="hit__none">장소 미지정</span>'}</p>
             ${memo}
             ${tags ? `<p class="hit__meta">${tags}</p>` : ''}
           </div>
           ${it.photo ? `<img class="hit__photo" src="${esc(it.photo)}" alt="${esc(it.name)} 보관 위치 사진" loading="lazy" decoding="async">` : ''}
           <span class="hit__qty num">${n(it.qty)}개</span>
+        </li>`;
+    }
+
+    function groupHTML(g) {
+      if (g.rows.length === 1) return hitHTML(g.head);
+      const it = g.head.item;
+      const m = g.head.marks;
+      const steps = PATH_KINDS.filter((k) => it[k.key]);
+      const path = steps.length
+        ? steps.map((k, i) => {
+            const inner = highlight(it[k.key], m[k.key]);
+            return i === steps.length - 1 ? `<span class="hit__end">${icon(ICONS.place)}${inner}</span>` : `<span>${inner}</span>`;
+          }).join('')
+        : '<span class="hit__none">장소 미지정</span>';
+      const open = openGroups.has(g.key);
+      return `
+        <li class="hit">
+          <div class="hit__main">
+            <div class="hit__head">
+              <p class="hit__name">${highlight(it.name, m.name)}</p>
+              <span class="hit__count num">${n(g.qty)}개</span>
+            </div>
+            <p class="hit__path">${path}</p>
+            <p class="hit__meta">
+              ${it.category ? `<span class="tag">${highlight(it.category, m.category)}</span>` : ''}
+              ${it.asset ? '<span class="tag tag--asset">비품</span>' : ''}
+              <button class="hit__each" type="button" data-group="${esc(g.key)}">${open ? '접기' : '하나씩 보기'}</button>
+            </p>
+            ${open ? `<ul class="hit__kids">${g.rows.slice(0, 60).map((r2) => `
+              <li class="kid">
+                <span class="kid__no">${esc(r2.item.assetInfo?.no || r2.item.name)}</span>
+                ${rowActions(r2.item.id)}
+                <span class="kid__sub">${esc([r2.item.assetInfo?.dept, r2.item.assetInfo?.date].filter(Boolean).join(' · '))}${r2.item.disused ? ' · 불용' : ''}</span>
+              </li>`).join('')}${g.rows.length > 60 ? `<li class="imp__more num">그 밖에 ${n(g.rows.length - 60)}개</li>` : ''}</ul>` : ''}
+          </div>
         </li>`;
     }
 
@@ -2461,9 +2630,12 @@
         }
 
         title.textContent = q ? '찾은 물품' : '전체 물품';
-        meta.textContent = q ? `${shown.length}개` : `${shown.length}개 · 최근 등록 순`;
+        const groupCount = groupHits(shown).length;
+        meta.textContent = q
+          ? `${n(shown.length)}개${groupCount < shown.length ? ` · ${n(groupCount)}가지` : ''}`
+          : `${n(shown.length)}개 · 최근 등록 순`;
         body.innerHTML = recentChips + (shown.length
-          ? `<ul class="hits" id="s-list">${shown.map(hitHTML).join('')}</ul>`
+          ? `<ul class="hits" id="s-list">${groupHits(shown).slice(0, 80).map(groupHTML).join('')}</ul>`
           : `<div class="nohit"><strong>조건에 맞는 물품이 없어요</strong><span>위에서 고른 조건을 풀어 보세요.</span></div>`);
         announce(q ? `${shown.length}개 찾았어요` : '');
 
@@ -2499,6 +2671,13 @@
       view.addEventListener('click', (e) => {
         const qBtn = e.target.closest('[data-q]');
         if (qBtn) { setQuery(qBtn.dataset.q, matchMedia('(pointer: fine)').matches); return; }
+        const grp = e.target.closest('[data-group]');
+        if (grp) {
+          const k = grp.dataset.group;
+          openGroups.has(k) ? openGroups.delete(k) : openGroups.add(k);
+          update();
+          return;
+        }
         const cat = e.target.closest('[data-cat]');
         if (cat) { filter.category = cat.dataset.cat; update(); return; }
         if (e.target.closest('[data-loanable]')) { filter.loanable = !filter.loanable; update(); return; }
@@ -2523,7 +2702,7 @@
     // 건물 → 층 → 실 순으로 묶는다.
     function groupPlaces(items) {
       const buildings = new Map();
-      for (const it of items) {
+      for (const it of items.filter((i) => i.building && i.room)) {
         const b = buildings.get(it.building) || { name: it.building, count: 0, rooms: 0, floors: new Map() };
         const f = b.floors.get(it.floor) || { name: it.floor, rooms: new Map() };
         const r = f.rooms.get(it.room) || { name: it.room, key: roomKey(it), building: it.building, floor: it.floor, count: 0, kinds: 0 };
@@ -3327,6 +3506,315 @@
       renderPreview();
     }
 
+    /* ════════ 파일로 가져오기 (→ src/lib/ledger-file.js) ════════ */
+    // 학교에서 내려받는 '물품목록정보' 엑셀을 그대로 읽는다.
+    const LEDGER_IN = {
+      code:  ['G2B목록번호', '목록번호', '분류번호'],
+      kind:  ['G2B물품분류명', '물품분류명', '품명'],
+      title: ['G2B목록명', '목록명', '물품명'],
+      no:    ['물품고유번호', '고유번호', '물품번호', '관리번호'],
+      rfid:  ['RFID 관리번호', 'RFID관리번호'],
+      date:  ['취득일자', '취득일'],
+      price: ['취득금액', '최초취득금액', '단가'],
+      life2: ['내용연수(변경)'],
+      life1: ['내용연수(취득)', '내용연수'],
+      dept:  ['운용부서', '부서'],
+      state: ['상태'],
+      place: ['설치장소', '보관장소', '위치'],
+      note:  ['비고'],
+    };
+
+    // 내보낼 때 쓰는 열 순서. 가져온 파일과 같은 모양이라 다시 올릴 수 있다.
+    const LEDGER_OUT = [
+      'G2B목록번호', 'G2B물품분류명', 'G2B목록명', '물품고유번호', 'RFID 관리번호',
+      '취득일자', '정리일자', '최초취득금액', '취득금액', '내용연수(취득)', '내용연수(변경)',
+      '운용부서', '운용일자', '상태', '진행상태', '나이스등록', '기자재여부', '기안상태',
+      '승인상태', '설치장소', '정보화기기구분', '비고',
+      '건물', '층', '실', '보관함', '칸',   // 이 앱에서 더한 칸
+    ];
+
+    const CATEGORY_HINTS = [
+      ['수업 기기', ['컴퓨터', '노트북', '모니터', 'LCD', '패널', '프로젝터', '빔', '전자칠판', '태블릿', '실물화상', '프린터', '복사', '스캐너', '충전', 'TV', '텔레비전', '서버', '공유기']],
+      ['과학 실험', ['현미경', '실험', '측정', '망원경', '표본', '해부', '시약', '저울', '항온']],
+      ['방송·행사', ['방송', '마이크', '앰프', '스피커', '카메라', '캠코더', '조명', '무대', '확성']],
+      ['체육', ['체육', '운동', '매트', '뜀틀', '평균대', '골대', '탁구', '농구', '배구', '축구', '철봉', '헬스']],
+      ['사무·행정', ['책상', '걸상', '의자', '로커', '책장', '캐비닛', '탁자', '테이블', '서랍', '금고', '파쇄', '게시', '칠판', '사물함', '스툴', '소파']],
+    ];
+    const guessCategory = (text) => {
+      const t = String(text || '');
+      for (const [cat, words] of CATEGORY_HINTS) if (words.some((w) => t.includes(w))) return cat;
+      return '기타';
+    };
+
+    const cellStr = (v) => (v === null || v === undefined ? '' : String(v).trim());
+
+    // 19980103 · 1998-01-03 · 날짜 칸 → 1998-01-03
+    function toDate(v) {
+      if (v instanceof Date) return ymd(v);
+      const t = cellStr(v).replace(/[^\d]/g, '');
+      return t.length === 8 ? `${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}` : '';
+    }
+    const toMoney = (v) => {
+      const num = Number(String(v ?? '').replace(/[^\d]/g, ''));
+      return num ? num.toLocaleString('ko-KR') : '';
+    };
+    const fromMoney = (v) => Number(String(v ?? '').replace(/[^\d]/g, '')) || '';
+
+    // 제목 줄이 위에 있어도 열 이름이 적힌 줄을 찾아낸다
+    function findHeader(rows) {
+      const wanted = [...LEDGER_IN.no, ...LEDGER_IN.kind, ...LEDGER_IN.code];
+      for (let r = 0; r < Math.min(rows.length, 30); r++) {
+        const cells = (rows[r] || []).map(cellStr);
+        if (cells.filter((c) => wanted.includes(c)).length >= 2) return r;
+      }
+      return -1;
+    }
+
+    function rowsToItems(rows) {
+      const hr = findHeader(rows);
+      if (hr < 0) return { error: 'NO_HEADER' };
+
+      const at = {};
+      const seenCol = {};
+      rows[hr].forEach((h, i) => { const k = cellStr(h); if (k && !(k in seenCol)) seenCol[k] = i; });
+      for (const [key, names] of Object.entries(LEDGER_IN)) {
+        at[key] = names.reduce((acc, n) => (acc >= 0 ? acc : (n in seenCol ? seenCol[n] : -1)), -1);
+      }
+      const extra = { building: seenCol['건물'] ?? -1, floor: seenCol['층'] ?? -1, room: seenCol['실'] ?? -1,
+                      storage: seenCol['보관함'] ?? -1, shelf: seenCol['칸'] ?? -1 };
+      if (at.no < 0 && at.kind < 0) return { error: 'NO_COLUMNS' };
+
+      const get = (row, key, map = at) => (map[key] >= 0 ? cellStr(row[map[key]]) : '');
+      const items = [];
+      const seen = new Set();
+      let blank = 0, dup = 0;
+
+      for (let r = hr + 1; r < rows.length; r++) {
+        const row = rows[r] || [];
+        if (!row.some((c) => cellStr(c) !== '')) continue;
+
+        const kind = get(row, 'kind');
+        const title = get(row, 'title');
+        const no = get(row, 'no');
+        const name = kind || title.split(',')[0].trim();
+        if (!name) { blank++; continue; }
+        if (no && seen.has(no)) { dup++; continue; }
+        if (no) seen.add(no);
+
+        let spec = title;
+        if (kind && spec.startsWith(kind)) spec = spec.slice(kind.length).replace(/^\s*,\s*/, '');
+
+        const noteBits = [get(row, 'note'), get(row, 'rfid') && `RFID ${get(row, 'rfid')}`].filter(Boolean);
+
+        items.push({
+          name,
+          category: guessCategory(`${kind} ${title}`),
+          qty: 1,
+          loanable: true,
+          building: get(row, 'building', extra), floor: get(row, 'floor', extra),
+          room: get(row, 'room', extra), storage: get(row, 'storage', extra), shelf: get(row, 'shelf', extra),
+          memo: '',
+          asset: true,
+          disused: get(row, 'state').includes('불용'),
+          assetInfo: {
+            name: title || name,
+            code: get(row, 'code'),
+            spec,
+            dept: get(row, 'dept'),
+            place: get(row, 'place') || get(row, 'dept'),
+            date: toDate(at.date >= 0 ? row[at.date] : ''),
+            no,
+            price: toMoney(at.price >= 0 ? row[at.price] : ''),
+            life: get(row, 'life2') || get(row, 'life1'),
+            note: noteBits.join(' · '),
+          },
+          raw: { state: get(row, 'state') },
+        });
+      }
+      return { items, blank, dup };
+    }
+
+    // 엑셀 다루는 도구는 쓸 때만 불러온다
+    let XLSXLib = null;
+    async function xlsx() {
+      if (!XLSXLib) XLSXLib = await import('https://esm.sh/xlsx@0.18.5');
+      return XLSXLib;
+    }
+
+    async function readTable(file) {
+      const buf = await file.arrayBuffer();
+      if (/\.csv$/i.test(file.name)) {
+        const text = new TextDecoder('utf-8').decode(buf).replace(/^\ufeff/, '');
+        return text.split(/\r?\n/).map((line) => {
+          const out = []; let cur = ''; let q = false;
+          for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (q) {
+              if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+              else if (ch === '"') q = false;
+              else cur += ch;
+            } else if (ch === '"') q = true;
+            else if (ch === ',') { out.push(cur); cur = ''; }
+            else cur += ch;
+          }
+          out.push(cur);
+          return out;
+        });
+      }
+      const XLSX = await xlsx();
+      const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      return XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, defval: '' });
+    }
+
+    // 지금 대장을 같은 양식의 엑셀로 내보낸다
+    async function exportLedger(list) {
+      const XLSX = await xlsx();
+      const today = new Date();
+      const stamp = ymd(today).replaceAll('-', '');
+      const body = list.map((it) => {
+        const a = it.assetInfo || {};
+        return [
+          a.code || '', it.name || '', a.name || '', a.no || '', (a.note || '').includes('RFID') ? (a.note.match(/RFID\s*([^\s·]+)/) || [, ''])[1] : '',
+          (a.date || '').replaceAll('-', ''), '', fromMoney(a.price), fromMoney(a.price),
+          a.life || '', a.life || '', a.dept || '', '', it.disused ? '불용' : '', '', '', '', '', '',
+          a.place || '', '', (a.note || '').replace(/(^|\s·\s)RFID\s*[^\s·]+/, '').trim(),
+          it.building || '', it.floor || '', it.room || '', it.storage || '', it.shelf || '',
+        ];
+      });
+      const aoa = [[`물품목록정보_${stamp}`], [], [], LEDGER_OUT, ...body];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = LEDGER_OUT.map((h) => ({ wch: Math.max(10, Math.min(34, h.length * 2 + 6)) }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, `물품목록정보_${stamp}`);
+      XLSX.writeFile(wb, `물품목록정보_${stamp}.xlsx`);
+    }
+
+    /* ── 가져오기 화면 ── */
+    function openImport(onDone) {
+      let parsed = null;
+
+      const back = document.createElement('div');
+      back.className = 'signback';
+      back.innerHTML = `
+        <div class="signbox impbox" role="dialog" aria-modal="true" aria-labelledby="imp-title">
+          <p class="signbox__title" id="imp-title">비품 대장 파일 가져오기</p>
+          <p class="signbox__desc">학교에서 내려받은 <b>물품목록정보</b> 엑셀 파일을 그대로 넣으면 돼요. 한셀은 ‘다른 이름으로 저장 → Excel 문서’로 바꿔 주세요.</p>
+
+          <label class="drop" id="imp-drop">
+            <input type="file" id="imp-file" accept=".xlsx,.xls,.csv">
+            ${icon(ICONS.upload, 'icon drop__icon')}
+            <span class="drop__text">파일 고르기<small>xlsx · xls · csv</small></span>
+          </label>
+
+          <div id="imp-body"></div>
+          <p class="signbox__err" id="imp-err" aria-live="polite"></p>
+          <div class="signbox__acts">
+            <span class="signbox__spacer"></span>
+            <button class="mini mini--quiet" type="button" id="imp-cancel">닫기</button>
+            <button class="signbox__go" type="button" id="imp-go" disabled>가져오기</button>
+          </div>
+        </div>`;
+      document.body.append(back);
+
+      const err = back.querySelector('#imp-err');
+      const body = back.querySelector('#imp-body');
+      const go = back.querySelector('#imp-go');
+      const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      back.addEventListener('click', (e) => { if (e.target === back) close(); });
+      back.querySelector('#imp-cancel').addEventListener('click', close);
+
+      back.querySelector('#imp-file').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        err.textContent = '';
+        go.disabled = true;
+        body.innerHTML = '<p class="imp__wait">파일을 읽는 중이에요…</p>';
+        try {
+          const rows = await readTable(file);
+          const out = rowsToItems(rows);
+          if (out.error) {
+            body.innerHTML = '';
+            err.textContent = out.error === 'NO_HEADER'
+              ? '열 이름을 찾지 못했어요. 물품고유번호와 물품분류명이 있는 파일인지 확인해 주세요.'
+              : '필요한 열이 없어요. 물품고유번호나 물품분류명이 있어야 해요.';
+            return;
+          }
+
+          // 이미 있는 것과 맞춰 본다 (고유번호가 열쇠)
+          const byNo = new Map(state.items.filter((i) => i.assetInfo?.no).map((i) => [i.assetInfo.no, i]));
+          let add = 0, update = 0, noPlace = 0;
+          for (const it of out.items) {
+            if (it.assetInfo.no && byNo.has(it.assetInfo.no)) update++; else add++;
+            if (!it.room) noPlace++;
+          }
+          parsed = { items: out.items, byNo };
+
+          body.innerHTML = `
+            <p class="imp__file">${esc(file.name)}</p>
+            <div class="imp__sum">
+              <div class="imp__fig"><span class="imp__k">새로 추가</span><span class="imp__v num">${n(add)}</span></div>
+              <div class="imp__fig"><span class="imp__k">내용 갱신</span><span class="imp__v num">${n(update)}</span></div>
+              <div class="imp__fig"><span class="imp__k">건너뜀</span><span class="imp__v num">${n(out.blank + out.dup)}</span></div>
+            </div>
+            ${noPlace ? `<p class="imp__note">${icon(ICONS.place)}<span>이 중 <b class="num">${n(noPlace)}개</b>는 보관 자리가 없어 <b>장소 미지정</b>으로 들어가요. 관리 담당 화면에서 한꺼번에 정할 수 있어요.</span></p>` : ''}
+            <ul class="imp__peek">
+              ${out.items.slice(0, 4).map((it) => `
+                <li>
+                  <span class="imp__name">${esc(it.name)}${it.disused ? '<span class="tag tag--no">불용</span>' : ''}</span>
+                  <span class="imp__sub">${esc([it.assetInfo.no, it.assetInfo.dept, it.assetInfo.date].filter(Boolean).join(' · '))}</span>
+                </li>`).join('')}
+              ${out.items.length > 4 ? `<li class="imp__more num">그 밖에 ${n(out.items.length - 4)}개</li>` : ''}
+            </ul>`;
+          go.disabled = !out.items.length;
+        } catch (ex) {
+          console.error(ex);
+          body.innerHTML = '';
+          err.textContent = '파일을 읽지 못했어요. 엑셀에서 한 번 열었다가 xlsx로 다시 저장해 보세요.';
+        }
+      });
+
+      go.addEventListener('click', async () => {
+        if (!parsed) return;
+        go.disabled = true;
+        body.innerHTML = '<p class="imp__wait">넣는 중이에요…</p>';
+        try {
+          const next = [...state.items];
+          const idx = new Map(next.map((i, k) => [i.id, k]));
+          for (const row of parsed.items) {
+            const old = row.assetInfo.no ? parsed.byNo.get(row.assetInfo.no) : null;
+            if (old) {
+              // 사람이 적어 둔 보관 자리와 메모는 덮어쓰지 않는다
+              const merged = {
+                ...old, ...row,
+                building: row.building || old.building, floor: row.floor || old.floor,
+                room: row.room || old.room, storage: row.storage || old.storage, shelf: row.shelf || old.shelf,
+                memo: old.memo || row.memo,
+                loanable: old.loanable,
+                id: old.id, createdAt: old.createdAt, updatedAt: new Date().toISOString(),
+              };
+              delete merged.raw;
+              next[idx.get(old.id)] = merged;
+            } else {
+              const made = { ...row, id: newId(), createdAt: new Date().toISOString() };
+              delete made.raw;
+              next.push(made);
+            }
+          }
+          commit({ ...state, items: next });
+          close();
+          onDone(parsed.items.length);
+        } catch (ex) {
+          console.error(ex);
+          body.innerHTML = '';
+          err.textContent = '저장하지 못했어요. 파일을 나눠서 올려 보세요.';
+          go.disabled = false;
+        }
+      });
+    }
+
     /* ════════ 비품 대장 (→ src/pages/ledger.js) ════════ */
     const toNumber = (v) => Number(String(v ?? '').replace(/[^\d]/g, '')) || 0;
     const won = (v) => toNumber(v).toLocaleString('ko-KR');
@@ -3382,7 +3870,8 @@
               <strong>아직 비품이 없어요</strong>
               <span>물품을 등록할 때 ‘비품 여부’를 켜면<br>대장 내용이 여기에 모여요.</span>
               <div class="nohit__actions">
-                <a class="btn btn--solid" href="#/add">물품 등록</a>
+                ${canImport() ? '<button class="btn btn--solid" type="button" id="l-import">파일로 가져오기</button>' : ''}
+                <a class="btn btn--ghost" href="#/add">물품 등록</a>
               </div>
             </div>
           </section>`;
@@ -3412,7 +3901,8 @@
             <span class="lsum__value num">${n(count)}<small>개</small></span>
           </div>
           <span class="lsum__spacer"></span>
-          <button class="btn btn--ghost" type="button" id="l-csv">${icon(ICONS.download)}표로 내려받기</button>
+          ${canImport() ? `<button class="btn btn--solid" type="button" id="l-import">${icon(ICONS.upload)}파일로 가져오기</button>` : ''}
+          <button class="btn btn--ghost" type="button" id="l-csv">${icon(ICONS.download)}엑셀로 내려받기</button>
         </section>
 
         <section class="card ledger" aria-labelledby="l-title">
@@ -3435,6 +3925,10 @@
     }
 
     function mountLedger(view) {
+      view.querySelector('#l-import')?.addEventListener('click', () => {
+        openImport((count) => { render(); flash(`${n(count)}개를 가져왔어요`); });
+      });
+
       let all = assetsOf(state.items);
       if (!all.length) return;
 
@@ -3554,7 +4048,9 @@
           update();
           return;
         }
-        if (e.target.closest('#l-csv')) downloadCsv();
+        if (e.target.closest('#l-csv')) {
+          exportLedger(shown).catch(() => flash('내려받지 못했어요', 'warn'));
+        }
       });
 
       input.addEventListener('input', update);
@@ -3566,23 +4062,6 @@
         if (!all.length) { render(); return; }
         update();
       };
-
-      function downloadCsv() {
-        const cell = (v) => `"${String(v ?? '').replaceAll('"', '""')}"`;
-        const header = ['비품명', '앱 물품 이름', '보관 위치', ...LEDGER_COLS.map((c) => c.label)];
-        const rows = shown.map((it) => [
-          assetName(it), it.name, pathOf(it).join(' > '),
-          ...LEDGER_COLS.map((c) => (c.num ? toNumber(cellText(it, c)) : cellText(it, c))),
-        ]);
-        // 엑셀이 한글을 깨뜨리지 않도록 BOM을 붙인다
-        const csv = '\ufeff' + [header, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
-        const today = new Date().toISOString().slice(0, 10);
-        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-        const a = document.createElement('a');
-        a.href = url; a.download = `비품대장_${today}.csv`;
-        document.body.append(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }
 
       update();
     }
@@ -3602,6 +4081,8 @@
       return ymd(d);
     }
 
+    const editHref = (it, from = '#/') => `#/add?id=${encodeURIComponent(it.id)}&from=${encodeURIComponent(from)}`;
+
     // 담당 선생님이 챙길 일을 한곳에 모은다
     function todoGroups() {
       const out = activeLoans();
@@ -3611,12 +4092,13 @@
       const blanks = assets
         .map((it) => ({ it, missing: ASSET_NEED.filter((f) => !it.assetInfo[f.key]) }))
         .filter((x) => x.missing.length)
-        .sort((a, b) => b.missing.length - a.missing.length);
+        .sort((a, b) => b.missing.length - a.missing.length)
+        .slice(0, 30);
       const expired = assets
         .map((it) => ({ it, on: expiryOf(it) }))
         .filter((x) => x.on && daysBetween(today(), x.on) <= 0)
-        .sort((a, b) => a.on.localeCompare(b.on));
-      const noSpot = state.items.filter((i) => !i.storage && !i.shelf && !i.memo);
+        .sort((a, b) => a.on.localeCompare(b.on))
+        .slice(0, 30);
 
       return [
         {
@@ -3643,7 +4125,7 @@
           row: ({ it, missing }) => ({
             name: assetName(it),
             sub: `${missing.map((f) => f.label).join(', ')}${missing.length > 1 ? '이(가)' : '이'} 비었어요`,
-            acts: `<a class="mini mini--go" href="#/add?id=${encodeURIComponent(it.id)}&from=%23%2Fmanager">채우기</a>`,
+            acts: `<a class="mini mini--go" href="${editHref(it, '#/manager')}">채우기</a>`,
           }),
         },
         {
@@ -3652,22 +4134,11 @@
           row: ({ it, on }) => ({
             name: assetName(it),
             sub: `${dateShort(it.assetInfo.date)} 취득 · ${toNumber(it.assetInfo.life)}년 · ${on.slice(0, 4)}년에 만료`,
-            acts: `<a class="mini mini--quiet" href="#/add?id=${encodeURIComponent(it.id)}&from=%23%2Fmanager">보기</a>`,
-          }),
-        },
-        {
-          key: 'spot', name: '보관 자리가 덜 적혔어요', color: 'var(--board)', rows: noSpot, href: (it) => editHref(it),
-          why: '실까지만 적혀 있어요. 보관함이나 칸을 더하면 찾기 쉬워져요.',
-          row: (it) => ({
-            name: it.name,
-            sub: pathOf(it).join(' › '),
-            acts: `<a class="mini mini--quiet" href="#/add?id=${encodeURIComponent(it.id)}&from=%23%2Fmanager">자리 적기</a>`,
+            acts: `<a class="mini mini--quiet" href="${editHref(it, '#/manager')}">보기</a>`,
           }),
         },
       ].filter((g) => g.rows.length);
     }
-
-    const editHref = (it, from = '#/') => `#/add?id=${encodeURIComponent(it.id)}&from=${encodeURIComponent(from)}`;
 
     // 알림: 챙길 일을 급한 순서대로 한 줄씩
     function notifications() {
@@ -3676,8 +4147,6 @@
         return { color: g.color, name: v.name, sub: v.sub, href: g.href(r) };
       }));
     }
-
-    const todoCount = () => todoGroups().reduce((a, g) => a + g.rows.length, 0);
     const urgentCount = () => activeLoans().filter((l) => ['late', 'today'].includes(dueState(l).key)).length;
 
     function managerView() {
@@ -3699,71 +4168,86 @@
         </section>
 
         <aside class="side">
-        <section class="card who" aria-labelledby="who-title">
-          <div class="card__head"><h2 class="card__title" id="who-title">담당 정보</h2></div>
-          <p class="sheet__desc">왼쪽 아래와 홈 제목에 이대로 보여요.</p>
-          <form id="who-form">
-            <div class="field">
-              <label class="field__label" for="w-name">학교 이름</label>
-              <input class="input" id="w-name" name="name" placeholder="예: 전주화정초등학교" autocomplete="off" value="${esc(s.name)}">
-            </div>
-            <div class="field">
-              <label class="field__label" for="w-addr">학교 주소</label>
-              <input class="input" id="w-addr" name="address" placeholder="예: 전북특별자치도 전주시 덕진구 화정1길 15" autocomplete="off" value="${esc(s.address || '')}">
-            </div>
-            <div class="row" style="margin-top:16px">
+          <section class="card who" aria-labelledby="who-title">
+            <div class="card__head"><h2 class="card__title" id="who-title">담당 정보</h2></div>
+            <p class="sheet__desc">왼쪽 아래와 홈 제목에 이대로 보여요.</p>
+            <form id="who-form">
               <div class="field">
-                <label class="field__label" for="w-teacher">담당 선생님</label>
-                <input class="input" id="w-teacher" name="teacher" placeholder="예: 김하늘" autocomplete="off" value="${esc(s.teacher)}">
+                <label class="field__label" for="w-name">학교 이름</label>
+                <input class="input" id="w-name" name="name" placeholder="예: 전주화정초등학교" autocomplete="off" value="${esc(s.name)}">
               </div>
               <div class="field">
-                <label class="field__label" for="w-pos">직위</label>
-                <div class="selectbox">
-                  <select class="input" id="w-pos" name="position">
-                    ${POSITIONS.map((v) => `<option value="${esc(v)}" ${s.position === v ? 'selected' : ''}>${esc(v)}</option>`).join('')}
-                  </select>
-                  ${icon(ICONS.caret, 'icon selectbox__caret')}
+                <label class="field__label" for="w-addr">학교 주소</label>
+                <input class="input" id="w-addr" name="address" placeholder="예: 전북특별자치도 전주시 덕진구 화정1길 15" autocomplete="off" value="${esc(s.address || '')}">
+              </div>
+              <div class="row" style="margin-top:16px">
+                <div class="field">
+                  <label class="field__label" for="w-teacher">담당 선생님</label>
+                  <input class="input" id="w-teacher" name="teacher" placeholder="예: 김하늘" autocomplete="off" value="${esc(s.teacher)}">
+                </div>
+                <div class="field">
+                  <label class="field__label" for="w-pos">직위</label>
+                  <div class="selectbox">
+                    <select class="input" id="w-pos" name="position">
+                      ${POSITIONS.map((v) => `<option value="${esc(v)}" ${s.position === v ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+                    </select>
+                    ${icon(ICONS.caret, 'icon selectbox__caret')}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="row" style="margin-top:16px">
-              <div class="field">
-                <label class="field__label" for="w-place">담당 위치</label>
-                <input class="input" id="w-place" name="place" placeholder="예: 행정실" autocomplete="off" value="${esc(s.place)}">
+              <div class="row" style="margin-top:16px">
+                <div class="field">
+                  <label class="field__label" for="w-place">담당 위치</label>
+                  <input class="input" id="w-place" name="place" placeholder="예: 행정실" autocomplete="off" value="${esc(s.place)}">
+                </div>
+                <div class="field">
+                  <label class="field__label" for="w-tel">연락처 <small>선택</small></label>
+                  <input class="input" id="w-tel" name="tel" type="tel" inputmode="tel" placeholder="예: 내선 302" autocomplete="off" value="${esc(s.tel)}">
+                </div>
               </div>
-              <div class="field">
-                <label class="field__label" for="w-tel">연락처 <small>선택</small></label>
-                <input class="input" id="w-tel" name="tel" type="tel" inputmode="tel" placeholder="예: 내선 302" autocomplete="off" value="${esc(s.tel)}">
-              </div>
+              <button class="who__save" type="submit">담당 정보 저장</button>
+              <p class="who__done" id="w-done" aria-live="polite"></p>
+            </form>
+          </section>
+
+          ${online() ? `
+          <section class="card team" aria-labelledby="team-title">
+            <div class="card__head">
+              <h2 class="card__title" id="team-title">우리 학교 선생님</h2>
+              <span class="card__meta" id="team-meta"></span>
             </div>
-            <button class="who__save" type="submit">담당 정보 저장</button>
-            <p class="who__done" id="w-done" aria-live="polite"></p>
-          </form>
-        </section>
+            <p class="sheet__desc">이 코드를 알려 주면 가입을 신청할 수 있어요. 승인해야 자료가 보여요.</p>
+            <div class="code">
+              <span class="code__val" id="team-code">${esc(me?.school?.join_code || '------')}</span>
+              <button class="mini mini--quiet" type="button" id="code-copy">복사</button>
+              <button class="mini mini--quiet" type="button" id="code-reset">새 코드</button>
+            </div>
+            <div id="team-list"></div>
+          </section>` : ''}
 
-        ${online() ? `
-        <section class="card team" aria-labelledby="team-title">
-          <div class="card__head">
-            <h2 class="card__title" id="team-title">우리 학교 선생님</h2>
-            <span class="card__meta" id="team-meta"></span>
-          </div>
-          <p class="sheet__desc">이 코드를 알려 주면 가입을 신청할 수 있어요. 승인해야 자료가 보여요.</p>
-          <div class="code">
-            <span class="code__val" id="team-code">${esc(me?.school?.join_code || '------')}</span>
-            <button class="mini mini--quiet" type="button" id="code-copy">복사</button>
-            <button class="mini mini--quiet" type="button" id="code-reset">새 코드</button>
-          </div>
-          <div id="team-list"></div>
-        </section>` : ''}
+          <section class="card wipe" aria-labelledby="wipe-title">
+            <div class="card__head"><h2 class="card__title" id="wipe-title">기록 지우기</h2></div>
+            <p class="sheet__desc">한 번에 비울 때 쓰세요. 지운 뒤에는 되돌릴 수 없어요.</p>
+            <div id="wipe-box"></div>
+          </section>
 
-        <section class="card signs" aria-labelledby="signs-title">
-          <div class="card__head">
-            <h2 class="card__title" id="signs-title">대여 서명</h2>
-            <span class="card__meta" id="signs-meta"></span>
-          </div>
-          <div id="signs-body"></div>
-        </section>
-        </aside>`;
+          <section class="card signs" aria-labelledby="signs-title">
+            <div class="card__head">
+              <h2 class="card__title" id="signs-title">대여 서명</h2>
+              <span class="card__meta" id="signs-meta"></span>
+            </div>
+            <div id="signs-body"></div>
+          </section>
+        </aside>
+
+        <section class="card spot" aria-labelledby="spot-title">
+          <button class="fold" type="button" id="spot-fold" aria-expanded="false" aria-controls="spot-box">
+            ${icon(ICONS.caret, 'icon fold__caret')}
+            <span id="spot-title">장소 미지정 비품</span>
+            <span class="fold__count num" id="spot-count"></span>
+          </button>
+          <div class="spotbox" id="spot-box" hidden></div>
+        </section>`;
     }
 
     function mountManager(view) {
@@ -3804,6 +4288,229 @@
           </section>`).join('');
       }
 
+      /* ── 장소 미지정 비품 ── */
+      const chosen = new Set();
+      const spotBox = view.querySelector('#spot-box');
+      const spotFold = view.querySelector('#spot-fold');
+
+      function spotGroups() {
+        const map = new Map();
+        for (const it of state.items.filter((i) => !i.building || !i.room)) {
+          const key = `${it.name}|${it.assetInfo?.place || ''}`;
+          const g = map.get(key);
+          if (g) { g.ids.push(it.id); g.qty += it.qty; }
+          else map.set(key, { key, name: it.name, place: it.assetInfo?.place || '', ids: [it.id], qty: it.qty });
+        }
+        return [...map.values()].sort((a, b) => b.qty - a.qty || a.name.localeCompare(b.name, 'ko'));
+      }
+
+      function drawSpots() {
+        const groups = spotGroups();
+        const total = groups.reduce((a, g) => a + g.qty, 0);
+        view.querySelector('#spot-count').textContent = total ? `${n(total)}개` : '없어요';
+        if (!total) { spotBox.innerHTML = '<p class="side-empty">모든 물품에 보관 자리가 적혀 있어요.</p>'; return; }
+
+        const picked = groups.filter((g) => chosen.has(g.key));
+        const pickedQty = picked.reduce((a, g) => a + g.qty, 0);
+        spotBox.innerHTML = `
+          <p class="sheet__desc">대장에 적힌 장소를 보고, 같은 자리에 둘 것끼리 골라 한꺼번에 옮기세요.</p>
+          <div class="spotpick">
+            <div class="spotpick__row">
+              <input class="input" id="sp-building" list="sp-b" placeholder="건물 (예: 본관)" autocomplete="off">
+              <input class="input" id="sp-floor" list="sp-f" placeholder="층 (예: 3층)" autocomplete="off">
+              <input class="input" id="sp-room" list="sp-r" placeholder="실 (예: 과학 준비실)" autocomplete="off">
+            </div>
+            <div class="spotpick__row">
+              <input class="input" id="sp-storage" placeholder="보관함 (선택)" autocomplete="off">
+              <input class="input" id="sp-shelf" placeholder="칸 (선택)" autocomplete="off">
+            </div>
+            <datalist id="sp-b">${[...new Set(state.items.map((i) => i.building).filter(Boolean))].map((v) => `<option value="${esc(v)}"></option>`).join('')}</datalist>
+            <datalist id="sp-f">${FLOORS.map((f) => `<option value="${esc(f.value)}"></option>`).join('')}</datalist>
+            <datalist id="sp-r">${[...new Set(state.items.map((i) => i.room).filter(Boolean))].map((v) => `<option value="${esc(v)}"></option>`).join('')}</datalist>
+          </div>
+          <div class="spotbar">
+            <span class="spotbar__info">${picked.length ? `${n(picked.length)}가지 · ${n(pickedQty)}개 고름` : '옮길 물품을 골라 주세요'}</span>
+            <button class="mini mini--quiet" type="button" id="sp-all">${picked.length === groups.length ? '모두 풀기' : '모두 고르기'}</button>
+            <button class="mini mini--go" type="button" id="sp-save" ${picked.length ? '' : 'disabled'}>여기로 옮기기</button>
+          </div>
+          <ul class="spotlist">
+            ${groups.slice(0, 200).map((g) => `
+              <li class="spotrow">
+                <input type="checkbox" data-spot="${esc(g.key)}" ${chosen.has(g.key) ? 'checked' : ''} aria-label="${esc(g.name)}">
+                <span class="spotrow__name">${esc(g.name)}</span>
+                <span class="spotrow__qty num">${n(g.qty)}개</span>
+                <span class="spotrow__sub">${esc(g.place || '대장에 장소가 없어요')}</span>
+              </li>`).join('')}
+            ${groups.length > 200 ? `<li class="imp__more num">그 밖에 ${n(groups.length - 200)}가지</li>` : ''}
+          </ul>`;
+      }
+
+      spotFold.addEventListener('click', () => {
+        const open = spotBox.hidden;
+        spotBox.hidden = !open;
+        spotFold.setAttribute('aria-expanded', String(open));
+        if (open) drawSpots();
+      });
+
+      view.addEventListener('change', (e) => {
+        const box = e.target.closest('[data-spot]');
+        if (!box) return;
+        box.checked ? chosen.add(box.dataset.spot) : chosen.delete(box.dataset.spot);
+        drawSpots();
+      });
+
+      /* ── 기록 지우기 ── */
+      const wipeBox = view.querySelector('#wipe-box');
+      let wipeKind = '';   // '' | items | loans
+      let wipeStep = 1;    // 1 물어보기 · 2 코드 적기
+      // 실수로 지우지 않도록 학교 코드를 그대로 적게 한다
+      const wipeWord = () => (online() ? (me?.school?.join_code || '') : '삭제');
+
+      const WIPES = {
+        items: {
+          title: '물품 전체 삭제',
+          count: () => state.items.length,
+          unit: '가지',
+          desc: () => `등록된 물품 ${n(state.items.length)}가지를 모두 지워요. 대장을 새로 올릴 때 쓰세요.`,
+          warn: '삭제하면 다시 복구할 수 없습니다. 복구를 하려면 엑셀로 내려받아 주세요.',
+          run: () => commit({ ...state, items: [] }),
+          done: (c) => `물품 ${n(c)}가지를 모두 지웠어요`,
+        },
+        loans: {
+          title: '대여 기록·서명 삭제',
+          count: () => (state.loans || []).length,
+          unit: '건',
+          desc: () => `빌려준 기록과 받아 둔 서명 ${n((state.loans || []).length)}건을 모두 지워요. 학년이 바뀔 때 쓰세요.`,
+          warn: '삭제하면 다시 복구할 수 없습니다. 서명도 함께 사라져요.',
+          run: () => commit({ ...state, loans: [] }),
+          done: (c) => `대여 기록 ${n(c)}건을 모두 지웠어요`,
+        },
+      };
+
+      function drawWipe() {
+        if (!wipeBox) return;
+        const spec = WIPES[wipeKind];
+
+        if (!wipeKind) {
+          wipeBox.innerHTML = Object.entries(WIPES).map(([key, w]) => `
+            <div class="wipe__row">
+              <div class="wipe__what">
+                <p class="wipe__name">${esc(w.title)}</p>
+                <p class="wipe__count num">${w.count() ? `${n(w.count())}${w.unit}` : '비어 있어요'}</p>
+              </div>
+              <button class="mini wipe__pick" type="button" data-wipe="${key}" ${w.count() ? '' : 'disabled'}>지우기</button>
+            </div>`).join('');
+          return;
+        }
+
+        if (wipeStep === 1) {
+          wipeBox.innerHTML = `
+            <div class="wipe__ask">
+              <p class="wipe__head">${esc(spec.title)}</p>
+              <p class="wipe__desc">${esc(spec.desc())}</p>
+              <p class="wipe__warn">${icon(ICONS.bell)}<span>${esc(spec.warn)}</span></p>
+              <div class="wipe__acts">
+                <button class="mini mini--quiet" type="button" id="wipe-cancel">그만두기</button>
+                ${wipeKind === 'items' ? '<button class="mini mini--quiet" type="button" id="wipe-save">엑셀로 내려받기</button>' : ''}
+                <button class="mini wipe__go" type="button" id="wipe-next">계속</button>
+              </div>
+            </div>`;
+          return;
+        }
+
+        wipeBox.innerHTML = `
+          <div class="wipe__ask">
+            <p class="wipe__head">${esc(spec.title)}</p>
+            <label class="field__label" for="wipe-code">확인을 위해 ${online() ? '학교 코드' : '‘삭제’'}를 적어 주세요</label>
+            <input class="input wipe__input" id="wipe-code" type="text" autocomplete="off" placeholder="${esc(online() ? '예: A1B2C3' : '삭제')}">
+            <p class="field__error" id="wipe-err"></p>
+            <div class="wipe__acts">
+              <button class="mini mini--quiet" type="button" id="wipe-cancel">그만두기</button>
+              <button class="mini wipe__go" type="button" id="wipe-go">${n(spec.count())}${spec.unit} 모두 지우기</button>
+            </div>
+          </div>`;
+        view.querySelector('#wipe-code')?.focus();
+      }
+
+      view.addEventListener('click', async (e) => {
+        const pick = e.target.closest('[data-wipe]');
+        if (pick) { wipeKind = pick.dataset.wipe; wipeStep = 1; drawWipe(); return; }
+        if (e.target.closest('#wipe-cancel')) { wipeKind = ''; wipeStep = 1; drawWipe(); return; }
+        if (e.target.closest('#wipe-next')) { wipeStep = 2; drawWipe(); return; }
+        if (e.target.closest('#wipe-save')) {
+          try { await exportLedger(assetsOf(state.items)); }
+          catch { flash('내려받지 못했어요', 'warn'); }
+          return;
+        }
+        if (!e.target.closest('#wipe-go')) return;
+
+        const typed = view.querySelector('#wipe-code').value.trim().toUpperCase();
+        if (typed !== wipeWord().toUpperCase()) {
+          view.querySelector('#wipe-err').textContent = online()
+            ? '학교 코드가 달라요. 우리 학교 선생님 카드에서 확인해 주세요.'
+            : '‘삭제’라고 적어 주세요.';
+          return;
+        }
+        const spec = WIPES[wipeKind];
+        const count = spec.count();
+        spec.run();
+        wipeKind = ''; wipeStep = 1; chosen.clear();
+        flash(spec.done(count));
+        drawWipe();
+        update();
+        drawSigns();
+        drawSpots();
+      });
+
+      /* ── 대여 서명 ── */
+      function drawSigns() {
+        const list = (state.loans || []).filter((l) => l.sign).sort((a, b) => b.outAt.localeCompare(a.outAt));
+        view.querySelector('#signs-meta').textContent = list.length ? `${n(list.length)}건` : '';
+        view.querySelector('#signs-body').innerHTML = list.length
+          ? `<ul class="signlist">${list.map((l) => `
+              <li class="signrow">
+                <div class="signrow__main">
+                  <p class="signrow__name">${esc(l.itemName)}${l.qty > 1 ? ` ${n(l.qty)}개` : ''}</p>
+                  <p class="signrow__sub">${esc(l.who)} · ${esc(dateShort(l.outAt.slice(0, 10)))} 빌림${l.returnedAt ? ` · ${esc(dateShort(l.returnedAt.slice(0, 10)))} 반납` : ''}</p>
+                </div>
+                <img class="signrow__img" src="${esc(l.sign)}" alt="${esc(l.who)} 서명">
+              </li>`).join('')}</ul>`
+          : '<p class="side-empty">물품을 빌릴 때 받은 서명이 여기에 남아요.</p>';
+      }
+
+      /* ── 우리 학교 선생님 ── */
+      function drawTeam() {
+        const list = view.querySelector('#team-list');
+        if (!list) return;
+        const pending = members.filter((m2) => m2.status === 'pending');
+        const active = members.filter((m2) => m2.status === 'active');
+        view.querySelector('#team-meta').textContent = pending.length ? `승인 기다림 ${pending.length}명` : `${active.length}명`;
+
+        const row = (m2) => `
+          <li class="mrow ${m2.status === 'pending' ? 'is-pending' : ''}">
+            <div>
+              <p class="mrow__name">${esc(m2.name || m2.email.split('@')[0])}${m2.position ? ` <span class="mrow__pos">${esc(m2.position)}</span>` : ''}${m2.role === 'admin' ? '<span class="rolechip">관리자</span>' : (m2.can_import ? '<span class="rolechip rolechip--soft">비품 담당</span>' : '')}</p>
+              <p class="mrow__mail">${esc(m2.email)}</p>
+            </div>
+            <div class="mrow__acts">
+              ${m2.status === 'pending'
+                ? `<button class="mini mini--go" type="button" data-approve="${m2.id}">승인</button>
+                   <button class="act act--del" type="button" data-reject="${m2.id}" aria-label="거절">${icon(ICONS.trash)}</button>`
+                : m2.user_id === session?.user?.id
+                  ? '<span class="mrow__tag">나</span>'
+                  : `${m2.role === 'admin'
+                        ? `<button class="mini mini--quiet" type="button" data-role="${m2.id}|teacher">관리자 해제</button>`
+                        : `<button class="mini mini--quiet" type="button" data-imp="${m2.id}|${m2.can_import ? 'off' : 'on'}">${m2.can_import ? '비품 담당 해제' : '비품 담당'}</button>
+                           <button class="mini mini--quiet" type="button" data-role="${m2.id}|admin">관리자로</button>`}
+                     <button class="act act--del" type="button" data-remove="${m2.id}" aria-label="내보내기">${icon(ICONS.trash)}</button>`}
+            </div>
+          </li>`;
+
+        list.innerHTML = members.length
+          ? `<ul class="mlist">${[...pending, ...active].map(row).join('')}</ul>`
+          : '<p class="side-empty">아직 가입한 선생님이 없어요.</p>';
+      }
+
       view.querySelector('#who-form').addEventListener('submit', (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -3822,58 +4529,41 @@
         renderNav('manager');
       });
 
-      function drawSigns() {
-        const list = (state.loans || []).filter((l) => l.sign)
-          .sort((a2, b2) => b2.outAt.localeCompare(a2.outAt));
-        view.querySelector('#signs-meta').textContent = list.length ? `${n(list.length)}건` : '';
-        view.querySelector('#signs-body').innerHTML = list.length
-          ? `<ul class="signlist">${list.map((l) => `
-              <li class="signrow">
-                <div class="signrow__main">
-                  <p class="signrow__name">${esc(l.itemName)}${l.qty > 1 ? ` ${n(l.qty)}개` : ''}</p>
-                  <p class="signrow__sub">${esc(l.who)} · ${esc(dateShort(l.outAt.slice(0, 10)))} 빌림${l.returnedAt ? ` · ${esc(dateShort(l.returnedAt.slice(0, 10)))} 반납` : ''}</p>
-                </div>
-                <img class="signrow__img" src="${esc(l.sign)}" alt="${esc(l.who)} 서명">
-              </li>`).join('')}</ul>`
-          : `<p class="side-empty">물품을 빌릴 때 받은 서명이 여기에 남아요.</p>`;
-      }
-
-      // ── 구성원 관리 ──
-      function drawTeam() {
-        const list = view.querySelector('#team-list');
-        if (!list) return;
-        const pending = members.filter((m2) => m2.status === 'pending');
-        const active = members.filter((m2) => m2.status === 'active');
-        view.querySelector('#team-meta').textContent = pending.length ? `승인 기다림 ${pending.length}명` : `${active.length}명`;
-
-        const row = (m2) => `
-          <li class="mrow ${m2.status === 'pending' ? 'is-pending' : ''}">
-            <div>
-              <p class="mrow__name">${esc(m2.name || m2.email.split('@')[0])}${m2.position ? ` <span class="mrow__pos">${esc(m2.position)}</span>` : ''}${m2.role === 'admin' ? '<span class="rolechip">관리자</span>' : ''}</p>
-              <p class="mrow__mail">${esc(m2.email)}</p>
-            </div>
-            <div class="mrow__acts">
-              ${m2.status === 'pending'
-                ? `<button class="mini mini--go" type="button" data-approve="${m2.id}">승인</button>
-                   <button class="act act--del" type="button" data-reject="${m2.id}" aria-label="거절">${icon(ICONS.trash)}</button>`
-                : m2.user_id === session?.user?.id
-                  ? '<span class="mrow__tag">나</span>'
-                  : `${m2.role === 'admin'
-                        ? `<button class="mini mini--quiet" type="button" data-role="${m2.id}|teacher">관리자 해제</button>`
-                        : `<button class="mini mini--quiet" type="button" data-role="${m2.id}|admin">관리자로</button>`}
-                     <button class="act act--del" type="button" data-remove="${m2.id}" aria-label="내보내기">${icon(ICONS.trash)}</button>`}
-            </div>
-          </li>`;
-
-        list.innerHTML = members.length
-          ? `<ul class="mlist">${[...pending, ...active].map(row).join('')}</ul>`
-          : '<p class="side-empty">아직 가입한 선생님이 없어요.</p>';
-      }
-
       view.addEventListener('click', async (e) => {
+        // 장소 한꺼번에 옮기기
+        if (e.target.closest('#sp-all')) {
+          const groups = spotGroups();
+          if (chosen.size === groups.length) chosen.clear();
+          else groups.forEach((g) => chosen.add(g.key));
+          drawSpots();
+          return;
+        }
+        if (e.target.closest('#sp-save')) {
+          const b = view.querySelector('#sp-building').value.trim();
+          const f = view.querySelector('#sp-floor').value.trim();
+          const r = view.querySelector('#sp-room').value.trim();
+          if (!b || !f || !r) { flash('건물, 층, 실을 모두 적어 주세요', 'warn'); return; }
+          const storage = view.querySelector('#sp-storage').value.trim();
+          const shelf = view.querySelector('#sp-shelf').value.trim();
+          const ids = new Set(spotGroups().filter((g) => chosen.has(g.key)).flatMap((g) => g.ids));
+          commit({
+            ...state,
+            items: state.items.map((it) => (ids.has(it.id)
+              ? { ...it, building: b, floor: f, room: r, storage: storage || it.storage, shelf: shelf || it.shelf, updatedAt: new Date().toISOString() }
+              : it)),
+          });
+          chosen.clear();
+          flash(`${n(ids.size)}개를 ${r}(으)로 옮겼어요`);
+          drawSpots();
+          update();
+          return;
+        }
+
+        // 구성원 관리
         const ok = e.target.closest('[data-approve]');
         const no = e.target.closest('[data-reject]') || e.target.closest('[data-remove]');
         const rl = e.target.closest('[data-role]');
+        const ip = e.target.closest('[data-imp]');
         if (ok) {
           await sb.from('members').update({ status: 'active' }).eq('id', ok.dataset.approve);
         } else if (no) {
@@ -3881,6 +4571,9 @@
         } else if (rl) {
           const [id, role] = rl.dataset.role.split('|');
           await sb.from('members').update({ role }).eq('id', id);
+        } else if (ip) {
+          const [id, on] = ip.dataset.imp.split('|');
+          await sb.from('members').update({ can_import: on === 'on' }).eq('id', id);
         } else if (e.target.closest('#code-copy')) {
           try { await navigator.clipboard.writeText(me.school.join_code); flash('코드를 복사했어요'); }
           catch { flash('복사하지 못했어요', 'warn'); }
@@ -3895,10 +4588,12 @@
         drawTeam();
       });
 
-      view.refresh = () => { update(); drawSigns(); drawTeam(); };
+      view.refresh = () => { update(); drawSigns(); drawTeam(); drawWipe(); if (!spotBox.hidden) drawSpots(); };
       update();
       drawSigns();
       drawTeam();
+      drawWipe();
+      drawSpots();
     }
 
     /* ════════ 등록 (→ src/pages/add.js) ════════ */
