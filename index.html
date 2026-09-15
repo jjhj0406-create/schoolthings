@@ -60,17 +60,20 @@
     .brand__name { font-size: 16px; font-weight: 800; line-height: 1.25; letter-spacing: -0.03em; }
     .rail__nav { display: flex; flex-direction: column; gap: 4px; }
     .rail__item--admin {
-      background: rgba(255, 201, 60, .13);
+      background: rgba(255, 255, 255, .11);
       color: #fff; font-weight: 700;
-      margin-bottom: 10px; position: relative;
+      margin-bottom: 12px; position: relative;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1);
     }
     .rail__item--admin::after {
-      content: ""; position: absolute; left: 12px; right: 12px; bottom: -6px;
+      content: ""; position: absolute; left: 12px; right: 12px; bottom: -7px;
       height: 1px; background: rgba(255, 255, 255, .12);
     }
     .rail__item--admin .icon { color: var(--marker); }
-    .rail__item--admin:hover { background: rgba(255, 201, 60, .22); }
-    .rail__item--admin[aria-current="page"] { background: var(--marker); color: var(--navy); }
+    .rail__item--admin:hover { background: rgba(255, 255, 255, .18); }
+    .rail__item--admin[aria-current="page"] {
+      background: var(--marker); color: var(--navy); box-shadow: none;
+    }
     .rail__item--admin[aria-current="page"] .icon { color: var(--navy); }
     .rail__item {
       display: flex; align-items: center; gap: 12px;
@@ -727,6 +730,30 @@
     .chosen__left { grid-column: 1; font-size: 13px; font-weight: 700; color: var(--board); margin-top: 2px; }
     .chosen__change { align-self: start; font-size: 13px; font-weight: 700; color: var(--ink-2); padding: 6px 10px; border-radius: 8px; }
     .chosen__change:hover { background: #e4e8f0; color: var(--ink); }
+
+    .whotabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; border-radius: 13px; background: var(--field); }
+    .whotab {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      height: 42px; border-radius: 10px;
+      font-size: 15px; font-weight: 700; color: var(--ink-2);
+      transition: background-color 120ms, color 120ms, box-shadow 120ms;
+    }
+    .whotab .icon { width: 18px; height: 18px; }
+    .whotab:hover { color: var(--ink); }
+    .whotab[aria-pressed="true"] {
+      background: #fff; color: var(--navy);
+      box-shadow: 0 1px 2px rgba(23, 32, 74, .1), 0 4px 12px -6px rgba(23, 32, 74, .25);
+    }
+    .whobox { margin-top: 10px; }
+    .whobox[hidden] { display: none; }
+    .whoclass { display: grid; grid-template-columns: 1fr 1fr 1.6fr; gap: 8px; }
+    .whonum { position: relative; }
+    .whonum .input { width: 100%; padding-right: 44px; text-align: center; -moz-appearance: textfield; }
+    .whonum .input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .whonum__unit {
+      position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+      font-size: 14px; font-weight: 600; color: var(--ink-3); pointer-events: none;
+    }
 
     .whens { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
     .when { height: 36px; padding: 0 12px; border-radius: 10px; background: var(--field); font-size: 14px; font-weight: 600; color: var(--ink-2); }
@@ -1509,12 +1536,13 @@
     const fromRowLoan = (r) => ({
       id: r.id, itemId: r.item_id, itemName: r.item_name, path: r.path, qty: r.qty, who: r.who,
       dueAt: r.due_at, period: r.period, periodNote: r.period_note, memo: r.memo,
+      ...(r.who_type ? { whoType: r.who_type } : {}),
       ...(r.sign ? { sign: r.sign } : {}),
       outAt: r.out_at, returnedAt: r.returned_at,
     });
     const toRowLoan = (l) => ({
       id: l.id, school_id: me.schoolId, item_id: l.itemId, item_name: l.itemName, path: l.path || '',
-      qty: l.qty, who: l.who, due_at: l.dueAt || null, period: l.period || '',
+      qty: l.qty, who: l.who, who_type: l.whoType || 'staff', due_at: l.dueAt || null, period: l.period || '',
       period_note: l.periodNote || '', memo: l.memo || '', sign: l.sign || null,
       out_at: l.outAt, returned_at: l.returnedAt,
     });
@@ -1923,6 +1951,7 @@
       caret: 'M6 9l6 6 6-6',
       lock: 'M7 10.5V8a5 5 0 0110 0v2.5 M5.5 10.5h13v9h-13z M12 14v2.5',
       upload: 'M12 16V5 M8 8.5l4-4 4 4 M5 19.5h14',
+      student: 'M12 4.5L21 9l-9 4.5L3 9z M7 11v4.5c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5V11',
       manager: 'M12 12.5a4 4 0 100-8 4 4 0 000 8z M4.5 20.5a7.5 7.5 0 0115 0',
       edit: 'M4 20h4L18.5 9.5l-4-4L4 16z M14 6l4 4',
       trash: 'M5 7h14 M9.5 7V4.5h5V7 M7 7l1 12.5h8L17 7 M10.5 10.5v6 M13.5 10.5v6',
@@ -2529,7 +2558,7 @@
         it.asset ? '<span class="tag tag--asset">비품</span>' : '',
         it.disused ? '<span class="tag tag--no">불용</span>' : '',
         it.repair ? '<span class="tag tag--fix">수리 필요</span>' : '',
-        it.loanable ? '' : '<span class="tag tag--no">대여 안 함</span>',
+        it.loanable ? '' : '<span class="tag tag--no">대여 불가</span>',
         r.why && r.why !== FIELD_WHY.memo ? `<span class="hit__why">${esc(r.why)}</span>` : '',
       ].filter(Boolean).join('');
       return `
@@ -2828,7 +2857,6 @@
           <section class="card bld" aria-labelledby="bld-title">
             <div class="card__head">
               <h2 class="card__title" id="bld-title">건물과 층</h2>
-              <span class="card__meta">아래가 낮은 층이에요</span>
             </div>
             <div class="bld__tabs" role="group" aria-label="건물 고르기">
               ${buildings.map((b) => `
@@ -2926,7 +2954,7 @@
                           ${it.category ? `<span class="tag">${esc(it.category)}</span>` : ''}
                           ${it.asset ? '<span class="tag tag--asset">비품</span>' : ''}
                           ${it.repair ? '<span class="tag tag--fix">수리 필요</span>' : ''}
-                          ${it.loanable ? '' : '<span class="tag tag--no">대여 안 함</span>'}
+                          ${it.loanable ? '' : '<span class="tag tag--no">대여 불가</span>'}
                           ${rowActions(it.id)}
                         </p>
                       </div>`).join('')}
@@ -3128,7 +3156,19 @@
 
     /* ── 빌리기 ── */
     let lend = null;
-    const emptyLend = () => ({ itemId: '', qty: 1, who: '', dueAt: plusDays(7), period: '', periodNote: '', memo: '', q: '', cat: '' });
+    const emptyLend = () => ({
+      itemId: '', qty: 1, dueAt: plusDays(7), period: '', periodNote: '', memo: '', q: '', cat: '',
+      whoType: 'staff', staffName: '', grade: '', classNo: '', studentName: '',
+    });
+
+    // 빌리는 분을 한 줄로 만든다. 학생은 학년·반까지 붙여 동명이인을 가린다.
+    function whoText(d) {
+      if (d.whoType === 'student') {
+        const bits = [d.grade && `${d.grade}학년`, d.classNo && `${d.classNo}반`, d.studentName].filter(Boolean);
+        return bits.join(' ');
+      }
+      return d.staffName;
+    }
     const PERIODS = ['1', '2', '3', '4', '5', '6', '7', '8'];
     const WHENS = [{ d: 0, label: '오늘' }, { d: 1, label: '내일' }, { d: 3, label: '3일 뒤' }, { d: 7, label: '일주일 뒤' }];
 
@@ -3183,12 +3223,33 @@
           <h2 class="sheet__title" id="lend-who">누가, 언제까지</h2>
           <p class="sheet__desc">반납일이 지나면 대여 현황에서 빨갛게 보여요. <span class="req">*</span> 표시는 꼭 적어야 해요.</p>
 
-          <div class="field">
-            <label class="field__label" for="l-who">빌리는 분<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
-            <input class="input" id="l-who" name="who" form="lend-form" list="l-who-list" placeholder="예: 2학년 3반 김지현" autocomplete="off" value="${esc(d.who)}" aria-describedby="e-who">
-            <datalist id="l-who-list">${[...new Set((state.loans || []).map((l) => l.who))].map((w) => `<option value="${esc(w)}"></option>`).join('')}</datalist>
+          <fieldset class="field">
+            <legend class="field__label">빌리는 분<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></legend>
+            <div class="whotabs" role="group" aria-label="누가 빌리나요">
+              <button class="whotab" type="button" data-whotype="staff" aria-pressed="${d.whoType !== 'student'}">${icon(ICONS.manager)}교직원</button>
+              <button class="whotab" type="button" data-whotype="student" aria-pressed="${d.whoType === 'student'}">${icon(ICONS.student)}학생</button>
+            </div>
+
+            <div class="whobox" ${d.whoType === 'student' ? 'hidden' : ''} id="who-staff">
+              <input class="input" id="l-staff" name="staffName" form="lend-form" list="l-staff-list" placeholder="예: 김하늘 선생님" autocomplete="off" value="${esc(d.staffName)}" aria-label="교직원 이름">
+              <datalist id="l-staff-list">${[...new Set((state.loans || []).filter((l) => l.whoType !== 'student').map((l) => l.who))].map((w) => `<option value="${esc(w)}"></option>`).join('')}</datalist>
+            </div>
+
+            <div class="whobox" ${d.whoType === 'student' ? '' : 'hidden'} id="who-student">
+              <div class="whoclass">
+                <span class="whonum">
+                  <input class="input num" id="l-grade" name="grade" form="lend-form" type="number" inputmode="numeric" min="1" max="9" placeholder="0" value="${esc(d.grade)}" aria-label="학년">
+                  <span class="whonum__unit">학년</span>
+                </span>
+                <span class="whonum">
+                  <input class="input num" id="l-class" name="classNo" form="lend-form" type="number" inputmode="numeric" min="1" max="99" placeholder="0" value="${esc(d.classNo)}" aria-label="반">
+                  <span class="whonum__unit">반</span>
+                </span>
+                <input class="input" id="l-sname" name="studentName" form="lend-form" placeholder="이름" autocomplete="off" value="${esc(d.studentName)}" aria-label="학생 이름">
+              </div>
+            </div>
             <p class="field__error" id="e-who"></p>
-          </div>
+          </fieldset>
 
           <div class="field">
             <label class="field__label" for="l-due">반납 예정일<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
@@ -3287,7 +3348,10 @@
         return {
           ...lend,
           qty: Math.min(Math.max(1, parseInt(fd.get('qty'), 10) || 1), Math.max(1, max)),
-          who: (fd.get('who') || '').trim(),
+          staffName: (fd.get('staffName') || '').trim(),
+          grade: (fd.get('grade') || '').trim(),
+          classNo: (fd.get('classNo') || '').trim(),
+          studentName: (fd.get('studentName') || '').trim(),
           dueAt: fd.get('dueAt') || '',
           period: fd.get('period') || '',
           periodNote: (fd.get('periodNote') || '').trim(),
@@ -3304,7 +3368,7 @@
           <p class="preview__name ${chosen ? '' : 'is-empty'}">${esc(chosen ? chosen.name : '빌릴 물품')}</p>
           <p class="preview__qty num">${n(d.qty)}개</p>
           <div class="preview__line">
-            ${line('빌리는 분', d.who)}
+            ${line('빌리는 분', whoText(d))}
             ${line('반납일', d.dueAt ? `${dateShort(d.dueAt)}${periodText(d) ? ` ${periodText(d)}` : ''} (${daysBetween(today(), d.dueAt)}일 뒤)` : '')}
             ${line('있던 곳', chosen ? pathOf(chosen).join(' › ') : '')}
           </div>
@@ -3312,8 +3376,8 @@
           <p class="preview__sign">빌리기를 누르면 서명 화면이 열려요.</p>`;
 
         view.querySelector('#lb-name').textContent = chosen ? `${chosen.name} ${d.qty}개` : '빌릴 물품을 고르세요';
-        view.querySelector('#lb-due').textContent = d.who
-          ? `${d.who} · ${d.dueAt ? `${dateShort(d.dueAt)}${periodText(d) ? ` ${periodText(d)}` : ''}까지` : '반납일을 정하세요'}`
+        view.querySelector('#lb-due').textContent = whoText(d)
+          ? `${whoText(d)} · ${d.dueAt ? `${dateShort(d.dueAt)}${periodText(d) ? ` ${periodText(d)}` : ''}까지` : '반납일을 정하세요'}`
           : '빌리는 분을 적어 주세요';
       }
 
@@ -3322,7 +3386,11 @@
         const out = [];
         if (!chosen) out.push(['item', '빌릴 물품을 골라 주세요']);
         else if (lend.qty > leftOf(chosen)) out.push(['qty', `지금은 ${leftOf(chosen)}개까지 빌릴 수 있어요`]);
-        if (!lend.who) out.push(['who', '빌리는 분을 적어 주세요']);
+        if (lend.whoType === 'student') {
+          if (!lend.grade || !lend.classNo || !lend.studentName) out.push(['who', '학년, 반, 이름을 모두 적어 주세요']);
+        } else if (!lend.staffName) {
+          out.push(['who', '빌리는 분 이름을 적어 주세요']);
+        }
         if (!lend.dueAt) out.push(['due', '반납 예정일을 정해 주세요']);
         else if (daysBetween(today(), lend.dueAt) < 0) out.push(['due', '오늘보다 이전 날짜는 고를 수 없어요']);
         return out;
@@ -3375,6 +3443,18 @@
         }
         const when = e.target.closest('[data-when]');
         if (when) { view.querySelector('#l-due').value = plusDays(Number(when.dataset.when)); sync(); return; }
+        const wt = e.target.closest('[data-whotype]');
+        if (wt) {
+          lend = { ...readLend(), whoType: wt.dataset.whotype };
+          for (const b of view.querySelectorAll('[data-whotype]')) {
+            b.setAttribute('aria-pressed', String(b.dataset.whotype === lend.whoType));
+          }
+          view.querySelector('#who-staff').hidden = lend.whoType === 'student';
+          view.querySelector('#who-student').hidden = lend.whoType !== 'student';
+          view.querySelector(lend.whoType === 'student' ? '#l-grade' : '#l-staff').focus();
+          sync();
+          return;
+        }
         const cat = e.target.closest('[data-cat]');
         if (cat) { lend = { ...readLend(), cat: cat.dataset.cat }; renderCats(); renderResults(); return; }
 
@@ -3387,7 +3467,8 @@
         const list = problems();
         showProblems(list);
         if (list.length) {
-          const first = { item: '#l-q', qty: '#l-qty', who: '#l-who', due: '#l-due' }[list[0][0]];
+          const first = { item: '#l-q', qty: '#l-qty',
+            who: lend.whoType === 'student' ? '#l-grade' : '#l-staff', due: '#l-due' }[list[0][0]];
           view.querySelector(first)?.focus();
           return;
         }
@@ -3397,7 +3478,7 @@
           const loan = {
             id: 'lon_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
             itemId: item.id, itemName: item.name, path: pathOf(item).join(' › '),
-            qty: lend.qty, who: lend.who, dueAt: lend.dueAt,
+            qty: lend.qty, who: whoText(lend), whoType: lend.whoType, dueAt: lend.dueAt,
             period: lend.period, periodNote: lend.period === 'etc' ? lend.periodNote : '',
             memo: lend.memo, sign,
             outAt: new Date().toISOString(), returnedAt: null,
@@ -3423,7 +3504,7 @@
         back.className = 'signback';
         back.innerHTML = `
           <div class="signbox" role="dialog" aria-modal="true" aria-labelledby="sign-title">
-            <p class="signbox__title" id="sign-title">${esc(lend.who)} 님, 여기에 서명해 주세요</p>
+            <p class="signbox__title" id="sign-title">${esc(whoText(lend))} 님, 여기에 서명해 주세요</p>
             <p class="signbox__desc">${esc(chosen.name)} ${n(lend.qty)}개 · ${esc(due)} · ${esc(pathOf(chosen).join(' › '))}</p>
             <div class="signpad" id="sign-pad">
               <canvas></canvas>
@@ -4068,7 +4149,7 @@
                   <span class="lname__where">${esc(pathOf(it).join(' › '))}</span>
                   ${assetName(it) !== it.name || !it.loanable ? `<span class="lname__tags">
                     ${assetName(it) !== it.name ? `<span class="tag">앱에선 ${esc(it.name)}</span>` : ''}
-                    ${it.loanable ? '' : '<span class="tag tag--no">대여 안 함</span>'}
+                    ${it.loanable ? '' : '<span class="tag tag--no">대여 불가</span>'}
                   </span>` : ''}
                   <span class="lname__acts">${rowActions(it.id)}</span>
                 </th>
@@ -4907,7 +4988,7 @@
       view.querySelector('#preview').innerHTML = `
         <p class="preview__label">이렇게 안내돼요</p>
         <p class="preview__name ${d.name ? '' : 'is-empty'}">${esc(d.name || '물품 이름')}</p>
-        <p class="preview__qty num">${n(d.qty || 1)}개${d.category ? ` · ${esc(d.category)}` : ''}${d.asset ? ' · 비품' : ''}${d.loanable ? '' : ' · 대여 안 함'}</p>
+        <p class="preview__qty num">${n(d.qty || 1)}개${d.category ? ` · ${esc(d.category)}` : ''}${d.asset ? ' · 비품' : ''}${d.loanable ? '' : ' · 대여 불가'}</p>
         <ol class="path">
           ${steps.map((s, i) => `
             <li class="path__step ${s.value ? 'is-set' : ''} ${i === lastSet ? 'is-last' : ''}">
