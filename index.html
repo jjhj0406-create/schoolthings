@@ -59,6 +59,19 @@
     .brand__mark .icon { stroke-width: 2.2; }
     .brand__name { font-size: 16px; font-weight: 800; line-height: 1.25; letter-spacing: -0.03em; }
     .rail__nav { display: flex; flex-direction: column; gap: 4px; }
+    .rail__item--admin {
+      background: rgba(255, 201, 60, .13);
+      color: #fff; font-weight: 700;
+      margin-bottom: 10px; position: relative;
+    }
+    .rail__item--admin::after {
+      content: ""; position: absolute; left: 12px; right: 12px; bottom: -6px;
+      height: 1px; background: rgba(255, 255, 255, .12);
+    }
+    .rail__item--admin .icon { color: var(--marker); }
+    .rail__item--admin:hover { background: rgba(255, 201, 60, .22); }
+    .rail__item--admin[aria-current="page"] { background: var(--marker); color: var(--navy); }
+    .rail__item--admin[aria-current="page"] .icon { color: var(--navy); }
     .rail__item {
       display: flex; align-items: center; gap: 12px;
       height: 46px; padding: 0 12px; border-radius: 12px;
@@ -212,8 +225,10 @@
 
     .field { display: grid; gap: 7px; border: 0; min-width: 0; }
     .field + .field { margin-top: 16px; }
-    .field__label { display: flex; align-items: baseline; justify-content: space-between; font-size: 14px; font-weight: 700; }
+    .field__label { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: 700; }
+    .field__label .req { margin-right: auto; }
     .field__label small { font-size: 12px; font-weight: 500; color: var(--ink-3); }
+    .req { color: var(--late); font-weight: 800; margin-left: 3px; }
     legend.field__label { padding: 0; margin-bottom: 7px; width: 100%; }
     .field__error { font-size: 13px; font-weight: 600; color: var(--late); }
     .field__error:empty { display: none; }
@@ -382,6 +397,7 @@
     }
     .tag { height: 24px; padding: 0 9px; border-radius: 7px; background: #e8ebf3; font-size: 12px; font-weight: 700; color: var(--ink-2); display: inline-flex; align-items: center; }
     .tag--no { background: #fdf0f0; color: var(--late); }
+    .tag--fix { background: #fff3e0; color: #b8860b; }
     /* 비품 대장 칸 */
     .assetbox {
       margin-top: 12px; padding: 16px; border-radius: 14px;
@@ -681,6 +697,12 @@
       .rrow__acts { grid-column: 2; grid-row: 1 / -1; margin: 0 -9px 0 0; flex-wrap: nowrap; }
     }
     .back-btn { height: 36px; padding: 0 14px; border-radius: 10px; background: var(--board); color: #fff; font-size: 14px; font-weight: 700; }
+    .askfix { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .askfix__q { font-size: 14px; font-weight: 700; color: var(--ink-2); }
+    .askfix__yes { background: #fdeaea; color: var(--late); }
+    .askfix__yes:hover { background: #fbdcdc; }
+    .askfix__cancel { font-size: 13px; font-weight: 600; color: var(--ink-3); padding: 6px 8px; border-radius: 8px; }
+    .askfix__cancel:hover { color: var(--ink); background: var(--field); }
     .back-btn:hover { background: var(--board-2); }
     .back-btn:active { transform: scale(.97); }
 
@@ -716,9 +738,14 @@
     .preview__v { font-weight: 700; overflow-wrap: anywhere; }
     .preview__v.is-empty { color: rgba(255, 255, 255, .35); font-weight: 500; }
     /* ───────── 관리 담당 ───────── */
-    .todo { grid-column: span 8; min-height: 0; }
-    .spot { grid-column: 1 / -1; }
-    .todo__body { flex: 1; min-height: 0; overflow: auto; display: grid; gap: 20px; align-content: start; margin: 0 -4px; padding: 0 4px; }
+    .todo { grid-column: span 6; min-height: 0; }
+    .spot { grid-column: span 6; min-height: 0; }
+    .is-manager .side {
+      grid-column: 1 / -1;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 16px; align-items: start; overflow: visible;
+    }
+    .todo__body { flex: 1; min-height: 0; max-height: 560px; overflow: auto; display: grid; gap: 20px; align-content: start; margin: 0 -4px; padding: 0 4px; }
     .group__head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
     .group__dot { width: 9px; height: 9px; border-radius: 3px; flex: none; align-self: center; }
     .group__name { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
@@ -731,7 +758,11 @@
     .todorow__name { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
     .todorow__sub { grid-column: 1; font-size: 13px; color: var(--ink-2); margin-top: 2px; }
     .todorow__act { grid-column: 2; grid-row: 1 / -1; display: flex; align-items: center; gap: 6px; }
-    .mini { height: 34px; padding: 0 13px; border-radius: 9px; font-size: 14px; font-weight: 700; white-space: nowrap; }
+    .mini {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 34px; padding: 0 14px; border-radius: 9px;
+      font-size: 14px; font-weight: 700; white-space: nowrap; text-align: center;
+    }
     .mini--go { background: var(--navy); color: #fff; }
     .mini--go:hover { background: var(--navy-2); }
     .mini--back { background: var(--board); color: #fff; }
@@ -1046,7 +1077,7 @@
     .spotpick { display: grid; gap: 10px; padding: 14px; border-radius: 14px; background: var(--field); }
     .spotpick__row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .spotpick .input { height: 44px; font-size: 15px; background: #fff; }
-    .spotlist { list-style: none; display: grid; gap: 4px; margin-top: 12px; max-height: 300px; overflow: auto; }
+    .spotlist { list-style: none; display: grid; gap: 4px; margin-top: 12px; max-height: 360px; overflow: auto; }
     .spotrow { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 11px; }
     .spotrow:hover { background: var(--field); }
     .spotrow input { width: 18px; height: 18px; accent-color: var(--navy); }
@@ -1465,13 +1496,14 @@
       memo: r.memo, ...(r.photo ? { photo: r.photo } : {}),
       asset: r.asset, ...(r.asset_info ? { assetInfo: r.asset_info } : {}),
       ...(r.disused ? { disused: true } : {}),
+      ...(r.repair ? { repair: true } : {}),
       createdAt: r.created_at, ...(r.updated_at ? { updatedAt: r.updated_at } : {}),
     });
     const toRowItem = (i) => ({
       id: i.id, school_id: me.schoolId, name: i.name, category: i.category || '', qty: i.qty,
       loanable: !!i.loanable, building: i.building || '', floor: i.floor || '', room: i.room || '',
       storage: i.storage || '', shelf: i.shelf || '', memo: i.memo || '', photo: i.photo || null,
-      asset: !!i.asset, asset_info: i.assetInfo || null, disused: !!i.disused,
+      asset: !!i.asset, asset_info: i.assetInfo || null, disused: !!i.disused, repair: !!i.repair,
       created_at: i.createdAt, updated_at: i.updatedAt || null,
     });
     const fromRowLoan = (r) => ({
@@ -1613,7 +1645,7 @@
           <div class="gform">
             <div class="row">
               <div class="field">
-                <label class="field__label" for="g-me">내 이름</label>
+                <label class="field__label" for="g-me">내 이름<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
                 <input class="input" id="g-me" type="text" placeholder="예: 김하늘" autocomplete="name" value="${esc(myName())}">
               </div>
               <div class="field">
@@ -1639,7 +1671,7 @@
           <p class="gate__desc">학교를 최초로 개설한 선생님이 관리자로 지정됩니다. 동료 선생님들은 초대 코드로 합류를 요청하고, 관리자의 승인 후 최종 가입됩니다.</p>
           <div class="gform">
             <div class="field">
-              <label class="field__label" for="g-name">학교 이름</label>
+              <label class="field__label" for="g-name">학교 이름<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
               <div class="findrow">
                 <input class="input" id="g-name" type="text" placeholder="예: 전주화정초등학교" autocomplete="off" value="${esc(picked ? picked.name : '')}">
                 ${NEIS_KEY ? '<button class="findrow__go" type="button" id="g-find">학교 찾기</button>' : ''}
@@ -1654,7 +1686,7 @@
             </div>
             <div class="row">
               <div class="field">
-                <label class="field__label" for="g-teacher">관리자 이름</label>
+                <label class="field__label" for="g-teacher">관리자 이름<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
                 <input class="input" id="g-teacher" type="text" placeholder="예: 김하늘" autocomplete="off" value="${esc(myName())}">
               </div>
               <div class="field">
@@ -1897,13 +1929,13 @@
       camera: 'M4 8.5A1.5 1.5 0 015.5 7h2l1.5-2h6l1.5 2h2A1.5 1.5 0 0120 8.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 014 17.5z M15.5 12.5a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0z',
     };
     const MENU = [
+      { key: 'manager', label: '관리 담당 선생님', href: '#/manager', tab: false, admin: true },
       { key: 'home',  label: '홈',         href: '#/' },
       { key: 'find',  label: '찾기',       href: '#/search' },
       { key: 'place', label: '장소별 보기', href: '#/places', tab: false },
       { key: 'add',   label: '등록',        href: '#/add' },
       { key: 'rent',  label: '대여', href: '#/rent' },
       { key: 'ledger', label: '비품 대장', href: '#/ledger', tab: false },
-      { key: 'manager', label: '관리 담당 선생님', href: '#/manager', tab: false, admin: true },
     ];
 
     /* ════════ 한글 검색 (→ src/lib/search.js) ════════ */
@@ -2131,8 +2163,10 @@
 
     /* ════════ 공통 조각 (→ src/components) ════════ */
     function renderNav(active) {
-      const item = (m, cls, withLabelSpan) => {
+      const item = (m, baseCls, withLabelSpan) => {
+        let cls = baseCls;
         const current = m.key === active ? 'aria-current="page"' : '';
+        if (m.admin) cls += ' rail__item--admin';
         const label = withLabelSpan ? `<span class="rail__label">${esc(m.label)}</span>` : esc(m.label);
         return m.href
           ? `<a class="${cls}" href="${m.href}" ${current}>${icon(ICONS[m.key])}${label}</a>`
@@ -2206,7 +2240,7 @@
       const out = loans.filter((l) => !l.returnedAt);
       const total = items.reduce((a, i) => a + i.qty, 0);
       const onLoan = out.reduce((a, l) => a + (l.qty || 1), 0);
-      const repair = 0;
+      const repair = items.filter((i) => i.repair).reduce((a, i) => a + i.qty, 0);
       const stock = [
         { label: '사용 가능', count: total - onLoan - repair, color: 'var(--board)' },
         { label: '대여 중',   count: onLoan, color: 'var(--marker)' },
@@ -2494,6 +2528,7 @@
         it.category ? `<span class="tag">${highlight(it.category, m.category)}</span>` : '',
         it.asset ? '<span class="tag tag--asset">비품</span>' : '',
         it.disused ? '<span class="tag tag--no">불용</span>' : '',
+        it.repair ? '<span class="tag tag--fix">수리 필요</span>' : '',
         it.loanable ? '' : '<span class="tag tag--no">대여 안 함</span>',
         r.why && r.why !== FIELD_WHY.memo ? `<span class="hit__why">${esc(r.why)}</span>` : '',
       ].filter(Boolean).join('');
@@ -2890,6 +2925,7 @@
                         <p class="thing__meta">
                           ${it.category ? `<span class="tag">${esc(it.category)}</span>` : ''}
                           ${it.asset ? '<span class="tag tag--asset">비품</span>' : ''}
+                          ${it.repair ? '<span class="tag tag--fix">수리 필요</span>' : ''}
                           ${it.loanable ? '' : '<span class="tag tag--no">대여 안 함</span>'}
                           ${rowActions(it.id)}
                         </p>
@@ -2968,6 +3004,22 @@
     const PILL = { late: 'pill--late', today: 'pill--today', soon: '', back: '' };
     const ORDER = { late: 0, today: 1, soon: 2, back: 3 };
 
+    // 반납을 누르면 바로 처리하지 않고 수리가 필요한지 한 번 묻는다
+    let askFix = null;   // 물어보는 중인 대여 id
+
+    function returnControl(l, small = false) {
+      const cls = small ? 'mini' : 'back-btn';
+      if (askFix !== l.id) {
+        return `<button class="${cls} ${small ? 'mini--back' : ''}" type="button" data-return="${l.id}">반납하기</button>`;
+      }
+      return `<span class="askfix">
+        <span class="askfix__q">혹시 수리가 필요한가요?</span>
+        <button class="mini askfix__yes" type="button" data-fix="${l.id}">예</button>
+        <button class="mini mini--back" type="button" data-nofix="${l.id}">아니요</button>
+        <button class="askfix__cancel" type="button" data-fixcancel>그만두기</button>
+      </span>`;
+    }
+
     const sortLoans = (list) => list.slice().sort((a, b) => {
       const x = dueState(a), y = dueState(b);
       return ORDER[x.key] - ORDER[y.key] || (a.dueAt || '').localeCompare(b.dueAt || '') || a.outAt.localeCompare(b.outAt);
@@ -2991,8 +3043,8 @@
                    <button class="confirm__yes" type="button" data-loan-del-yes="${loan.id}">지우기</button>
                    <button class="confirm__no" type="button" data-del-cancel>그만두기</button>
                  </span>`
-              : `<button class="act act--del" type="button" data-loan-del="${loan.id}" aria-label="기록 지우기">${icon(ICONS.trash)}<span class="act__label">기록 지우기</span></button>
-                 ${loan.returnedAt ? '' : `<button class="back-btn" type="button" data-return="${loan.id}">반납하기</button>`}`}
+              : `${askFix === loan.id ? '' : `<button class="act act--del" type="button" data-loan-del="${loan.id}" aria-label="기록 지우기">${icon(ICONS.trash)}<span class="act__label">기록 지우기</span></button>`}
+                 ${loan.returnedAt ? '' : returnControl(loan)}`}
           </div>
         </li>`;
     }
@@ -3107,7 +3159,7 @@
             </div>
 
             <div class="field" style="margin-top:16px">
-              <label class="field__label" for="l-qty">빌리는 수량</label>
+              <label class="field__label" for="l-qty">빌리는 수량<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
               <div class="stepper">
                 <button type="button" data-lstep="-1" aria-label="하나 빼기" ${d.qty <= 1 ? 'disabled' : ''}>${icon(ICONS.minus)}</button>
                 <input id="l-qty" name="qty" type="number" inputmode="numeric" min="1" max="${left}" value="${d.qty}" class="num">
@@ -3129,17 +3181,17 @@
 
         <section class="sheet card" aria-labelledby="lend-who">
           <h2 class="sheet__title" id="lend-who">누가, 언제까지</h2>
-          <p class="sheet__desc">반납일이 지나면 대여 현황에서 빨갛게 보여요.</p>
+          <p class="sheet__desc">반납일이 지나면 대여 현황에서 빨갛게 보여요. <span class="req">*</span> 표시는 꼭 적어야 해요.</p>
 
           <div class="field">
-            <label class="field__label" for="l-who">빌리는 분</label>
+            <label class="field__label" for="l-who">빌리는 분<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
             <input class="input" id="l-who" name="who" form="lend-form" list="l-who-list" placeholder="예: 2학년 3반 김지현" autocomplete="off" value="${esc(d.who)}" aria-describedby="e-who">
             <datalist id="l-who-list">${[...new Set((state.loans || []).map((l) => l.who))].map((w) => `<option value="${esc(w)}"></option>`).join('')}</datalist>
             <p class="field__error" id="e-who"></p>
           </div>
 
           <div class="field">
-            <label class="field__label" for="l-due">반납 예정일</label>
+            <label class="field__label" for="l-due">반납 예정일<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
             <div class="whens" id="l-whens">
               ${WHENS.map((w) => `<button class="when" type="button" data-when="${w.d}" aria-pressed="${d.dueAt === plusDays(w.d)}">${esc(w.label)}</button>`).join('')}
             </div>
@@ -4141,14 +4193,25 @@
         .sort((a, b) => a.on.localeCompare(b.on))
         .slice(0, 30);
 
+      const broken = state.items.filter((i) => i.repair).slice(0, 30);
+
       return [
+        {
+          key: 'fix', name: '수리가 필요해요', color: '#b8860b', rows: broken, href: (it) => editHref(it, '#/manager'),
+          why: '반납할 때 수리가 필요하다고 표시된 물품이에요.',
+          row: (it) => ({
+            name: `${it.name}${it.qty > 1 ? ` ${n(it.qty)}개` : ''}`,
+            sub: pathOf(it).join(' › ') || '장소 미지정',
+            acts: `<button class="mini mini--quiet" type="button" data-fixed="${it.id}">고쳤어요</button>`,
+          }),
+        },
         {
           key: 'late', name: '반납이 늦었어요', color: 'var(--late)', rows: overdue, href: () => '#/rent',
           why: '빌려 간 분에게 한 번 알려 주세요.',
           row: (l) => ({
             late: true, name: `${l.itemName}${l.qty > 1 ? ` ${n(l.qty)}개` : ''}`,
             sub: `${l.who} · ${dueState(l).label}`,
-            acts: `<button class="mini mini--back" type="button" data-return="${l.id}">반납하기</button>`,
+            acts: returnControl(l, true),
           }),
         },
         {
@@ -4157,7 +4220,7 @@
           row: (l) => ({
             name: `${l.itemName}${l.qty > 1 ? ` ${n(l.qty)}개` : ''}`,
             sub: `${l.who} · ${l.path}`,
-            acts: `<button class="mini mini--back" type="button" data-return="${l.id}">반납하기</button>`,
+            acts: returnControl(l, true),
           }),
         },
         {
@@ -4208,13 +4271,22 @@
           <div class="todo__body" id="todo-body" aria-live="polite"></div>
         </section>
 
+        <section class="card spot" aria-labelledby="spot-title">
+          <button class="fold" type="button" id="spot-fold" aria-expanded="true" aria-controls="spot-box">
+            ${icon(ICONS.caret, 'icon fold__caret')}
+            <span id="spot-title">장소 미지정 비품</span>
+            <span class="fold__count num" id="spot-count"></span>
+          </button>
+          <div class="spotbox" id="spot-box"></div>
+        </section>
+
         <aside class="side">
           <section class="card who" aria-labelledby="who-title">
             <div class="card__head"><h2 class="card__title" id="who-title">담당 정보</h2></div>
             <p class="sheet__desc">왼쪽 아래와 홈 제목에 이대로 보여요.</p>
             <form id="who-form">
               <div class="field">
-                <label class="field__label" for="w-name">학교 이름</label>
+                <label class="field__label" for="w-name">학교 이름<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
                 <input class="input" id="w-name" name="name" placeholder="예: 전주화정초등학교" autocomplete="off" value="${esc(s.name)}">
               </div>
               <div class="field">
@@ -4281,14 +4353,7 @@
           </section>
         </aside>
 
-        <section class="card spot" aria-labelledby="spot-title">
-          <button class="fold" type="button" id="spot-fold" aria-expanded="false" aria-controls="spot-box">
-            ${icon(ICONS.caret, 'icon fold__caret')}
-            <span id="spot-title">장소 미지정 비품</span>
-            <span class="fold__count num" id="spot-count"></span>
-          </button>
-          <div class="spotbox" id="spot-box" hidden></div>
-        </section>`;
+`;
     }
 
     function mountManager(view) {
@@ -4629,7 +4694,7 @@
         drawTeam();
       });
 
-      view.refresh = () => { update(); drawSigns(); drawTeam(); drawWipe(); if (!spotBox.hidden) drawSpots(); };
+      view.refresh = () => { update(); drawSigns(); drawTeam(); drawWipe(); drawSpots(); };
       update();
       drawSigns();
       drawTeam();
@@ -4675,10 +4740,10 @@
 
         <form class="sheet card" id="add-form" novalidate aria-labelledby="what-title">
           <h2 class="sheet__title" id="what-title">무엇인가요</h2>
-          <p class="sheet__desc">선생님들이 부르는 이름 그대로 적어 주세요.</p>
+          <p class="sheet__desc">선생님들이 부르는 이름 그대로 적어 주세요. <span class="req">*</span> 표시는 꼭 적어야 해요.</p>
 
           <div class="field">
-            <label class="field__label" for="f-name">물품 이름</label>
+            <label class="field__label" for="f-name">물품 이름<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
             <input class="input" id="f-name" name="name" placeholder="예: 휴대용 빔프로젝터" autocomplete="off" value="${esc(d.name)}" aria-describedby="e-name">
             <p class="field__error" id="e-name"></p>
           </div>
@@ -4692,7 +4757,7 @@
 
           <div class="row row--qty" style="margin-top:16px">
             <div class="field">
-              <label class="field__label" for="f-qty">수량</label>
+              <label class="field__label" for="f-qty">수량<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
               <div class="stepper">
                 <button type="button" data-step="-1" aria-label="하나 빼기" ${d.qty <= 1 ? 'disabled' : ''}>${icon(ICONS.minus)}</button>
                 <input id="f-qty" name="qty" type="number" inputmode="numeric" min="1" max="9999" value="${d.qty}" class="num">
@@ -4739,14 +4804,14 @@
           <p class="sheet__desc">큰 곳부터 작은 곳 순서로 적어 주세요. 이 순서대로 길을 안내해요.</p>
 
           <div class="field">
-            <label class="field__label" for="f-building">건물</label>
+            <label class="field__label" for="f-building">건물<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
             <input class="input" id="f-building" name="building" form="add-form" list="l-building" placeholder="예: 본관" autocomplete="off" value="${esc(d.building)}" aria-describedby="e-building">
             <datalist id="l-building">${opts(buildings)}</datalist>
             <p class="field__error" id="e-building"></p>
           </div>
 
           <fieldset class="field">
-            <legend class="field__label">층</legend>
+            <legend class="field__label">층<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></legend>
             <div class="floors" id="floors">
               ${FLOORS.map((f) => `<label class="choice"><input type="radio" name="floor" form="add-form" value="${esc(f.value)}" ${d.floor === f.value ? 'checked' : ''} aria-label="${esc(f.value)}"><span>${esc(f.short)}</span></label>`).join('')}
             </div>
@@ -4754,7 +4819,7 @@
           </fieldset>
 
           <div class="field">
-            <label class="field__label" for="f-room">실</label>
+            <label class="field__label" for="f-room">실<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
             <input class="input" id="f-room" name="room" form="add-form" list="l-room" placeholder="예: 과학 준비실" autocomplete="off" value="${esc(d.room)}" aria-describedby="e-room">
             <datalist id="l-room">${opts(uniq('room'))}</datalist>
             <p class="field__error" id="e-room"></p>
@@ -5113,7 +5178,7 @@
     }
 
     window.addEventListener('hashchange', () => {
-      draft = null; lastSaved = ''; pendingDelete = null;
+      draft = null; lastSaved = ''; pendingDelete = null; askFix = null;
       if (!location.hash.startsWith('#/lend')) lend = null;
       render(true);
     });
@@ -5142,13 +5207,39 @@
         return;
       }
 
-      // 반납 처리
+      // 반납: 먼저 수리가 필요한지 묻는다
       const ret = e.target.closest('[data-return]');
-      if (ret) {
-        const id = ret.dataset.return;
+      if (ret) { askFix = ret.dataset.return; refreshView(); return; }
+      if (e.target.closest('[data-fixcancel]')) { askFix = null; refreshView(); return; }
+
+      const fix = e.target.closest('[data-fix]') || e.target.closest('[data-nofix]');
+      if (fix) {
+        const needFix = Boolean(fix.dataset.fix);
+        const id = fix.dataset.fix || fix.dataset.nofix;
         const loan = (state.loans || []).find((l) => l.id === id);
-        commit({ ...state, loans: state.loans.map((l) => (l.id === id ? { ...l, returnedAt: new Date().toISOString() } : l)) });
-        flash(loan ? `${loan.itemName} 반납 처리했어요` : '반납 처리했어요');
+        const next = {
+          ...state,
+          loans: state.loans.map((l) => (l.id === id ? { ...l, returnedAt: new Date().toISOString() } : l)),
+          items: needFix && loan
+            ? state.items.map((it) => (it.id === loan.itemId ? { ...it, repair: true, updatedAt: new Date().toISOString() } : it))
+            : state.items,
+        };
+        commit(next);
+        askFix = null;
+        flash(needFix
+          ? `${loan ? loan.itemName : '물품'} 반납했어요. 수리 필요로 표시했어요`
+          : `${loan ? loan.itemName : '물품'} 반납 처리했어요`);
+        refreshView();
+        return;
+      }
+
+      // 고쳤어요
+      const fixed = e.target.closest('[data-fixed]');
+      if (fixed) {
+        const id = fixed.dataset.fixed;
+        const it = state.items.find((x) => x.id === id);
+        commit({ ...state, items: state.items.map((x) => (x.id === id ? { ...x, repair: false, updatedAt: new Date().toISOString() } : x)) });
+        flash(`${it ? it.name : '물품'} 수리 표시를 풀었어요`);
         refreshView();
         return;
       }
