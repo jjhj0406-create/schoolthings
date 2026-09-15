@@ -521,6 +521,8 @@
     .dept__chip:hover { color: var(--ink); }
     .dept__chip[aria-pressed="true"] { background: var(--navy); color: #fff; }
     .dept__chip b { font-size: 13px; opacity: .6; margin-left: 5px; }
+    .dept__more { background: transparent; color: var(--ink-2); box-shadow: inset 0 0 0 1.5px var(--line); }
+    .dept__more:hover { background: var(--field); }
 
     .lwrap { flex: 1; min-height: 0; overflow: auto; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--line); }
     .ltable { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; font-size: 14px; }
@@ -553,6 +555,8 @@
     .ldim { color: var(--ink-3); }
     .lnote { white-space: normal; min-width: 160px; max-width: 260px; line-height: 1.4; color: var(--ink-2); }
 
+    .lmore { display: flex; justify-content: center; padding-top: 14px; }
+    .lmore:empty { display: none; }
     .lcards { display: none; }
     /* 수정·삭제 단추 */
     .acts { display: inline-flex; align-items: center; gap: 2px; }
@@ -2589,10 +2593,30 @@
           return;
         }
 
-        // 검색어가 없으면 전체를 최근 등록 순으로 보여 준다
-        const matched = q
-          ? searchItems(all, q)
-          : all.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((item) => ({ item, marks: {} }));
+        // 검색어가 없으면 목록을 그리지 않는다. 물품이 많으면 그리는 데만 한참 걸린다.
+        if (!q) {
+          filtersEl.innerHTML = '';
+          title.textContent = '찾기';
+          meta.textContent = `${n(all.length)}가지 등록됨`;
+          const recent = state.recent.slice(0, 6);
+          body.innerHTML = `
+            <div class="nohit">
+              <strong>무엇을 찾으세요?</strong>
+              <span>물품 이름이나 장소를 적어 주세요.<br>초성만 넣어도 찾아요.</span>
+              ${recent.length ? `<div class="nohit__guess">
+                <span class="nohit__guess-label">최근 찾은 말</span>
+                ${recent.map((r) => `<button class="pchip" type="button" data-q="${esc(r)}">${esc(r)}</button>`).join('')}
+              </div>` : ''}
+              <div class="nohit__actions">
+                <a class="btn btn--ghost" href="#/places">장소별로 보기</a>
+                <a class="btn btn--ghost" href="#/ledger">비품 대장 보기</a>
+              </div>
+            </div>`;
+          announce('');
+          return;
+        }
+
+        const matched = searchItems(all, q);
 
         // 분류 칩은 지금 찾은 것 기준으로 센다
         const counts = new Map();
@@ -2607,9 +2631,6 @@
         const shown = matched.filter((r) =>
           (!filter.category || r.item.category === filter.category) &&
           (!filter.loanable || r.item.loanable));
-
-        const recentChips = !q && state.recent.length
-          ? `<div class="results__recent">${state.recent.map((r) => `<button class="pchip" type="button" data-q="${esc(r)}">${esc(r)}</button>`).join('')}</div>` : '';
 
         if (q && !matched.length) {
           title.textContent = '찾은 물품';
@@ -2629,13 +2650,11 @@
           return;
         }
 
-        title.textContent = q ? '찾은 물품' : '전체 물품';
-        const groupCount = groupHits(shown).length;
-        meta.textContent = q
-          ? `${n(shown.length)}개${groupCount < shown.length ? ` · ${n(groupCount)}가지` : ''}`
-          : `${n(shown.length)}개 · 최근 등록 순`;
-        body.innerHTML = recentChips + (shown.length
-          ? `<ul class="hits" id="s-list">${groupHits(shown).slice(0, 80).map(groupHTML).join('')}</ul>`
+        const groups = groupHits(shown);
+        title.textContent = '찾은 물품';
+        meta.textContent = `${n(shown.length)}개${groups.length < shown.length ? ` · ${n(groups.length)}가지` : ''}`;
+        body.innerHTML = (shown.length
+          ? `<ul class="hits" id="s-list">${groups.slice(0, 60).map(groupHTML).join('')}</ul>${groups.length > 60 ? `<p class="imp__more num">그 밖에 ${n(groups.length - 60)}가지 더 있어요. 검색어를 더 적어 주세요.</p>` : ''}`
           : `<div class="nohit"><strong>조건에 맞는 물품이 없어요</strong><span>위에서 고른 조건을 풀어 보세요.</span></div>`);
         announce(q ? `${shown.length}개 찾았어요` : '');
 
@@ -2753,6 +2772,7 @@
     function placesView(params) {
       const items = state.items;
       const buildings = groupPlaces(items);
+      const placed = items.some((i) => i.building && i.room);
       const want = params.get('room');
       const current = want && items.some((i) => roomKey(i) === want) ? want : (buildings[0]?.floorList[0]?.roomList[0]?.key || '');
       const [curB] = current ? current.split('|') : [''];
@@ -2769,7 +2789,7 @@
           </div>
         </header>
 
-        ${items.length ? `
+        ${placed ? `
           <section class="card bld" aria-labelledby="bld-title">
             <div class="card__head">
               <h2 class="card__title" id="bld-title">건물과 층</h2>
@@ -2788,10 +2808,12 @@
         : `
           <section class="card" style="grid-column:1/-1">
             <div class="nohit">
-              <strong>아직 등록된 장소가 없어요</strong>
-              <span>물품을 등록하면 건물과 층, 실이 여기에 자동으로 쌓여요.</span>
+              <strong>${items.length ? '보관 자리가 정해진 물품이 없어요' : '아직 등록된 장소가 없어요'}</strong>
+              <span>${items.length
+                ? '관리 담당 화면의 ‘장소 미지정 비품’에서<br>건물과 층, 실을 정하면 여기에 쌓여요.'
+                : '물품을 등록하면 건물과 층, 실이 여기에 자동으로 쌓여요.'}</span>
               <div class="nohit__actions">
-                <a class="btn btn--solid" href="#/add">물품 등록</a>
+                ${items.length ? '<a class="btn btn--solid" href="#/manager">장소 정하러 가기</a>' : '<a class="btn btn--solid" href="#/add">물품 등록</a>'}
               </div>
             </div>
           </section>`}`;
@@ -2799,7 +2821,7 @@
 
     function mountPlaces(view, params) {
       const items = state.items;
-      if (!items.length) return;
+      if (!items.some((i) => i.building && i.room)) return;
 
       const buildings = groupPlaces(items);
       const stack = view.querySelector('#stack');
@@ -3921,6 +3943,7 @@
           <p class="sr-only" id="l-live" aria-live="polite"></p>
           <div class="lwrap"><table class="ltable" id="l-table"></table></div>
           <div class="lcards" id="l-cards"></div>
+          <div class="lmore" id="l-more"></div>
         </section>`;
     }
 
@@ -3942,6 +3965,8 @@
       let dept = '';
       let sort = { by: 'date', dir: 'desc' };
       let shown = [];
+      let limit = 100;   // 한 번에 그리는 줄 수. 수천 개를 한꺼번에 그리면 화면이 멈춘다.
+      let deptsOpen = false;
 
       const matches = (it, q) => {
         if (!q) return true;
@@ -3954,10 +3979,15 @@
         const counts = new Map();
         for (const it of list) if (it.assetInfo.dept) counts.set(it.assetInfo.dept, (counts.get(it.assetInfo.dept) || 0) + 1);
         if (dept && !counts.has(dept)) dept = '';
-        const depts = [...counts.keys()].sort((a, b) => a.localeCompare(b, 'ko'));
+        // 부서가 많으면 큰 것부터 몇 개만 보여 주고 나머지는 접어 둔다
+        const depts = [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a) || a.localeCompare(b, 'ko'));
+        const cap = 8;
+        const show = deptsOpen ? depts : depts.slice(0, cap);
+        if (dept && !show.includes(dept)) show.unshift(dept);
         deptWrap.innerHTML = depts.length < 2 ? '' : `
           <button class="dept__chip" type="button" data-dept="" aria-pressed="${!dept}">전체 부서</button>
-          ${depts.map((d) => `<button class="dept__chip" type="button" data-dept="${esc(d)}" aria-pressed="${dept === d}">${esc(d)}<b class="num">${counts.get(d)}</b></button>`).join('')}`;
+          ${show.map((d) => `<button class="dept__chip" type="button" data-dept="${esc(d)}" aria-pressed="${dept === d}">${esc(d)}<b class="num">${counts.get(d)}</b></button>`).join('')}
+          ${depts.length > cap ? `<button class="dept__chip dept__more" type="button" id="dept-more">${deptsOpen ? '접기' : `부서 ${n(depts.length - cap)}개 더`}</button>` : ''}`;
       }
 
       function renderTable() {
@@ -3976,9 +4006,10 @@
             </tr>
           </thead>`;
 
+        const page = shown.slice(0, limit);
         const body = `
           <tbody>
-            ${shown.map((it) => `
+            ${page.map((it) => `
               <tr>
                 <th class="lname" scope="row">
                   <span class="lname__title">${esc(assetName(it))}</span>
@@ -3997,7 +4028,7 @@
           </tbody>`;
         table.innerHTML = head + body;
 
-        cards.innerHTML = shown.map((it) => `
+        cards.innerHTML = page.map((it) => `
           <article class="lcard">
             <div class="lcard__top">
               <p class="lcard__name">${esc(assetName(it))}</p>
@@ -4013,15 +4044,23 @@
             </div>
             <div class="lcard__acts">${rowActions(it.id)}</div>
           </article>`).join('');
+
+        const more = shown.length - page.length;
+        view.querySelector('#l-more').innerHTML = more
+          ? `<button class="btn btn--ghost" type="button" id="l-more-go">${n(more)}가지 더 보기</button>`
+          : '';
       }
 
-      function update() {
+      function update(keepLimit = false) {
+        if (!keepLimit) limit = 100;
         const q = input.value.trim();
         clear.hidden = !input.value;
         const found = all.filter((it) => matches(it, q));
         renderDept(found);
         shown = sortAssets(found.filter((it) => !dept || it.assetInfo.dept === dept), sort.by, sort.dir);
-        meta.textContent = `${n(shown.length)}가지`;
+        meta.textContent = shown.length > limit
+          ? `${n(limit)} / ${n(shown.length)}가지`
+          : `${n(shown.length)}가지`;
         if (!shown.length) {
           table.innerHTML = '';
           cards.innerHTML = `<div class="nohit"><strong>찾는 비품이 없어요</strong><span>다른 말로 찾거나 부서를 바꿔 보세요.</span></div>`;
@@ -4048,6 +4087,8 @@
           update();
           return;
         }
+        if (e.target.closest('#dept-more')) { deptsOpen = !deptsOpen; update(true); return; }
+        if (e.target.closest('#l-more-go')) { limit += 200; update(true); return; }
         if (e.target.closest('#l-csv')) {
           exportLedger(shown).catch(() => flash('내려받지 못했어요', 'warn'));
         }
