@@ -313,8 +313,16 @@
     .preview__photo { margin-top: 14px; width: 100%; height: 110px; object-fit: cover; border-radius: 12px; }
     .preview > #preview { min-height: 0; overflow: auto; }
     .preview__foot { margin-top: auto; padding-top: 18px; display: grid; gap: 10px; }
-    .preview__done { font-size: 14px; font-weight: 600; color: var(--marker); line-height: 1.45; }
+    .preview__done {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 14px; border-radius: 12px;
+      background: rgba(255, 255, 255, .16);
+      font-size: 15px; font-weight: 700; color: #fff; line-height: 1.4;
+      animation: rise 200ms ease-out both;
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
     .preview__done:empty { display: none; }
+    .preview__done .icon { width: 19px; height: 19px; flex: none; stroke-width: 2.6; color: var(--marker); }
     .save { height: 54px; border-radius: 14px; background: #fff; color: var(--navy); font-size: 17px; font-weight: 800; transition: transform 120ms, background-color 120ms; }
     .save:hover { background: #f1f3f8; }
     .save:active { transform: scale(.98); }
@@ -575,15 +583,18 @@
 
     /* 지웠어요 같은 짧은 알림 */
     .flash {
-      position: fixed; left: 50%; bottom: 24px; z-index: 40;
+      position: fixed; left: 50%; bottom: 24px; z-index: 60;
       transform: translateX(-50%);
       max-width: calc(100vw - 32px);
-      padding: 11px 18px; border-radius: 999px;
+      display: flex; align-items: center; gap: 9px;
+      padding: 13px 22px 13px 18px; border-radius: 999px;
       background: var(--navy); color: #fff;
-      font-size: 15px; font-weight: 600; letter-spacing: -0.01em;
-      box-shadow: 0 8px 24px -8px rgba(23, 32, 74, .5);
+      font-size: 16px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.35;
+      box-shadow: 0 10px 30px -8px rgba(23, 32, 74, .55);
       animation: flash-in 180ms ease-out both;
     }
+    .flash__mark { width: 22px; height: 22px; flex: none; stroke-width: 2.6; color: var(--marker); }
+    .flash--warn .flash__mark { color: #ffd479; }
     .flash[hidden] { display: none; }
     @keyframes flash-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
@@ -848,6 +859,22 @@
       background: var(--bg);
     }
     .gate[hidden], .app[hidden] { display: none; }
+
+    /* 첫 화면 */
+    .welcome { border-radius: 24px; overflow: hidden; background: var(--card); box-shadow: 0 2px 6px rgba(23, 32, 74, .06), 0 24px 56px -24px rgba(23, 32, 74, .4); }
+    .welcome__hero {
+      position: relative; overflow: hidden;
+      padding: 30px 26px 28px;
+      background: linear-gradient(135deg, var(--board) 0%, var(--board-2) 100%);
+      color: #fff;
+    }
+    .welcome__hero .plan { right: 6px; top: -30px; width: min(210px, 52%); opacity: .38; }
+    .welcome__eyebrow { position: relative; font-size: 13px; font-weight: 700; color: rgba(255, 255, 255, .72); letter-spacing: -0.01em; }
+    .welcome__title { position: relative; font-size: clamp(26px, 7vw, 32px); font-weight: 800; letter-spacing: -0.04em; line-height: 1.2; margin-top: 8px; }
+    .welcome__body { padding: 24px 26px 26px; }
+    .welcome__desc { font-size: 15px; color: var(--ink-2); line-height: 1.7; margin-bottom: 22px; word-break: keep-all; }
+    .welcome__note { display: flex; align-items: center; gap: 7px; margin-top: 16px; font-size: 13px; color: var(--ink-3); line-height: 1.5; }
+    .welcome__lock { width: 15px; height: 15px; flex: none; stroke-width: 1.8; }
     .gate__box { width: min(420px, 100%); }
     .gate__brand { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
     .gate__mark { width: 44px; height: 44px; border-radius: 13px; background: var(--marker); color: var(--navy); display: grid; place-items: center; flex: none; }
@@ -1053,7 +1080,13 @@
       .dangerbar { display: block; margin-top: 2px; }
       .act__label { display: none; }
       .hit__head .act { padding: 0 7px; }
-      .flash { bottom: calc(env(safe-area-inset-bottom) + 86px); }
+      .flash {
+        left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 86px);
+        max-width: none; transform: none;
+        justify-content: center; text-align: center;
+        font-size: 15px; padding: 13px 18px;
+      }
+      @keyframes flash-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
       body.is-add .flash, body.is-room .flash { bottom: calc(env(safe-area-inset-bottom) + 82px); }
       .lcard__acts { display: flex; gap: 4px; margin: 10px -9px -4px; }
       .hit__meta { row-gap: 4px; }
@@ -1366,7 +1399,7 @@
       const bad = results.find((r) => r && r.error);
       if (bad) {
         console.error(bad.error);
-        flash('저장하지 못했어요. 인터넷을 확인해 주세요.');
+        flash('저장하지 못했어요. 인터넷을 확인해 주세요.', 'warn');
       }
     }
 
@@ -1416,14 +1449,24 @@
 
     function gateView(kind) {
       if (kind === 'login') {
-        return gateShell(`
-          <h1 class="gate__title">선생님, 안녕하세요</h1>
-          <p class="gate__desc">학교 계정으로 로그인하면 우리 학교 물품만 보여요.<br>다른 학교 자료는 보이지 않아요.</p>
-          <div class="gate__acts">
-            <button class="bigbtn bigbtn--google" type="button" id="g-google">${GOOGLE_MARK}구글로 계속하기</button>
-          </div>
-          <p class="gate__err" id="g-err"></p>`);
+        return `
+          <div class="gate__box">
+            <div class="welcome">
+              <div class="welcome__hero">
+                ${PLAN_SVG}
+                <p class="welcome__eyebrow">학교 물품 어디 있지?</p>
+                <h1 class="welcome__title">선생님, 환영합니다!</h1>
+              </div>
+              <div class="welcome__body">
+                <p class="welcome__desc">교내 비품 조회부터 대여까지 한 번에 해결하는 맞춤형 서비스입니다. 계정으로 로그인하여 우리 학교만의 프라이빗한 물품 현황을 바로 확인해 보세요.</p>
+                <button class="bigbtn bigbtn--google" type="button" id="g-google">${GOOGLE_MARK}구글로 계속하기</button>
+                <p class="gate__err" id="g-err"></p>
+                <p class="welcome__note">${icon(ICONS.lock, 'icon welcome__lock')}<span>우리 학교 자료는 같은 학교 선생님에게만 보여요.</span></p>
+              </div>
+            </div>
+          </div>`;
       }
+
       if (kind === 'start') {
         if (!found) {
           return gateShell(`
@@ -1555,12 +1598,13 @@
       root.querySelector('#g-retry')?.addEventListener('click', () => location.reload());
 
       root.querySelector('#g-google')?.addEventListener('click', async (e) => {
-        busy(e.currentTarget, true);
+        const btn = e.currentTarget;
+        busy(btn, true);
         const { error } = await sb.auth.signInWithOAuth({
           provider: 'google',
           options: { redirectTo: location.origin + location.pathname },
         });
-        if (error) { busy(e.currentTarget, false); say('로그인 창을 열지 못했어요. 잠시 뒤 다시 해 주세요.'); }
+        if (error) { busy(btn, false); say('로그인 창을 열지 못했어요. 잠시 뒤 다시 해 주세요.'); }
       });
 
       root.querySelector('#g-out')?.addEventListener('click', async () => {
@@ -1583,11 +1627,12 @@
 
       // 1단계: 코드로 어느 학교인지 확인
       root.querySelector('#g-check')?.addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
         const v = code.value.trim();
         if (v.length < 6) { say('코드 6자리를 모두 넣어 주세요.'); code.focus(); return; }
-        busy(e.currentTarget, true); say('');
+        busy(btn, true); say('');
         const { data, error } = await sb.rpc('find_school', { code: v });
-        busy(e.currentTarget, false);
+        busy(btn, false);
         if (error || !data) {
           say('그런 코드를 가진 학교가 없어요. 코드를 다시 확인해 주세요.');
           code.select();
@@ -1601,13 +1646,14 @@
 
       // 2단계: 이름과 직위를 적고 신청
       root.querySelector('#g-join')?.addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
         const nameBox = root.querySelector('#g-me');
         const who = nameBox.value.trim();
         const pos = root.querySelector('#g-mypos').value;
         if (!who) { say('내 이름을 적어 주세요.'); nameBox.focus(); return; }
-        busy(e.currentTarget, true); say('');
+        busy(btn, true); say('');
         const { error } = await sb.rpc('join_school', { code: found.code, member_name: who, position_name: pos });
-        busy(e.currentTarget, false);
+        busy(btn, false);
         if (error) {
           say(String(error.message).includes('NO_SCHOOL')
             ? '학교를 찾지 못했어요. 코드를 다시 확인해 주세요.'
@@ -1621,10 +1667,12 @@
       });
 
       const hits = root.querySelector('#g-hits');
+      root.querySelector('#g-name')?.addEventListener('input', () => { if (hits) hits.innerHTML = ''; });
       root.querySelector('#g-find')?.addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
         const q = root.querySelector('#g-name').value.trim();
         if (q.length < 2) { say('학교 이름을 두 글자 이상 적어 주세요.'); return; }
-        busy(e.currentTarget, true); say('');
+        busy(btn, true); say('');
         hits.innerHTML = '<p class="hits__wait">찾는 중이에요…</p>';
         try {
           const list = await findSchools(q);
@@ -1648,7 +1696,7 @@
             : code === 'NO_KEY' ? '학교 찾기를 쓰려면 나이스 인증키가 필요해요. 주소를 직접 적어 주세요.'
             : '지금은 학교 찾기가 되지 않아요. 주소를 직접 적어 주세요.'}</p>`;
         }
-        busy(e.currentTarget, false);
+        busy(btn, false);
       });
 
       root.querySelector('#g-make')?.addEventListener('click', async (e) => {
@@ -1657,10 +1705,11 @@
         const pos = root.querySelector('#g-pos').value;
         if (!name) { say('학교 이름을 적어 주세요.'); root.querySelector('#g-name').focus(); return; }
         if (!who) { say('관리자 이름을 적어 주세요.'); root.querySelector('#g-teacher').focus(); return; }
-        busy(e.currentTarget, true); say('');
+        const btn = e.currentTarget;
+        busy(btn, true); say('');
         const addr = root.querySelector('#g-addr').value.trim();
         const { error } = await sb.rpc('create_school', { school_name: name, school_address: addr, teacher_name: who, position_name: pos });
-        busy(e.currentTarget, false);
+        busy(btn, false);
         if (error) {
           say(String(error.message).includes('ALREADY_JOINED')
             ? '이미 다른 학교에 속해 있어요.'
@@ -1671,9 +1720,10 @@
       });
 
       root.querySelector('#g-recheck')?.addEventListener('click', async (e) => {
-        busy(e.currentTarget, true); say('');
+        const btn = e.currentTarget;
+        busy(btn, true); say('');
         await loadMe();
-        busy(e.currentTarget, false);
+        busy(btn, false);
         if (me?.status === 'active') { justApplied = false; await loadData(); render(); flash('승인됐어요. 이제 함께 쓸 수 있어요'); }
         else say('아직 승인 전이에요. 조금 뒤에 다시 눌러 주세요.');
       });
@@ -1717,6 +1767,7 @@
       download: 'M12 4v10 M8 10.5l4 4 4-4 M5 19.5h14',
       up: 'M12 6l6 7H6z',
       caret: 'M6 9l6 6 6-6',
+      lock: 'M7 10.5V8a5 5 0 0110 0v2.5 M5.5 10.5h13v9h-13z M12 14v2.5',
       manager: 'M12 12.5a4 4 0 100-8 4 4 0 000 8z M4.5 20.5a7.5 7.5 0 0115 0',
       edit: 'M4 20h4L18.5 9.5l-4-4L4 16z M14 6l4 4',
       trash: 'M5 7h14 M9.5 7V4.5h5V7 M7 7l1 12.5h8L17 7 M10.5 10.5v6 M13.5 10.5v6',
@@ -2007,14 +2058,15 @@
     }
 
     let flashTimer;
-    function flash(msg) {
+    function flash(msg, kind = 'ok') {
       const el = document.getElementById('flash');
       clearTimeout(flashTimer);
-      el.textContent = msg;
+      el.className = 'flash flash--' + kind;
+      el.innerHTML = `${icon(kind === 'ok' ? ICONS.check : ICONS.bell, 'icon flash__mark')}<span>${esc(msg)}</span>`;
       el.hidden = false;
       // 다시 띄울 때도 움직임이 보이게 애니메이션을 처음부터 준다
       el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
-      flashTimer = setTimeout(() => { el.hidden = true; }, 2600);
+      flashTimer = setTimeout(() => { el.hidden = true; }, 3200);
     }
 
     const refreshView = () => {
@@ -3765,6 +3817,7 @@
         };
         commit({ ...state, school: next });
         view.querySelector('#w-done').textContent = '저장했어요';
+        flash('담당 정보를 저장했어요');
         setTimeout(() => { const el = view.querySelector('#w-done'); if (el) el.textContent = ''; }, 2200);
         renderNav('manager');
       });
@@ -3830,7 +3883,7 @@
           await sb.from('members').update({ role }).eq('id', id);
         } else if (e.target.closest('#code-copy')) {
           try { await navigator.clipboard.writeText(me.school.join_code); flash('코드를 복사했어요'); }
-          catch { flash('복사하지 못했어요'); }
+          catch { flash('복사하지 못했어요', 'warn'); }
           return;
         } else if (e.target.closest('#code-reset')) {
           const { data, error } = await sb.rpc('reset_join_code');
@@ -4063,7 +4116,8 @@
         </ol>
         ${d.memo ? `<p class="preview__memo">${esc(d.memo)}</p>` : ''}
         ${d.photo ? `<img class="preview__photo" src="${esc(d.photo)}" alt="보관 위치 사진">` : ''}`;
-      view.querySelector('#preview-done').textContent = lastSaved;
+      const doneBox = view.querySelector('#preview-done');
+      doneBox.innerHTML = lastSaved ? `${icon(ICONS.check)}<span>${esc(lastSaved)}</span>` : '';
 
       const path = pathOf(d);
       view.querySelector('#sb-name').textContent = d.name || '물품 이름을 적어 주세요';
@@ -4245,7 +4299,8 @@
           return;
         }
 
-        lastSaved = `‘${item.name}’ 등록했어요. 위치는 그대로 두었어요.`;
+        lastSaved = `‘${item.name}’ 등록했어요`;
+        flash(`‘${item.name}’ 등록했어요`);
         draft = emptyDraft({ ...item, name: '' }); // 위치·분류·비품 여부는 남기고 나머지는 비운다
         render();
         document.getElementById('f-name').focus({ preventScroll: true });
