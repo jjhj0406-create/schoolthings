@@ -765,6 +765,19 @@
     .preview__v { font-weight: 700; overflow-wrap: anywhere; }
     .preview__v.is-empty { color: rgba(255, 255, 255, .35); font-weight: 500; }
     /* ───────── 관리 담당 ───────── */
+    .setupcard {
+      grid-column: 1 / -1;
+      display: flex; flex-flow: row wrap; align-items: center; gap: 12px 20px;
+      padding: 18px 22px;
+      background: linear-gradient(135deg, var(--board) 0%, var(--board-2) 100%);
+      color: #fff; box-shadow: 0 14px 36px -22px rgba(31, 90, 69, .9);
+    }
+    .setupcard__main { flex: 1; min-width: 220px; }
+    .setupcard__title { font-size: 18px; font-weight: 800; letter-spacing: -0.03em; }
+    .setupcard__sub { font-size: 14px; color: rgba(255, 255, 255, .78); line-height: 1.45; margin-top: 4px; }
+    .setupcard .btn { background: #fff; color: var(--navy); flex: none; }
+    .setupcard .btn:hover { background: #f1f3f8; }
+
     .todo { grid-column: span 6; min-height: 0; }
     .spot { grid-column: span 6; min-height: 0; }
     .is-manager .side {
@@ -1113,6 +1126,108 @@
     .spotrow__qty { font-size: 14px; font-weight: 700; color: var(--ink-2); }
     .spotbar { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
     .spotbar__info { flex: 1; font-size: 14px; color: var(--ink-2); font-weight: 600; }
+    /* ───────── 우리 학교 공간 설정하기 ───────── */
+    .wizback {
+      position: fixed; inset: 0; z-index: 70;
+      display: grid; place-items: center; padding: 20px;
+      background: rgba(18, 24, 49, .5);
+      backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+      animation: fade 140ms ease-out both;
+    }
+    .wizbox {
+      width: min(560px, 100%); max-height: min(760px, calc(100dvh - 40px));
+      display: flex; flex-direction: column;
+      background: var(--card); border-radius: 24px; overflow: hidden;
+      box-shadow: 0 28px 70px -24px rgba(23, 32, 74, .6);
+      animation: pop 180ms ease-out both;
+    }
+    .wizbar { display: flex; align-items: center; gap: 12px; padding: 16px 18px 12px; }
+    .wizbar__step { font-size: 13px; font-weight: 800; color: var(--ink-3); flex: none; }
+    .wizbar__track { flex: 1; height: 5px; border-radius: 3px; background: var(--field); overflow: hidden; }
+    .wizbar__fill { display: block; height: 100%; border-radius: 3px; background: var(--navy); transition: width 260ms cubic-bezier(.2, .8, .2, 1); }
+    .wizbar__x { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-3); flex: none; }
+    .wizbar__x:hover { background: var(--field); color: var(--ink); }
+    .wizbody { flex: 1; min-height: 0; overflow: auto; padding: 6px 24px 24px; }
+    .wizstep { animation: wizin 220ms cubic-bezier(.2, .8, .2, 1) both; }
+    @keyframes wizin { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+
+    .wiz__title { font-size: 23px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.35; }
+    .wiz__desc { font-size: 15px; color: var(--ink-2); line-height: 1.55; margin-top: 8px; }
+    .wiz__hint { font-size: 13px; color: var(--ink-3); line-height: 1.5; margin-top: 10px; }
+    .wiz__label { font-size: 13px; font-weight: 700; color: var(--ink-3); margin: 18px 0 8px; }
+    .wiz__acts { display: flex; gap: 8px; margin-top: 24px; }
+    .wiz__acts .bigbtn { flex: 1; height: 52px; }
+
+    .wizchips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; }
+    .wizchips--on { margin-top: 14px; }
+    .wizchip {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 40px; padding: 0 14px; border-radius: 11px;
+      background: var(--field); font-size: 15px; font-weight: 700; color: var(--ink-2);
+      transition: background-color 120ms, color 120ms, transform 120ms;
+    }
+    .wizchip:hover { background: #e7eaf2; color: var(--ink); }
+    .wizchip:active { transform: scale(.97); }
+    .wizchip.is-on { background: var(--navy); color: #fff; }
+    .wizchip.is-on:hover { background: var(--navy-2); }
+    .wizchip__plus { font-size: 16px; font-weight: 700; color: var(--ink-3); }
+    .wizchip:hover .wizchip__plus { color: var(--ink-2); }
+    .wizchip__x { width: 14px; height: 14px; stroke-width: 2.6; opacity: .7; }
+    .wizchip small { font-size: 12px; font-weight: 600; opacity: .65; margin-left: 2px; }
+    .wizchip b { font-size: 12px; font-weight: 700; opacity: .55; }
+
+    .wizadd { display: flex; gap: 8px; margin-top: 14px; }
+    .wizadd .input { flex: 1; height: 46px; }
+    .wizadd .btn { height: 46px; flex: none; }
+
+    .wizask { margin-top: 16px; padding: 14px 16px; border-radius: 14px; background: #fff7e6; }
+    .wizask__q { font-size: 15px; font-weight: 700; }
+    .wizask .wizchips { margin-top: 10px; }
+    .wizask .wizchip { background: #fff; }
+
+    .wizfloors { list-style: none; display: grid; gap: 10px; margin-top: 18px; }
+    .wizfloor { padding: 14px 16px; border-radius: 16px; background: var(--field); }
+    .wizfloor__name { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+    .wizfloor__rows { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .wizfloor__row { display: flex; align-items: center; gap: 8px; }
+    .wizfloor__k { font-size: 14px; font-weight: 700; color: var(--ink-2); flex: none; }
+    .stepper--sm { flex: 1; height: 42px; background: #fff; }
+    .stepper--sm button { width: 40px; height: 42px; }
+    .stepper__val { flex: 1; text-align: center; font-size: 16px; font-weight: 800; }
+    .wizfloor__sum { font-size: 13px; color: var(--ink-3); margin-top: 10px; line-height: 1.5; }
+
+    .wizwhere { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+    .wizledger { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .wizledger__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .wizledger__head .wiz__label { margin: 0; }
+
+    .wizpaste { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .wizpaste summary { font-size: 14px; font-weight: 700; color: var(--ink-2); cursor: pointer; list-style: none; }
+    .wizpaste summary::-webkit-details-marker { display: none; }
+    .wizpaste summary::before { content: "＋ "; color: var(--ink-3); }
+    .wizpaste[open] summary::before { content: "− "; }
+    .wizpaste summary:hover { color: var(--ink); }
+    .wizpaste__box { width: 100%; height: 110px; margin-top: 10px; padding: 12px 14px; resize: none; line-height: 1.45; }
+    .wizpaste__acts { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .wizpaste__msg { flex: 1; font-size: 13px; color: var(--ink-2); }
+
+    .wizdone { width: 54px; height: 54px; border-radius: 50%; background: #e8f2ed; color: var(--board); display: grid; place-items: center; margin-bottom: 14px; }
+    .wizdone .icon { width: 26px; height: 26px; stroke-width: 2.6; }
+    .wizsum { list-style: none; display: grid; gap: 8px; margin-top: 18px; }
+    .wizsum__row { padding: 14px 16px; border-radius: 14px; background: var(--field); }
+    .wizsum__name { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+    .wizsum__sub { font-size: 13px; color: var(--ink-2); margin-top: 3px; line-height: 1.5; }
+
+    @media (max-width: 760px) {
+      .wizback { padding: 0; place-items: stretch; }
+      .wizbox { width: 100%; max-height: none; border-radius: 0; min-height: 100dvh; }
+      .wizbar { padding: calc(env(safe-area-inset-top) + 14px) 16px 12px; }
+      .wizbody { padding: 6px 18px calc(env(safe-area-inset-bottom) + 20px); }
+      .wiz__title { font-size: 21px; }
+      .wizfloor__rows { grid-template-columns: 1fr; }
+      .wizwhere { grid-template-columns: 1fr; }
+      .wiz__acts { position: sticky; bottom: 0; background: linear-gradient(transparent, var(--card) 28%); padding-top: 14px; }
+    }
     .placebar { display: none; }
     .tabbar { display: none; }
 
@@ -1245,7 +1360,8 @@
       .rrow { padding: 12px 14px; }
       .rrow__acts .act__label { display: none; }
       .pick__results { max-height: none; }
-      .todo, .side, .spot { grid-column: 1 / -1; }
+      .todo, .side, .spot, .setupcard { grid-column: 1 / -1; }
+      .setupcard .btn { width: 100%; }
       .spotpick__row { grid-template-columns: 1fr; }
       .signlist { max-height: none; }
       .todo__body { overflow: visible; }
@@ -1327,6 +1443,8 @@
 
     <nav class="tabbar" id="tabbar" aria-label="메뉴"></nav>
   </div>
+
+  <div id="wizroot"></div>
 
   <div class="flash" id="flash" role="status" aria-live="polite" hidden></div>
 
@@ -1899,6 +2017,7 @@
           return;
         }
         await loadMe(); await loadData(); render();
+        setTimeout(openSpaces, 400);   // 학교를 만들자마자 공간 설정을 이어서
       });
 
       root.querySelector('#g-recheck')?.addEventListener('click', async (e) => {
@@ -1952,12 +2071,14 @@
       lock: 'M7 10.5V8a5 5 0 0110 0v2.5 M5.5 10.5h13v9h-13z M12 14v2.5',
       upload: 'M12 16V5 M8 8.5l4-4 4 4 M5 19.5h14',
       student: 'M12 4.5L21 9l-9 4.5L3 9z M7 11v4.5c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5V11',
+      spaces: 'M4 20.5V9.5l8-5 8 5v11 M3 20.5h18 M9.5 20.5v-6h5v6',
       manager: 'M12 12.5a4 4 0 100-8 4 4 0 000 8z M4.5 20.5a7.5 7.5 0 0115 0',
       edit: 'M4 20h4L18.5 9.5l-4-4L4 16z M14 6l4 4',
       trash: 'M5 7h14 M9.5 7V4.5h5V7 M7 7l1 12.5h8L17 7 M10.5 10.5v6 M13.5 10.5v6',
       camera: 'M4 8.5A1.5 1.5 0 015.5 7h2l1.5-2h6l1.5 2h2A1.5 1.5 0 0120 8.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 014 17.5z M15.5 12.5a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0z',
     };
     const MENU = [
+      { key: 'spaces', label: '학교 공간 설정하기', tab: false, admin: true, action: 'spaces' },
       { key: 'manager', label: '관리 담당 선생님', href: '#/manager', tab: false, admin: true },
       { key: 'home',  label: '홈',         href: '#/' },
       { key: 'find',  label: '찾기',       href: '#/search' },
@@ -2095,6 +2216,13 @@
           also: Object.fromEntries(extra.filter((f) => f.score >= 20).map((f) => [f.field, f.ranges])),
         };
       }
+      // 강당 ↔ 다목적실처럼 학교에서 다르게 부르는 이름
+      if ((!best || best.score < 60) && entry.item?.room) {
+        const alias = ROOM_ALIAS.get(q.syl);
+        if (alias && alias === entry.item.room) {
+          best = { score: 78, field: 'room', ranges: [], why: '다르게 부르는 이름' };
+        }
+      }
       if (!best || best.field !== 'name' || best.score < 60) {
         for (const field of ['name', 'memo']) {
           const s = synonymHits(entry.idx[field], q);
@@ -2107,7 +2235,10 @@
       return best;
     }
 
+    let ROOM_ALIAS = new Map();
+
     function searchItems(items, text) {
+      ROOM_ALIAS = roomAliasMap();
       const whole = makeQuery(text);
       const tokens = String(text).trim().split(/\s+/).filter(Boolean);
       const parts = tokens.length > 1 ? tokens.map(makeQuery) : [];
@@ -2197,6 +2328,7 @@
         const current = m.key === active ? 'aria-current="page"' : '';
         if (m.admin) cls += ' rail__item--admin';
         const label = withLabelSpan ? `<span class="rail__label">${esc(m.label)}</span>` : esc(m.label);
+        if (m.action) return `<button class="${cls}" type="button" data-action="${m.action}">${icon(ICONS[m.key])}${label}</button>`;
         return m.href
           ? `<a class="${cls}" href="${m.href}" ${current}>${icon(ICONS[m.key])}${label}</a>`
           : `<button class="${cls}" type="button" data-soon>${icon(ICONS[m.key])}${label}</button>`;
@@ -4240,6 +4372,504 @@
       update();
     }
 
+    /* ════════ 우리 학교 공간 설정하기 (→ src/pages/spaces.js) ════════ */
+    const BUILDING_CHIPS = ['본관', '별관', '체육관', '급식동', '유치원', '후관', '신관'];
+
+    // 이름이 갈리는 실은 다르게 부르는 말을 함께 담아 둔다
+    const ROOM_CHIPS = [
+      { name: '과학실', alt: ['과학 준비실', '실험실'] },
+      { name: '음악실', alt: ['음악 준비실'] },
+      { name: '컴퓨터실', alt: ['정보실', '전산실'] },
+      { name: '도서실', alt: ['도서관'] },
+      { name: '강당', alt: ['다목적실', '대강당'] },
+      { name: '방송실', alt: [] },
+      { name: '보건실', alt: ['양호실'] },
+      { name: '급식실', alt: ['식당'] },
+      { name: '체육 창고', alt: ['체육관 창고'] },
+      { name: '행정실', alt: ['서무실'] },
+      { name: '교무실', alt: [] },
+      { name: '돌봄교실', alt: ['방과후교실'] },
+      { name: '상담실', alt: ['위클래스'] },
+      { name: '영어실', alt: ['영어체험실'] },
+      { name: '미술실', alt: [] },
+      { name: '실과실', alt: ['가사실'] },
+    ];
+
+    const emptySpaces = () => ({ buildings: [], rooms: [] });
+    const spaces = () => {
+      const sp = school().spaces;
+      return sp && Array.isArray(sp.buildings) ? sp : emptySpaces();
+    };
+    const hasSpaces = () => spaces().buildings.length > 0;
+
+    // 지하 n층 ~ 지상 n층을 위에서 아래 순서로 만든다
+    function floorsOf(b) {
+      const out = [];
+      for (let i = Number(b.up) || 1; i >= 1; i--) out.push(`${i}층`);
+      for (let i = 1; i <= (Number(b.down) || 0); i++) out.push(`지하 ${i}층`);
+      return out;
+    }
+    const roomsOf = (building, floor) => spaces().rooms
+      .filter((r) => r.building === building && (!floor || !r.floor || r.floor === floor));
+
+    // 다르게 부르는 이름으로도 찾을 수 있게
+    function roomAliasMap() {
+      const map = new Map();
+      for (const r of spaces().rooms) {
+        for (const a of r.aliases || []) map.set(a, r.name);
+      }
+      return map;
+    }
+
+    /* ── 글에서 실 이름 뽑아내기 ── */
+    // "3층 - 과학실, 음악실" 같은 흔한 모양을 규칙으로 읽는다
+    function parseRooms(text) {
+      const found = [];
+      const seen = new Set();
+      const push = (name, floor) => {
+        const n2 = name.trim().replace(/^[-–·•*\d.)\s]+/, '').replace(/[,.·]+$/, '').trim();
+        if (n2.length < 2 || n2.length > 20 || seen.has(n2)) return;
+        if (/^(층|실|호|건물|구분|번호|비고|합계|계)$/.test(n2)) return;
+        seen.add(n2);
+        found.push({ name: n2, floor: floor || '' });
+      };
+      for (const rawLine of String(text).split(/\r?\n/)) {
+        const line = rawLine.trim();
+        if (!line) continue;
+        const m = line.match(/(지하\s*\d+\s*층|B\d|\d+\s*층)\s*[:\-–|\t]?\s*(.*)$/i);
+        if (m && m[2]) {
+          const floor = m[1].replace(/\s+/g, '').replace(/^B(\d)$/i, '지하 $1층').replace(/^(\d+)층$/, '$1층');
+          m[2].split(/[,،/|\t]+/).forEach((part) => push(part, floor));
+        } else {
+          line.split(/[,،/|\t]{1,}/).forEach((part) => {
+            if (/(실|관|창고|교실|센터|반)$/.test(part.trim())) push(part, '');
+          });
+        }
+      }
+      return found;
+    }
+
+    // 비품 대장에 적힌 장소를 후보로 모은다
+    function roomsFromLedger() {
+      const count = new Map();
+      for (const it of state.items) {
+        const raw = it.assetInfo?.place || it.assetInfo?.dept || '';
+        for (const part of raw.split(/[,、/]+/)) {
+          const name = part.trim();
+          if (name.length < 2 || name.length > 20) continue;
+          if (/^\d/.test(name)) continue;          // 4-1,4-2 같은 반 표기는 뺀다
+          count.set(name, (count.get(name) || 0) + it.qty);
+        }
+      }
+      return [...count.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([name, qty]) => ({ name, qty }));
+    }
+
+    /* ── 설정 화면 ── */
+    let wizOpen = false;
+    let wizStep = 1;
+    let wiz = null;          // { buildings:[{name,down,up}], rooms:[{building,floor,name,aliases}] }
+    let wizPick = null;      // 이름을 고르는 중인 칩
+    let wizWhere = { building: '', floor: '' };
+    let wizBusy = false;
+
+    function openSpaces() {
+      const sp = spaces();
+      const used = [...new Set(state.items.map((i) => i.building).filter(Boolean))];
+      wiz = {
+        buildings: sp.buildings.length
+          ? sp.buildings.map((b) => ({ ...b }))
+          : used.map((name) => ({ name, down: 0, up: 4 })),
+        rooms: sp.rooms.map((r) => ({ ...r })),
+      };
+      wizStep = 1; wizPick = null; wizOpen = true;
+      wizWhere = { building: wiz.buildings[0]?.name || '', floor: '' };
+      drawWiz();
+    }
+
+    function closeSpaces(force = false) {
+      if (!force && wizStep > 1 && wiz?.buildings.length) {
+        if (!confirm('설정을 나중에 이어서 할까요? 지금까지 고른 내용은 사라져요.')) return;
+      }
+      wizOpen = false; wiz = null;
+      document.getElementById('wizroot').innerHTML = '';
+      document.body.classList.remove('is-wiz');
+    }
+
+    function saveSpaces() {
+      commit({ ...state, school: { ...school(), spaces: { buildings: wiz.buildings, rooms: wiz.rooms } } });
+    }
+
+    function drawWiz() {
+      const root = document.getElementById('wizroot');
+      if (!wizOpen) { root.innerHTML = ''; return; }
+      document.body.classList.add('is-wiz');
+      root.innerHTML = `
+        <div class="wizback">
+          <div class="wizbox" role="dialog" aria-modal="true" aria-labelledby="wiz-title">
+            <div class="wizbar">
+              <span class="wizbar__step num">${wizStep} / 4</span>
+              <div class="wizbar__track"><span class="wizbar__fill" style="width:${wizStep * 25}%"></span></div>
+              <button class="wizbar__x" type="button" id="wiz-close" aria-label="닫기">${icon(ICONS.close)}</button>
+            </div>
+            <div class="wizbody" id="wiz-body">${wizStepHTML()}</div>
+          </div>
+        </div>`;
+      mountWiz();
+    }
+
+    function wizStepHTML() {
+      if (wizStep === 1) {
+        const picked = wiz.buildings.map((b) => b.name);
+        const rest = BUILDING_CHIPS.filter((c) => !picked.includes(c));
+        return `
+          <div class="wizstep">
+            <h2 class="wiz__title" id="wiz-title">${esc(school().name)}의 공간을 세팅해 볼까요?<br>어떤 건물들이 있나요?</h2>
+            <p class="wiz__desc">탭해서 고르고, 없으면 직접 적어 주세요.</p>
+
+            <div class="wizchips">
+              ${picked.map((nm) => `<button class="wizchip is-on" type="button" data-bld="${esc(nm)}">${esc(nm)}${icon(ICONS.close, 'icon wizchip__x')}</button>`).join('')}
+              ${rest.map((nm) => `<button class="wizchip" type="button" data-bld="${esc(nm)}">${esc(nm)}<span class="wizchip__plus">+</span></button>`).join('')}
+            </div>
+
+            <div class="wizadd">
+              <input class="input" id="wiz-newb" placeholder="직접 적기 (예: 제2별관)" autocomplete="off">
+              <button class="btn btn--ghost" type="button" id="wiz-addb">더하기</button>
+            </div>
+            <p class="wiz__hint">별관이 여러 개면 후관·신관처럼 <b>부르는 이름 그대로</b> 각각 적어 주세요.</p>
+
+            <div class="wiz__acts">
+              <button class="bigbtn bigbtn--navy" type="button" id="wiz-next" ${picked.length ? '' : 'disabled'}>다음</button>
+            </div>
+          </div>`;
+      }
+
+      if (wizStep === 2) {
+        return `
+          <div class="wizstep">
+            <h2 class="wiz__title" id="wiz-title">건물별로 몇 층까지 있나요?</h2>
+            <p class="wiz__desc">지하가 없으면 0으로 두세요.</p>
+            <ul class="wizfloors">
+              ${wiz.buildings.map((b, i) => `
+                <li class="wizfloor">
+                  <p class="wizfloor__name">${esc(b.name)}</p>
+                  <div class="wizfloor__rows">
+                    <div class="wizfloor__row">
+                      <span class="wizfloor__k">지하</span>
+                      <div class="stepper stepper--sm">
+                        <button type="button" data-fl="${i}|down|-1" aria-label="지하 층 줄이기" ${b.down <= 0 ? 'disabled' : ''}>${icon(ICONS.minus)}</button>
+                        <span class="stepper__val num">${b.down}</span>
+                        <button type="button" data-fl="${i}|down|1" aria-label="지하 층 늘리기" ${b.down >= 5 ? 'disabled' : ''}>${icon(ICONS.add)}</button>
+                      </div>
+                    </div>
+                    <div class="wizfloor__row">
+                      <span class="wizfloor__k">지상</span>
+                      <div class="stepper stepper--sm">
+                        <button type="button" data-fl="${i}|up|-1" aria-label="지상 층 줄이기" ${b.up <= 1 ? 'disabled' : ''}>${icon(ICONS.minus)}</button>
+                        <span class="stepper__val num">${b.up}</span>
+                        <button type="button" data-fl="${i}|up|1" aria-label="지상 층 늘리기" ${b.up >= 20 ? 'disabled' : ''}>${icon(ICONS.add)}</button>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="wizfloor__sum">${esc(floorsOf(b).join(' · '))}</p>
+                </li>`).join('')}
+            </ul>
+            <div class="wiz__acts">
+              <button class="bigbtn bigbtn--ghost" type="button" id="wiz-prev">이전</button>
+              <button class="bigbtn bigbtn--navy" type="button" id="wiz-next">다음</button>
+            </div>
+          </div>`;
+      }
+
+      if (wizStep === 3) {
+        const b = wiz.buildings.find((x) => x.name === wizWhere.building) || wiz.buildings[0];
+        const floors = b ? floorsOf(b) : [];
+        const here = wiz.rooms.filter((r) => r.building === b?.name);
+        const ledger = roomsFromLedger().filter((x) => !wiz.rooms.some((r) => r.name === x.name)).slice(0, 24);
+        const chips = ROOM_CHIPS.filter((c) => !wiz.rooms.some((r) => r.name === c.name || (r.aliases || []).includes(c.name)));
+
+        return `
+          <div class="wizstep">
+            <h2 class="wiz__title" id="wiz-title">각 층에 어떤 실이 있나요?</h2>
+            <p class="wiz__desc">지금 안 하셔도 돼요. 물품을 등록하면서 채워도 됩니다.</p>
+
+            <div class="wizwhere">
+              <div class="selectbox">
+                <select class="input" id="wiz-b">
+                  ${wiz.buildings.map((x) => `<option value="${esc(x.name)}" ${x.name === b?.name ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}
+                </select>
+                ${icon(ICONS.caret, 'icon selectbox__caret')}
+              </div>
+              <div class="selectbox">
+                <select class="input" id="wiz-f">
+                  <option value="" ${wizWhere.floor ? '' : 'selected'}>층 미정</option>
+                  ${floors.map((f) => `<option value="${esc(f)}" ${f === wizWhere.floor ? 'selected' : ''}>${esc(f)}</option>`).join('')}
+                </select>
+                ${icon(ICONS.caret, 'icon selectbox__caret')}
+              </div>
+            </div>
+
+            ${here.length ? `<p class="wiz__label">담은 실 ${n(here.length)}곳</p>
+            <div class="wizchips wizchips--on">
+              ${here.map((r) => `<button class="wizchip is-on" type="button" data-rmdel="${esc(r.name)}">
+                ${esc(r.name)}${r.floor ? `<small>${esc(r.floor)}</small>` : ''}${icon(ICONS.close, 'icon wizchip__x')}
+              </button>`).join('')}
+            </div>` : ''}
+
+            ${wizPick ? `
+              <div class="wizask">
+                <p class="wizask__q">이 학교에서는 뭐라고 부르세요?</p>
+                <div class="wizchips">
+                  ${[wizPick.name, ...wizPick.alt].map((nm) => `<button class="wizchip" type="button" data-rmname="${esc(nm)}">${esc(nm)}</button>`).join('')}
+                </div>
+              </div>` : `
+              <p class="wiz__label">자주 쓰는 실</p>
+              <div class="wizchips">
+                ${chips.map((c) => `<button class="wizchip" type="button" data-rmchip="${esc(c.name)}">${esc(c.name)}<span class="wizchip__plus">+</span></button>`).join('')}
+              </div>`}
+
+            ${ledger.length ? `
+              <div class="wizledger">
+                <div class="wizledger__head">
+                  <p class="wiz__label">비품 대장에서 찾은 장소</p>
+                  <button class="mini mini--quiet" type="button" id="wiz-allled">${n(ledger.length)}곳 모두 담기</button>
+                </div>
+                <div class="wizchips">
+                  ${ledger.map((x) => `<button class="wizchip" type="button" data-rmled="${esc(x.name)}">${esc(x.name)}<b class="num">${n(x.qty)}</b></button>`).join('')}
+                </div>
+              </div>` : ''}
+
+            <div class="wizadd">
+              <input class="input" id="wiz-newr" placeholder="직접 적기 (예: 과학 준비실)" autocomplete="off">
+              <button class="btn btn--ghost" type="button" id="wiz-addr">더하기</button>
+            </div>
+
+            <details class="wizpaste">
+              <summary>한글 문서나 배치도에서 붙여넣기</summary>
+              <p class="wiz__hint">한글에서 Ctrl+A, Ctrl+C 한 뒤 아래에 붙여 주세요. 배치도 그림도 붙일 수 있어요.</p>
+              <textarea class="input wizpaste__box" id="wiz-paste" placeholder="여기에 붙여넣기 (Ctrl+V)"></textarea>
+              <div class="wizpaste__acts">
+                <span class="wizpaste__msg" id="wiz-pmsg"></span>
+                <button class="btn btn--ghost" type="button" id="wiz-pgo">읽어 오기</button>
+              </div>
+            </details>
+
+            <div class="wiz__acts">
+              <button class="bigbtn bigbtn--ghost" type="button" id="wiz-prev">이전</button>
+              <button class="bigbtn bigbtn--navy" type="button" id="wiz-next">${wiz.rooms.length ? '다음' : '지금은 건너뛰기'}</button>
+            </div>
+          </div>`;
+      }
+
+      // 4단계
+      return `
+        <div class="wizstep">
+          <span class="wizdone" aria-hidden="true">${icon(ICONS.check)}</span>
+          <h2 class="wiz__title" id="wiz-title">설정을 마쳤어요</h2>
+          <p class="wiz__desc">이제 물품을 등록할 때 여기서 고르면 돼요. 없는 곳은 그때 직접 적어도 됩니다.</p>
+          <ul class="wizsum">
+            ${wiz.buildings.map((b) => {
+              const rs = wiz.rooms.filter((r) => r.building === b.name);
+              return `<li class="wizsum__row">
+                <p class="wizsum__name">${esc(b.name)}</p>
+                <p class="wizsum__sub">${esc(floorsOf(b).join(' · '))}</p>
+                <p class="wizsum__sub">${rs.length ? `실 ${n(rs.length)}곳 · ${esc(rs.slice(0, 6).map((r) => r.name).join(', '))}${rs.length > 6 ? ' …' : ''}` : '실은 나중에 채워도 돼요'}</p>
+              </li>`;
+            }).join('')}
+          </ul>
+          <div class="wiz__acts">
+            <button class="bigbtn bigbtn--ghost" type="button" id="wiz-prev">이전</button>
+            <button class="bigbtn bigbtn--navy" type="button" id="wiz-save">설정 완료</button>
+          </div>
+        </div>`;
+    }
+
+    function mountWiz() {
+      const root = document.getElementById('wizroot');
+      const back = root.querySelector('.wizback');
+      const go = (n2) => { wizStep = n2; wizPick = null; drawWiz(); };
+
+      root.querySelector('#wiz-close').addEventListener('click', () => closeSpaces());
+      back.addEventListener('click', (e) => { if (e.target === back) closeSpaces(); });
+      root.querySelector('#wiz-prev')?.addEventListener('click', () => go(wizStep - 1));
+      root.querySelector('#wiz-next')?.addEventListener('click', () => go(wizStep + 1));
+      root.querySelector('#wiz-save')?.addEventListener('click', () => {
+        saveSpaces();
+        closeSpaces(true);
+        flash('학교 공간을 저장했어요');
+        render();
+      });
+
+      // 1단계
+      const addB = (name) => {
+        const nm = name.trim();
+        if (!nm || wiz.buildings.some((b) => b.name === nm)) return;
+        wiz.buildings.push({ name: nm, down: 0, up: 4 });
+        if (!wizWhere.building) wizWhere.building = nm;
+        drawWiz();
+      };
+      root.querySelector('#wiz-addb')?.addEventListener('click', () => addB(root.querySelector('#wiz-newb').value));
+      root.querySelector('#wiz-newb')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addB(e.target.value); }
+      });
+
+      // 3단계 입력
+      const addR = (name, alt = []) => {
+        const nm = name.trim();
+        if (!nm) return;
+        const b = wizWhere.building || wiz.buildings[0]?.name || '';
+        if (wiz.rooms.some((r) => r.building === b && r.name === nm)) return;
+        wiz.rooms.push({ building: b, floor: wizWhere.floor || '', name: nm, aliases: alt });
+        wizPick = null;
+        drawWiz();
+      };
+      root.querySelector('#wiz-addr')?.addEventListener('click', () => addR(root.querySelector('#wiz-newr').value));
+      root.querySelector('#wiz-newr')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addR(e.target.value); }
+      });
+      root.querySelector('#wiz-b')?.addEventListener('change', (e) => { wizWhere.building = e.target.value; wizWhere.floor = ''; drawWiz(); });
+      root.querySelector('#wiz-f')?.addEventListener('change', (e) => { wizWhere.floor = e.target.value; drawWiz(); });
+      root.querySelector('#wiz-allled')?.addEventListener('click', () => {
+        const b = wizWhere.building || wiz.buildings[0]?.name || '';
+        for (const x of roomsFromLedger().slice(0, 24)) {
+          if (!wiz.rooms.some((r) => r.name === x.name)) {
+            wiz.rooms.push({ building: b, floor: wizWhere.floor || '', name: x.name, aliases: [] });
+          }
+        }
+        drawWiz();
+      });
+
+      // 붙여넣기 (글은 규칙으로, 그림은 서버에 물어본다)
+      const pasteBox = root.querySelector('#wiz-paste');
+      if (pasteBox) {
+        pasteBox.addEventListener('paste', async (e) => {
+          const img = [...(e.clipboardData?.items || [])].find((i) => i.type.startsWith('image/'));
+          if (!img) return;
+          e.preventDefault();
+          await readImage(img.getAsFile());
+        });
+      }
+      root.querySelector('#wiz-pgo')?.addEventListener('click', async () => {
+        const msg = root.querySelector('#wiz-pmsg');
+        const text = pasteBox.value.trim();
+        if (!text) { msg.textContent = '붙여넣은 내용이 없어요.'; return; }
+        msg.textContent = '읽는 중이에요…';
+        let list = parseRooms(text);
+        if (list.length < 2) {
+          const smart = await askAI({ text });
+          if (smart) list = smart;
+        }
+        addMany(list, msg);
+      });
+
+      async function readImage(file) {
+        const msg = root.querySelector('#wiz-pmsg');
+        msg.textContent = '그림을 읽는 중이에요…';
+        try {
+          const base64 = await new Promise((res, rej) => {
+            const r = new FileReader();
+            r.onload = () => res(String(r.result).split(',')[1]);
+            r.onerror = rej;
+            r.readAsDataURL(file);
+          });
+          const list = await askAI({ image: base64, mime: file.type });
+          if (!list) { msg.textContent = aiWhy || '그림 읽기는 아직 준비 중이에요. 글로 붙여넣어 주세요.'; return; }
+          addMany(list, msg);
+        } catch {
+          msg.textContent = '그림을 읽지 못했어요.';
+        }
+      }
+
+      function addMany(list, msg) {
+        const b = wizWhere.building || wiz.buildings[0]?.name || '';
+        let added = 0;
+        for (const r of list) {
+          if (wiz.rooms.some((x) => x.building === b && x.name === r.name)) continue;
+          wiz.rooms.push({ building: b, floor: r.floor || wizWhere.floor || '', name: r.name, aliases: [] });
+          added++;
+        }
+        if (!added) { msg.textContent = '새로 담을 실 이름을 찾지 못했어요.'; return; }
+        drawWiz();
+        flash(`실 ${n(added)}곳을 담았어요`);
+      }
+
+      // 칩 누르기 (다시 그릴 때마다 새로 만들어지는 요소에 건다)
+      back.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-bld]');
+        if (b) {
+          const nm = b.dataset.bld;
+          const at = wiz.buildings.findIndex((x) => x.name === nm);
+          if (at >= 0) {
+            wiz.buildings.splice(at, 1);
+            wiz.rooms = wiz.rooms.filter((r) => r.building !== nm);
+            if (wizWhere.building === nm) wizWhere = { building: wiz.buildings[0]?.name || '', floor: '' };
+          } else addB(nm);
+          drawWiz();
+          return;
+        }
+        const fl = e.target.closest('[data-fl]');
+        if (fl) {
+          const [i, key, step] = fl.dataset.fl.split('|');
+          const bb = wiz.buildings[Number(i)];
+          bb[key] = Math.max(key === 'up' ? 1 : 0, Number(bb[key]) + Number(step));
+          drawWiz();
+          return;
+        }
+        const chip = e.target.closest('[data-rmchip]');
+        if (chip) {
+          const spec = ROOM_CHIPS.find((c) => c.name === chip.dataset.rmchip);
+          if (spec && spec.alt.length) { wizPick = spec; drawWiz(); }
+          else addR(chip.dataset.rmchip);
+          return;
+        }
+        const pick = e.target.closest('[data-rmname]');
+        if (pick) {
+          const nm = pick.dataset.rmname;
+          const all = [wizPick.name, ...wizPick.alt];
+          addR(nm, all.filter((x) => x !== nm));
+          return;
+        }
+        const led = e.target.closest('[data-rmled]');
+        if (led) { addR(led.dataset.rmled); return; }
+        const del = e.target.closest('[data-rmdel]');
+        if (del) {
+          const bname = wizWhere.building;
+          wiz.rooms = wiz.rooms.filter((r) => !(r.building === bname && r.name === del.dataset.rmdel));
+          drawWiz();
+        }
+      });
+    }
+
+    // 서버(Edge Function)에 제미나이로 읽어 달라고 부탁한다. 준비가 안 됐으면 조용히 물러난다.
+    let aiWhy = '';   // 서버가 알려 준 실패 이유
+
+    async function askAI(payload) {
+      aiWhy = '';
+      if (!sb || !session) return null;
+      try {
+        const res = await fetch(`${SUPABASE.url}/functions/v1/parse-spaces`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: SUPABASE.anonKey,
+          },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          if (data.error === 'KEY_REJECTED') aiWhy = '제미나이 키가 거절됐어요. Supabase에 넣은 키를 확인해 주세요.';
+          else if (data.error === 'NO_KEY') aiWhy = '서버에 제미나이 키가 없어요.';
+          else aiWhy = '';
+          return null;
+        }
+        return Array.isArray(data.rooms) ? data.rooms.filter((r) => r && r.name) : null;
+      } catch {
+        return null;
+      }
+    }
+
     /* ════════ 관리 담당 선생님 (→ src/pages/manager.js) ════════ */
     const ASSET_NEED = [
       { key: 'no', label: '고유번호' }, { key: 'code', label: '분류번호' },
@@ -4343,6 +4973,16 @@
             <h1 class="top__title" tabindex="-1">관리 담당 선생님</h1>
           </div>
         </header>
+
+        <section class="card setupcard" aria-label="학교 공간 설정">
+          <div class="setupcard__main">
+            <p class="setupcard__title">우리 학교 공간 설정하기</p>
+            <p class="setupcard__sub">${hasSpaces()
+              ? `건물 ${n(spaces().buildings.length)}곳 · 실 ${n(spaces().rooms.length)}곳이 설정돼 있어요`
+              : '건물과 층, 실을 미리 정해 두면 등록할 때 고르기만 하면 돼요'}</p>
+          </div>
+          <button class="btn btn--solid" type="button" data-action="spaces">${icon(ICONS.spaces)}${hasSpaces() ? '다시 설정' : '설정 시작'}</button>
+        </section>
 
         <section class="card todo" aria-labelledby="todo-title">
           <div class="card__head">
@@ -4511,9 +5151,9 @@
               <input class="input" id="sp-storage" placeholder="보관함 (선택)" autocomplete="off">
               <input class="input" id="sp-shelf" placeholder="칸 (선택)" autocomplete="off">
             </div>
-            <datalist id="sp-b">${[...new Set(state.items.map((i) => i.building).filter(Boolean))].map((v) => `<option value="${esc(v)}"></option>`).join('')}</datalist>
-            <datalist id="sp-f">${FLOORS.map((f) => `<option value="${esc(f.value)}"></option>`).join('')}</datalist>
-            <datalist id="sp-r">${[...new Set(state.items.map((i) => i.room).filter(Boolean))].map((v) => `<option value="${esc(v)}"></option>`).join('')}</datalist>
+            <datalist id="sp-b">${[...new Set([...spaces().buildings.map((b) => b.name), ...state.items.map((i) => i.building)])].filter(Boolean).map((v) => `<option value="${esc(v)}"></option>`).join('')}</datalist>
+            <datalist id="sp-f">${[...new Set([...spaces().buildings.flatMap(floorsOf), ...FLOORS.map((f) => f.value)])].map((v) => `<option value="${esc(v)}"></option>`).join('')}</datalist>
+            <datalist id="sp-r">${[...new Set([...spaces().rooms.map((r) => r.name), ...state.items.map((i) => i.room)])].filter(Boolean).map((v) => `<option value="${esc(v)}"></option>`).join('')}</datalist>
           </div>
           <div class="spotbar">
             <span class="spotbar__info">${picked.length ? `${n(picked.length)}가지 · ${n(pickedQty)}개 고름` : '옮길 물품을 골라 주세요'}</span>
@@ -4794,6 +5434,13 @@
 
     const uniq = (key) => [...new Set(state.items.map((i) => i[key]).filter(Boolean))];
 
+    // 설정한 공간이 있으면 그 층을, 없으면 기본 층을 보여 준다
+    function floorChoices(d) {
+      const b = spaces().buildings.find((x) => x.name === d.building);
+      if (!b) return FLOORS;
+      return floorsOf(b).map((v) => ({ value: v, short: v.includes('지하') ? v.replace('지하 ', 'B').replace('층', '') : v.replace('층', '') }));
+    }
+
     function addView(params) {
       const wanted = params.get('id');
       const target = wanted ? state.items.find((i) => i.id === wanted) : null;
@@ -4808,7 +5455,11 @@
             });
       }
       const d = draft;
-      const buildings = [...new Set([...uniq('building'), ...BUILDING_HINTS])];
+      const spaceBuildings = () => [...new Set([...spaces().buildings.map((b) => b.name), ...uniq('building'), ...BUILDING_HINTS])];
+      const spaceRooms = (b, f) => [...new Set([
+        ...spaces().rooms.filter((r) => (!b || r.building === b) && (!f || !r.floor || r.floor === f)).map((r) => r.name),
+        ...uniq('room'),
+      ])];
       const opts = (list) => list.map((v) => `<option value="${esc(v)}"></option>`).join('');
 
       return `
@@ -4887,14 +5538,14 @@
           <div class="field">
             <label class="field__label" for="f-building">건물<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
             <input class="input" id="f-building" name="building" form="add-form" list="l-building" placeholder="예: 본관" autocomplete="off" value="${esc(d.building)}" aria-describedby="e-building">
-            <datalist id="l-building">${opts(buildings)}</datalist>
+            <datalist id="l-building">${opts(spaceBuildings())}</datalist>
             <p class="field__error" id="e-building"></p>
           </div>
 
           <fieldset class="field">
             <legend class="field__label">층<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></legend>
             <div class="floors" id="floors">
-              ${FLOORS.map((f) => `<label class="choice"><input type="radio" name="floor" form="add-form" value="${esc(f.value)}" ${d.floor === f.value ? 'checked' : ''} aria-label="${esc(f.value)}"><span>${esc(f.short)}</span></label>`).join('')}
+              ${floorChoices(d).map((f) => `<label class="choice"><input type="radio" name="floor" form="add-form" value="${esc(f.value)}" ${d.floor === f.value ? 'checked' : ''} aria-label="${esc(f.value)}"><span>${esc(f.short)}</span></label>`).join('')}
             </div>
             <p class="field__error" id="e-floor"></p>
           </fieldset>
@@ -4902,7 +5553,7 @@
           <div class="field">
             <label class="field__label" for="f-room">실<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
             <input class="input" id="f-room" name="room" form="add-form" list="l-room" placeholder="예: 과학 준비실" autocomplete="off" value="${esc(d.room)}" aria-describedby="e-room">
-            <datalist id="l-room">${opts(uniq('room'))}</datalist>
+            <datalist id="l-room">${opts(spaceRooms(d.building, d.floor))}</datalist>
             <p class="field__error" id="e-room"></p>
           </div>
 
@@ -5080,8 +5731,17 @@
       const assetBox = view.querySelector('#asset-fields');
       const assetSwitch = view.querySelector('#f-asset');
 
+      let shownFloors = '';
       const sync = () => {
         draft = readForm(form);
+        // 건물을 바꾸면 그 건물의 층으로 갈아 끼운다
+        const list = floorChoices(draft);
+        const key = list.map((f) => f.value).join('|');
+        if (key !== shownFloors) {
+          shownFloors = key;
+          view.querySelector('#floors').innerHTML = list.map((f) => `
+            <label class="choice"><input type="radio" name="floor" form="add-form" value="${esc(f.value)}" ${draft.floor === f.value ? 'checked' : ''} aria-label="${esc(f.value)}"><span>${esc(f.short)}</span></label>`).join('');
+        }
         assetBox.hidden = !draft.asset;
         assetSwitch.setAttribute('aria-expanded', String(draft.asset));
         // 비품명을 비워 두면 물품 이름을 그대로 쓴다고 알려 준다
@@ -5265,6 +5925,8 @@
     });
 
     document.addEventListener('click', (e) => {
+      if (e.target.closest('[data-action="spaces"]')) { openSpaces(); return; }
+
       // 수정하기
       const edit = e.target.closest('[data-edit]');
       if (edit) {
