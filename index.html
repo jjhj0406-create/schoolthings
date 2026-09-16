@@ -60,17 +60,19 @@
     .brand__name { font-size: 16px; font-weight: 800; line-height: 1.25; letter-spacing: -0.03em; }
     .rail__nav { display: flex; flex-direction: column; gap: 4px; }
     .rail__item--admin {
-      background: rgba(255, 255, 255, .11);
-      color: #fff; font-weight: 700;
-      margin-bottom: 12px; position: relative;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1);
+      background: rgba(255, 201, 60, .10);
+      color: #ffd97a; font-weight: 700;
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(255, 201, 60, .22);
     }
-    .rail__item--admin::after {
-      content: ""; position: absolute; left: 12px; right: 12px; bottom: -7px;
+    .rail__item--admin + .rail__item:not(.rail__item--admin) { margin-top: 12px; }
+    .rail__item--admin + .rail__item:not(.rail__item--admin)::before {
+      content: ""; position: absolute; left: 12px; right: 12px; top: -7px;
       height: 1px; background: rgba(255, 255, 255, .12);
     }
+    .rail__item { position: relative; }
     .rail__item--admin .icon { color: var(--marker); }
-    .rail__item--admin:hover { background: rgba(255, 255, 255, .18); }
+    .rail__item--admin:hover { background: rgba(255, 201, 60, .18); color: #fff; }
     .rail__item--admin[aria-current="page"] {
       background: var(--marker); color: var(--navy); box-shadow: none;
     }
@@ -361,6 +363,7 @@
     @media (pointer: coarse), (max-width: 760px) { .kbd { display: none; } }
 
     .filters { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-height: 34px; }
+    .filters:empty { display: none; }
     .fchip {
       height: 34px; padding: 0 12px; border-radius: 999px; flex: none;
       display: inline-flex; align-items: center; gap: 6px;
@@ -778,14 +781,21 @@
     .setupcard .btn { background: #fff; color: var(--navy); flex: none; }
     .setupcard .btn:hover { background: #f1f3f8; }
 
-    .todo { grid-column: span 6; min-height: 0; }
-    .spot { grid-column: span 6; min-height: 0; }
+    /* 카드 높이를 화면에 억지로 맞추지 않는다. 겹침의 원인이었다. */
+    /* 카드 높이를 화면에 억지로 맞추지 않는다. 겹침의 원인이었다. */
+    .main.is-manager { grid-template-rows: none; grid-auto-rows: max-content; align-content: start; }
+    .mgrtop {
+      grid-column: 1 / -1;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;
+    }
+    .todo, .spot { min-width: 0; }
     .is-manager .side {
       grid-column: 1 / -1;
       display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
       gap: 16px; align-items: start; overflow: visible;
     }
-    .todo__body { flex: 1; min-height: 0; max-height: 560px; overflow: auto; display: grid; gap: 20px; align-content: start; margin: 0 -4px; padding: 0 4px; }
+    .todo__body { max-height: 620px; overflow: auto; display: grid; gap: 20px; align-content: start; margin: 14px -4px 0; padding: 0 4px; }
+    .todo__body[hidden] { display: none; }
     .group__head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
     .group__dot { width: 9px; height: 9px; border-radius: 3px; flex: none; align-self: center; }
     .group__name { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
@@ -825,6 +835,8 @@
     .wipe__name { font-size: 15px; font-weight: 700; }
     .wipe__count { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
     .wipe__pick { background: #fdeaea; color: var(--late); }
+    .wipe__pick--all { background: var(--late); color: #fff; }
+    .wipe__pick--all:hover { background: #d13c41; }
     .wipe__pick:hover { background: #fbdcdc; }
     .wipe__pick[disabled] { background: var(--field); color: var(--ink-3); cursor: default; }
     .wipe__head { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
@@ -1072,6 +1084,9 @@
     .mrow__pos { font-size: 13px; font-weight: 600; color: var(--ink-2); }
     /* 파일 가져오기 */
     .impbox { width: min(560px, 100%); }
+    .bulkrow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+    .bulkrow .btn { height: 46px; }
+    .bulkrow .btn[disabled] { opacity: .5; cursor: default; }
     .drop {
       display: flex; align-items: center; gap: 14px;
       margin-top: 16px; padding: 18px; border-radius: 16px;
@@ -1117,7 +1132,7 @@
     .spotpick { display: grid; gap: 10px; padding: 14px; border-radius: 14px; background: var(--field); }
     .spotpick__row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .spotpick .input { height: 44px; font-size: 15px; background: #fff; }
-    .spotlist { list-style: none; display: grid; gap: 4px; margin-top: 12px; max-height: 360px; overflow: auto; }
+    .spotlist { list-style: none; display: grid; gap: 4px; margin-top: 12px; max-height: 430px; overflow: auto; }
     .spotrow { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 11px; }
     .spotrow:hover { background: var(--field); }
     .spotrow input { width: 18px; height: 18px; accent-color: var(--navy); }
@@ -1135,34 +1150,55 @@
       animation: fade 140ms ease-out both;
     }
     .wizbox {
-      width: min(560px, 100%); max-height: min(760px, calc(100dvh - 40px));
+      width: min(680px, 100%); max-height: min(840px, calc(100dvh - 48px));
       display: flex; flex-direction: column;
       background: var(--card); border-radius: 24px; overflow: hidden;
       box-shadow: 0 28px 70px -24px rgba(23, 32, 74, .6);
       animation: pop 180ms ease-out both;
     }
-    .wizbar { display: flex; align-items: center; gap: 12px; padding: 16px 18px 12px; }
+    .wizbar { display: flex; align-items: center; gap: 14px; padding: 20px 26px 14px; }
     .wizbar__step { font-size: 13px; font-weight: 800; color: var(--ink-3); flex: none; }
     .wizbar__track { flex: 1; height: 5px; border-radius: 3px; background: var(--field); overflow: hidden; }
     .wizbar__fill { display: block; height: 100%; border-radius: 3px; background: var(--navy); transition: width 260ms cubic-bezier(.2, .8, .2, 1); }
     .wizbar__x { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-3); flex: none; }
     .wizbar__x:hover { background: var(--field); color: var(--ink); }
-    .wizbody { flex: 1; min-height: 0; overflow: auto; padding: 6px 24px 24px; }
-    .wizstep { animation: wizin 220ms cubic-bezier(.2, .8, .2, 1) both; }
+    .wizbody { flex: 1; min-height: 0; overflow: auto; padding: 10px 32px 32px; }
+    .wizstep { animation: wizin 240ms cubic-bezier(.2, .8, .2, 1) both; }
+    .wiz__eyebrow { font-size: 13px; font-weight: 800; color: var(--board); letter-spacing: -0.01em; margin-bottom: 8px; }
+    .wiz__skip { display: block; width: 100%; margin-top: 14px; padding: 8px; font-size: 14px; font-weight: 600; color: var(--ink-3); text-align: center; }
+    .wiz__skip:hover { color: var(--ink); }
+
+    .wizdrop {
+      display: flex; align-items: center; gap: 16px;
+      margin-top: 18px; padding: 22px; border-radius: 18px;
+      border: 1.5px dashed #c9cfdd; cursor: pointer;
+      transition: border-color 120ms, background-color 120ms;
+    }
+    .wizdrop:hover { border-color: var(--navy); background: #fafbfd; }
+    .wizdrop.is-busy { border-style: solid; border-color: var(--line); background: var(--field); cursor: default; }
+    .wizdrop input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    .wizdrop__icon { width: 28px; height: 28px; color: var(--navy); flex: none; stroke-width: 2; }
+    .wizdrop__text { font-size: 17px; font-weight: 700; line-height: 1.35; }
+    .wizdrop__text small { display: block; font-size: 13px; font-weight: 500; color: var(--ink-2); margin-top: 3px; }
+    .wizdrop__msg { font-size: 14px; color: var(--ink-2); line-height: 1.5; margin-top: 10px; }
+
+    .wizcount { display: flex; align-items: center; gap: 8px; margin-top: 18px; padding: 13px 16px; border-radius: 13px; background: #e8f2ed; font-size: 15px; font-weight: 600; color: var(--board); }
+    .wizcount .icon { width: 18px; height: 18px; flex: none; stroke-width: 2.6; }
+    .wizchip--wait { box-shadow: inset 0 0 0 1.5px var(--line); background: #fff; }
     @keyframes wizin { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
 
-    .wiz__title { font-size: 23px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.35; }
-    .wiz__desc { font-size: 15px; color: var(--ink-2); line-height: 1.55; margin-top: 8px; }
+    .wiz__title { font-size: 27px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.32; }
+    .wiz__desc { font-size: 16px; color: var(--ink-2); line-height: 1.6; margin-top: 10px; word-break: keep-all; }
     .wiz__hint { font-size: 13px; color: var(--ink-3); line-height: 1.5; margin-top: 10px; }
     .wiz__label { font-size: 13px; font-weight: 700; color: var(--ink-3); margin: 18px 0 8px; }
-    .wiz__acts { display: flex; gap: 8px; margin-top: 24px; }
-    .wiz__acts .bigbtn { flex: 1; height: 52px; }
+    .wiz__acts { display: flex; gap: 10px; margin-top: 28px; }
+    .wiz__acts .bigbtn { flex: 1; height: 56px; font-size: 17px; }
 
-    .wizchips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; }
+    .wizchips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
     .wizchips--on { margin-top: 14px; }
     .wizchip {
-      display: inline-flex; align-items: center; gap: 6px;
-      height: 40px; padding: 0 14px; border-radius: 11px;
+      display: inline-flex; align-items: center; gap: 7px;
+      height: 44px; padding: 0 16px; border-radius: 12px;
       background: var(--field); font-size: 15px; font-weight: 700; color: var(--ink-2);
       transition: background-color 120ms, color 120ms, transform 120ms;
     }
@@ -1177,8 +1213,8 @@
     .wizchip b { font-size: 12px; font-weight: 700; opacity: .55; }
 
     .wizadd { display: flex; gap: 8px; margin-top: 14px; }
-    .wizadd .input { flex: 1; height: 46px; }
-    .wizadd .btn { height: 46px; flex: none; }
+    .wizadd .input { flex: 1; height: 50px; }
+    .wizadd .btn { height: 50px; flex: none; }
 
     .wizask { margin-top: 16px; padding: 14px 16px; border-radius: 14px; background: #fff7e6; }
     .wizask__q { font-size: 15px; font-weight: 700; }
@@ -1221,9 +1257,9 @@
     @media (max-width: 760px) {
       .wizback { padding: 0; place-items: stretch; }
       .wizbox { width: 100%; max-height: none; border-radius: 0; min-height: 100dvh; }
-      .wizbar { padding: calc(env(safe-area-inset-top) + 14px) 16px 12px; }
-      .wizbody { padding: 6px 18px calc(env(safe-area-inset-bottom) + 20px); }
-      .wiz__title { font-size: 21px; }
+      .wizbar { padding: calc(env(safe-area-inset-top) + 14px) 18px 12px; }
+      .wizbody { padding: 8px 20px calc(env(safe-area-inset-bottom) + 24px); }
+      .wiz__title { font-size: 23px; }
       .wizfloor__rows { grid-template-columns: 1fr; }
       .wizwhere { grid-template-columns: 1fr; }
       .wiz__acts { position: sticky; bottom: 0; background: linear-gradient(transparent, var(--card) 28%); padding-top: 14px; }
@@ -1268,7 +1304,8 @@
       .top__date { font-size: 13px; }
       .top__title { font-size: 22px; }
       .top__actions .btn { display: none; }
-      .is-rent .top__actions .btn { display: inline-flex; }
+      .is-rent .top__actions .btn,
+      .is-add .top__actions .btn { display: inline-flex; }
       .avatar { width: 40px; height: 40px; }
 
       .find { min-height: 0; padding: 22px 18px 16px; border-radius: 20px; }
@@ -1360,7 +1397,8 @@
       .rrow { padding: 12px 14px; }
       .rrow__acts .act__label { display: none; }
       .pick__results { max-height: none; }
-      .todo, .side, .spot, .setupcard { grid-column: 1 / -1; }
+      .todo, .side, .spot, .setupcard, .mgrtop { grid-column: 1 / -1; }
+      .mgrtop { grid-template-columns: 1fr; gap: 10px; }
       .setupcard .btn { width: 100%; }
       .spotpick__row { grid-template-columns: 1fr; }
       .signlist { max-height: none; }
@@ -1374,7 +1412,7 @@
       .signbox__go { height: 46px; padding: 0 16px; font-size: 15px; white-space: nowrap; }
       .signbox__acts .mini { white-space: nowrap; }
       .sheet { padding: 18px; }
-      .seek { position: sticky; top: env(safe-area-inset-top); z-index: 5; padding: 10px; border-radius: 18px; gap: 10px; margin: 0 -6px; }
+      .seek { position: sticky; top: env(safe-area-inset-top); z-index: 5; padding: 10px; border-radius: 18px; gap: 10px; }
       .search--wide { height: 52px; }
       .search--wide input { font-size: 16px; }
       .filters { flex-wrap: nowrap; overflow-x: auto; margin: 0 -10px; padding: 0 10px; scrollbar-width: none; }
@@ -1460,7 +1498,7 @@
     const BUILDING_HINTS = ['본관', '별관', '체육관'];
 
     // 학교에서 쓰는 직위
-    const POSITIONS = ['교사', '부장교사', '수석교사', '교감', '교장', '행정실장', '행정직원', '교육공무직', '기타'];
+    const POSITIONS = ['교사', '부장교사', '수석교사', '교감', '교장', '행정실장', '행정팀장', '주무관', '교육공무직', '기타'];
 
     // 비품 대장에 적는 칸. wide=true면 한 줄을 다 쓴다.
     const ASSET_FIELDS = [
@@ -3363,7 +3401,7 @@
             </div>
 
             <div class="whobox" ${d.whoType === 'student' ? 'hidden' : ''} id="who-staff">
-              <input class="input" id="l-staff" name="staffName" form="lend-form" list="l-staff-list" placeholder="예: 김하늘 선생님" autocomplete="off" value="${esc(d.staffName)}" aria-label="교직원 이름">
+              <input class="input" id="l-staff" name="staffName" form="lend-form" list="l-staff-list" placeholder="예: 김하늘" autocomplete="off" value="${esc(d.staffName)}" aria-label="교직원 이름">
               <datalist id="l-staff-list">${[...new Set((state.loans || []).filter((l) => l.whoType !== 'student').map((l) => l.who))].map((w) => `<option value="${esc(w)}"></option>`).join('')}</datalist>
             </div>
 
@@ -3977,6 +4015,243 @@
       XLSX.writeFile(wb, `물품목록정보_${stamp}.xlsx`);
     }
 
+    /* ════════ 물품 엑셀로 한꺼번에 등록 (→ src/lib/item-file.js) ════════ */
+    const ITEM_COLS = ['물품 이름', '분류', '수량', '대여 가능', '건물', '층', '실', '보관함', '칸', '메모'];
+    const ITEM_IN = {
+      name:     ['물품 이름', '물품이름', '이름', '품명', '물품명'],
+      category: ['분류', '종류', '카테고리'],
+      qty:      ['수량', '개수'],
+      loanable: ['대여 가능', '대여가능', '대여', '대여 여부'],
+      building: ['건물', '건물명'],
+      floor:    ['층', '층수'],
+      room:     ['실', '실명', '장소', '보관장소'],
+      storage:  ['보관함', '수납함', '캐비닛'],
+      shelf:    ['칸', '선반'],
+      memo:     ['메모', '비고', '한마디'],
+    };
+
+    const YES = ['예', 'o', 'O', 'ㅇ', 'y', 'Y', 'yes', 'TRUE', 'true', '1', '가능', '대여가능'];
+    const NO = ['아니오', '아니요', 'x', 'X', 'n', 'N', 'no', 'FALSE', 'false', '0', '불가', '대여불가'];
+
+    // 층 표기를 앱이 쓰는 모양으로 맞춘다 (3 · 3층 · B1 · 지하1층 → 3층 · 지하 1층)
+    function normalFloor(v) {
+      const t = cellStr(v).replace(/\s+/g, '');
+      if (!t) return '';
+      const down = t.match(/^(?:지하|b)(\d+)층?$/i);
+      if (down) return `지하 ${down[1]}층`;
+      const up = t.match(/^(\d+)층?$/);
+      if (up) return `${up[1]}층`;
+      return cellStr(v);
+    }
+
+    function rowsToPlainItems(rows) {
+      let hr = -1;
+      for (let r = 0; r < Math.min(rows.length, 20); r++) {
+        const cells = (rows[r] || []).map(cellStr);
+        if (cells.some((c) => ITEM_IN.name.includes(c))) { hr = r; break; }
+      }
+      if (hr < 0) return { error: 'NO_HEADER' };
+
+      const seenCol = {};
+      rows[hr].forEach((h, i) => { const k = cellStr(h); if (k && !(k in seenCol)) seenCol[k] = i; });
+      const at = {};
+      for (const [key, names] of Object.entries(ITEM_IN)) {
+        at[key] = names.reduce((acc, nm) => (acc >= 0 ? acc : (nm in seenCol ? seenCol[nm] : -1)), -1);
+      }
+
+      const get = (row, key) => (at[key] >= 0 ? cellStr(row[at[key]]) : '');
+      const items = [];
+      let blank = 0;
+
+      for (let r = hr + 1; r < rows.length; r++) {
+        const row = rows[r] || [];
+        if (!row.some((c) => cellStr(c) !== '')) continue;
+        const name = get(row, 'name');
+        if (!name || name.startsWith('예)')) { blank++; continue; }
+
+        const cat = get(row, 'category');
+        const lend = get(row, 'loanable');
+        items.push({
+          name,
+          category: CATEGORIES.includes(cat) ? cat : (cat ? '기타' : ''),
+          qty: Math.max(1, parseInt(get(row, 'qty'), 10) || 1),
+          loanable: NO.includes(lend) ? false : true,
+          building: get(row, 'building'),
+          floor: normalFloor(at.floor >= 0 ? row[at.floor] : ''),
+          room: get(row, 'room'),
+          storage: get(row, 'storage'),
+          shelf: get(row, 'shelf'),
+          memo: get(row, 'memo'),
+          asset: false,
+        });
+      }
+      return { items, blank };
+    }
+
+    const itemKey = (it) => [it.name, it.building, it.floor, it.room, it.storage, it.shelf].join('|');
+
+    // 빈 양식 내려받기
+    async function downloadItemForm() {
+      const XLSX = await xlsx();
+      const sample = [
+        ['휴대용 빔프로젝터', '수업 기기', 2, '예', '본관', '3층', '과학 준비실', '2번 캐비닛', '위에서 2칸', '파란 상자 안에 있어요'],
+        ['줄넘기', '체육', 40, '예', '체육관', '1층', '체육 창고', '왼쪽 바구니', '', ''],
+        ['예) 이 줄부터 지우고 적어 주세요', '', '', '', '', '', '', '', '', ''],
+      ];
+      const ws = XLSX.utils.aoa_to_sheet([ITEM_COLS, ...sample]);
+      ws['!cols'] = [22, 12, 8, 10, 12, 10, 16, 14, 14, 30].map((wch) => ({ wch }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '물품 등록 양식');
+      XLSX.writeFile(wb, '물품 등록 양식.xlsx');
+    }
+
+    // 지금 등록된 물품 내려받기 (같은 양식이라 그대로 다시 올릴 수 있다)
+    async function downloadItems(list) {
+      const XLSX = await xlsx();
+      const body = list.map((it) => [
+        it.name, it.category || '', it.qty, it.loanable ? '예' : '아니오',
+        it.building || '', it.floor || '', it.room || '', it.storage || '', it.shelf || '', it.memo || '',
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([ITEM_COLS, ...body]);
+      ws['!cols'] = [22, 12, 8, 10, 12, 10, 16, 14, 14, 30].map((wch) => ({ wch }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '물품 목록');
+      XLSX.writeFile(wb, `물품 목록_${ymd(new Date()).replaceAll('-', '')}.xlsx`);
+    }
+
+    /* ── 물품 한꺼번에 등록 화면 ── */
+    function openItemImport(onDone) {
+      let parsed = null;
+
+      const back = document.createElement('div');
+      back.className = 'signback';
+      back.innerHTML = `
+        <div class="signbox impbox" role="dialog" aria-modal="true" aria-labelledby="bulk-title">
+          <p class="signbox__title" id="bulk-title">엑셀로 한꺼번에 등록</p>
+          <p class="signbox__desc">양식을 받아 채운 뒤 올리면 한 번에 등록돼요. 지금 등록된 물품을 받아서 고친 뒤 다시 올려도 됩니다.</p>
+
+          <div class="bulkrow">
+            <button class="btn btn--ghost" type="button" id="bulk-form">${icon(ICONS.download)}양식 내려받기</button>
+            <button class="btn btn--ghost" type="button" id="bulk-out" ${state.items.length ? '' : 'disabled'}>${icon(ICONS.download)}지금 물품 내려받기</button>
+          </div>
+
+          <label class="drop" id="bulk-drop">
+            <input type="file" id="bulk-file" accept=".xlsx,.xls,.csv">
+            ${icon(ICONS.upload, 'icon drop__icon')}
+            <span class="drop__text">채운 파일 올리기<small>xlsx · xls · csv</small></span>
+          </label>
+
+          <div id="bulk-body"></div>
+          <p class="signbox__err" id="bulk-err" aria-live="polite"></p>
+          <div class="signbox__acts">
+            <span class="signbox__spacer"></span>
+            <button class="mini mini--quiet" type="button" id="bulk-cancel">닫기</button>
+            <button class="signbox__go" type="button" id="bulk-go" disabled>등록하기</button>
+          </div>
+        </div>`;
+      document.body.append(back);
+
+      const err = back.querySelector('#bulk-err');
+      const body = back.querySelector('#bulk-body');
+      const go = back.querySelector('#bulk-go');
+      const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      back.addEventListener('click', (e) => { if (e.target === back) close(); });
+      back.querySelector('#bulk-cancel').addEventListener('click', close);
+
+      back.querySelector('#bulk-form').addEventListener('click', () => {
+        downloadItemForm().catch(() => { err.textContent = '양식을 내려받지 못했어요.'; });
+      });
+      back.querySelector('#bulk-out').addEventListener('click', () => {
+        downloadItems(state.items).catch(() => { err.textContent = '내려받지 못했어요.'; });
+      });
+
+      back.querySelector('#bulk-file').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        err.textContent = '';
+        go.disabled = true;
+        body.innerHTML = '<p class="imp__wait">파일을 읽는 중이에요…</p>';
+        try {
+          const rows = await readTable(file);
+          const out = rowsToPlainItems(rows);
+          if (out.error) {
+            body.innerHTML = '';
+            err.textContent = '열 이름을 찾지 못했어요. 양식을 내려받아 첫 줄은 그대로 두고 채워 주세요.';
+            return;
+          }
+          if (!out.items.length) {
+            body.innerHTML = '';
+            err.textContent = '등록할 줄이 없어요. 물품 이름을 적어 주세요.';
+            return;
+          }
+
+          const byKey = new Map(state.items.map((i) => [itemKey(i), i]));
+          let add = 0, update = 0, noPlace = 0;
+          for (const it of out.items) {
+            if (byKey.has(itemKey(it))) update++; else add++;
+            if (!it.building || !it.room) noPlace++;
+          }
+          parsed = { items: out.items, byKey };
+
+          body.innerHTML = `
+            <p class="imp__file">${esc(file.name)}</p>
+            <div class="imp__sum">
+              <div class="imp__fig"><span class="imp__k">새로 추가</span><span class="imp__v num">${n(add)}</span></div>
+              <div class="imp__fig"><span class="imp__k">내용 갱신</span><span class="imp__v num">${n(update)}</span></div>
+              <div class="imp__fig"><span class="imp__k">건너뜀</span><span class="imp__v num">${n(out.blank)}</span></div>
+            </div>
+            ${noPlace ? `<p class="imp__note">${icon(ICONS.place)}<span><b class="num">${n(noPlace)}개</b>는 건물이나 실이 비어 있어 <b>장소 미지정</b>으로 들어가요. 관리 담당 화면에서 한꺼번에 정할 수 있어요.</span></p>` : ''}
+            <ul class="imp__peek">
+              ${out.items.slice(0, 4).map((it) => `
+                <li>
+                  <span class="imp__name">${esc(it.name)}<span class="num">${n(it.qty)}개</span></span>
+                  <span class="imp__sub">${esc([it.category, pathOf(it).join(' › ') || '장소 미지정'].filter(Boolean).join(' · '))}</span>
+                </li>`).join('')}
+              ${out.items.length > 4 ? `<li class="imp__more num">그 밖에 ${n(out.items.length - 4)}개</li>` : ''}
+            </ul>`;
+          go.disabled = false;
+        } catch (ex) {
+          console.error(ex);
+          body.innerHTML = '';
+          err.textContent = '파일을 읽지 못했어요. 엑셀에서 한 번 열었다가 xlsx로 다시 저장해 보세요.';
+        }
+      });
+
+      go.addEventListener('click', () => {
+        if (!parsed) return;
+        go.disabled = true;
+        body.innerHTML = '<p class="imp__wait">등록하는 중이에요…</p>';
+        try {
+          const next = [...state.items];
+          const idx = new Map(next.map((i, k) => [i.id, k]));
+          for (const row of parsed.items) {
+            const old = parsed.byKey.get(itemKey(row));
+            if (old) {
+              next[idx.get(old.id)] = {
+                ...old, ...row,
+                category: row.category || old.category,
+                memo: row.memo || old.memo,
+                asset: old.asset, ...(old.assetInfo ? { assetInfo: old.assetInfo } : {}),
+                id: old.id, createdAt: old.createdAt, updatedAt: new Date().toISOString(),
+              };
+            } else {
+              next.push({ ...row, category: row.category || '기타', id: newId(), createdAt: new Date().toISOString() });
+            }
+          }
+          commit({ ...state, items: next });
+          close();
+          onDone(parsed.items.length);
+        } catch (ex) {
+          console.error(ex);
+          body.innerHTML = '';
+          err.textContent = '저장하지 못했어요. 파일을 나눠서 올려 보세요.';
+          go.disabled = false;
+        }
+      });
+    }
+
     /* ── 가져오기 화면 ── */
     function openImport(onDone) {
       let parsed = null;
@@ -4468,11 +4743,21 @@
 
     /* ── 설정 화면 ── */
     let wizOpen = false;
-    let wizStep = 1;
+    let wizAt = 0;           // 지금 몇 번째 화면인지
     let wiz = null;          // { buildings:[{name,down,up}], rooms:[{building,floor,name,aliases}] }
     let wizPick = null;      // 이름을 고르는 중인 칩
-    let wizWhere = { building: '', floor: '' };
-    let wizBusy = false;
+    let wizMsg = '';         // 배치도 읽기 알림
+    let wizReading = false;
+
+    // 건물과 층이 정해지면 화면 목록이 만들어진다
+    function wizPages() {
+      const pages = [{ kind: 'buildings' }, { kind: 'floors' }, { kind: 'upload' }];
+      for (const b of wiz.buildings) {
+        for (const f of floorsOf(b)) pages.push({ kind: 'floor', building: b.name, floor: f });
+      }
+      pages.push({ kind: 'done' });
+      return pages;
+    }
 
     function openSpaces() {
       const sp = spaces();
@@ -4483,14 +4768,13 @@
           : used.map((name) => ({ name, down: 0, up: 4 })),
         rooms: sp.rooms.map((r) => ({ ...r })),
       };
-      wizStep = 1; wizPick = null; wizOpen = true;
-      wizWhere = { building: wiz.buildings[0]?.name || '', floor: '' };
+      wizAt = 0; wizPick = null; wizMsg = ''; wizOpen = true;
       drawWiz();
     }
 
     function closeSpaces(force = false) {
-      if (!force && wizStep > 1 && wiz?.buildings.length) {
-        if (!confirm('설정을 나중에 이어서 할까요? 지금까지 고른 내용은 사라져요.')) return;
+      if (!force && wizAt > 0 && wiz?.buildings.length) {
+        if (!confirm('설정을 그만둘까요? 지금까지 저장한 내용은 남아 있어요.')) return;
       }
       wizOpen = false; wiz = null;
       document.getElementById('wizroot').innerHTML = '';
@@ -4505,27 +4789,42 @@
       const root = document.getElementById('wizroot');
       if (!wizOpen) { root.innerHTML = ''; return; }
       document.body.classList.add('is-wiz');
+
+      const pages = wizPages();
+      wizAt = Math.max(0, Math.min(wizAt, pages.length - 1));
+      const page = pages[wizAt];
+      const pct = Math.round(((wizAt + 1) / pages.length) * 100);
+
       root.innerHTML = `
         <div class="wizback">
           <div class="wizbox" role="dialog" aria-modal="true" aria-labelledby="wiz-title">
             <div class="wizbar">
-              <span class="wizbar__step num">${wizStep} / 4</span>
-              <div class="wizbar__track"><span class="wizbar__fill" style="width:${wizStep * 25}%"></span></div>
+              <span class="wizbar__step num">${wizAt + 1} / ${pages.length}</span>
+              <div class="wizbar__track"><span class="wizbar__fill" style="width:${pct}%"></span></div>
               <button class="wizbar__x" type="button" id="wiz-close" aria-label="닫기">${icon(ICONS.close)}</button>
             </div>
-            <div class="wizbody" id="wiz-body">${wizStepHTML()}</div>
+            <div class="wizbody" id="wiz-body">${wizPageHTML(page)}</div>
           </div>
         </div>`;
-      mountWiz();
+      mountWiz(page, pages);
     }
 
-    function wizStepHTML() {
-      if (wizStep === 1) {
+    const wizActs = (opts = {}) => `
+      <div class="wiz__acts">
+        ${wizAt > 0 ? '<button class="bigbtn bigbtn--ghost" type="button" id="wiz-prev">이전</button>' : ''}
+        <button class="bigbtn bigbtn--navy" type="button" id="wiz-next" ${opts.off ? 'disabled' : ''}>${esc(opts.next || '다음')}</button>
+      </div>
+      ${opts.skip ? `<button class="wiz__skip" type="button" id="wiz-skip">${esc(opts.skip)}</button>` : ''}`;
+
+    function wizPageHTML(page) {
+      /* ── 건물 ── */
+      if (page.kind === 'buildings') {
         const picked = wiz.buildings.map((b) => b.name);
         const rest = BUILDING_CHIPS.filter((c) => !picked.includes(c));
         return `
           <div class="wizstep">
-            <h2 class="wiz__title" id="wiz-title">${esc(school().name)}의 공간을 세팅해 볼까요?<br>어떤 건물들이 있나요?</h2>
+            <p class="wiz__eyebrow">1. 건물</p>
+            <h2 class="wiz__title" id="wiz-title">${esc(school().name)}에<br>어떤 건물이 있나요?</h2>
             <p class="wiz__desc">탭해서 고르고, 없으면 직접 적어 주세요.</p>
 
             <div class="wizchips">
@@ -4534,22 +4833,21 @@
             </div>
 
             <div class="wizadd">
-              <input class="input" id="wiz-newb" placeholder="직접 적기 (예: 제2별관)" autocomplete="off">
+              <input class="input" id="wiz-newb" placeholder="직접 적기 (예: 모듈형 건물)" autocomplete="off">
               <button class="btn btn--ghost" type="button" id="wiz-addb">더하기</button>
             </div>
             <p class="wiz__hint">별관이 여러 개면 후관·신관처럼 <b>부르는 이름 그대로</b> 각각 적어 주세요.</p>
-
-            <div class="wiz__acts">
-              <button class="bigbtn bigbtn--navy" type="button" id="wiz-next" ${picked.length ? '' : 'disabled'}>다음</button>
-            </div>
+            ${wizActs({ off: !picked.length })}
           </div>`;
       }
 
-      if (wizStep === 2) {
+      /* ── 층 ── */
+      if (page.kind === 'floors') {
         return `
           <div class="wizstep">
+            <p class="wiz__eyebrow">2. 층</p>
             <h2 class="wiz__title" id="wiz-title">건물별로 몇 층까지 있나요?</h2>
-            <p class="wiz__desc">지하가 없으면 0으로 두세요.</p>
+            <p class="wiz__desc">지하가 없으면 0으로 두세요. 여기서 정한 층이 등록 화면에도 그대로 나와요.</p>
             <ul class="wizfloors">
               ${wiz.buildings.map((b, i) => `
                 <li class="wizfloor">
@@ -4575,47 +4873,72 @@
                   <p class="wizfloor__sum">${esc(floorsOf(b).join(' · '))}</p>
                 </li>`).join('')}
             </ul>
-            <div class="wiz__acts">
-              <button class="bigbtn bigbtn--ghost" type="button" id="wiz-prev">이전</button>
-              <button class="bigbtn bigbtn--navy" type="button" id="wiz-next">다음</button>
-            </div>
+            ${wizActs()}
           </div>`;
       }
 
-      if (wizStep === 3) {
-        const b = wiz.buildings.find((x) => x.name === wizWhere.building) || wiz.buildings[0];
-        const floors = b ? floorsOf(b) : [];
-        const here = wiz.rooms.filter((r) => r.building === b?.name);
+      /* ── 배치도 올리기 ── */
+      if (page.kind === 'upload') {
         const ledger = roomsFromLedger().filter((x) => !wiz.rooms.some((r) => r.name === x.name)).slice(0, 24);
-        const chips = ROOM_CHIPS.filter((c) => !wiz.rooms.some((r) => r.name === c.name || (r.aliases || []).includes(c.name)));
-
+        const total = wiz.rooms.length;
         return `
           <div class="wizstep">
-            <h2 class="wiz__title" id="wiz-title">각 층에 어떤 실이 있나요?</h2>
-            <p class="wiz__desc">지금 안 하셔도 돼요. 물품을 등록하면서 채워도 됩니다.</p>
+            <p class="wiz__eyebrow">3. 실 이름</p>
+            <h2 class="wiz__title" id="wiz-title">배치도가 있으면<br>먼저 올려 주세요</h2>
+            <p class="wiz__desc">학교 배치도 PDF나 사진을 올리면 층별 실 이름을 미리 채워 둘게요. 없으면 그냥 넘어가도 돼요.</p>
 
-            <div class="wizwhere">
-              <div class="selectbox">
-                <select class="input" id="wiz-b">
-                  ${wiz.buildings.map((x) => `<option value="${esc(x.name)}" ${x.name === b?.name ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}
-                </select>
-                ${icon(ICONS.caret, 'icon selectbox__caret')}
-              </div>
-              <div class="selectbox">
-                <select class="input" id="wiz-f">
-                  <option value="" ${wizWhere.floor ? '' : 'selected'}>층 미정</option>
-                  ${floors.map((f) => `<option value="${esc(f)}" ${f === wizWhere.floor ? 'selected' : ''}>${esc(f)}</option>`).join('')}
-                </select>
-                ${icon(ICONS.caret, 'icon selectbox__caret')}
-              </div>
+            <label class="wizdrop ${wizReading ? 'is-busy' : ''}" id="wiz-drop">
+              <input type="file" id="wiz-file" accept="image/*,.pdf,application/pdf" ${wizReading ? 'disabled' : ''}>
+              ${icon(ICONS.upload, 'icon wizdrop__icon')}
+              <span class="wizdrop__text">${wizReading ? '읽는 중이에요…' : '배치도 올리기'}<small>${wizReading ? '잠시만 기다려 주세요' : 'PDF · 사진'}</small></span>
+            </label>
+            ${wizMsg ? `<p class="wizdrop__msg">${esc(wizMsg)}</p>` : ''}
+
+            ${ledger.length ? `
+              <div class="wizledger">
+                <div class="wizledger__head">
+                  <p class="wiz__label">비품 대장에서 찾은 장소</p>
+                  <button class="mini mini--quiet" type="button" id="wiz-allled">${n(ledger.length)}곳 담기</button>
+                </div>
+                <p class="wiz__hint">올려 두신 대장에 적힌 장소예요. 담아 두면 다음 화면에서 층만 정하면 돼요.</p>
+                <div class="wizchips">
+                  ${ledger.slice(0, 12).map((x) => `<button class="wizchip" type="button" data-rmled="${esc(x.name)}">${esc(x.name)}<b class="num">${n(x.qty)}</b></button>`).join('')}
+                </div>
+              </div>` : ''}
+
+            ${total ? `<p class="wizcount">${icon(ICONS.check)}<span>지금까지 실 <b class="num">${n(total)}곳</b>을 담았어요</span></p>` : ''}
+            ${wizActs({ next: '층별로 정하기' })}
+          </div>`;
+      }
+
+      /* ── 층별 ── */
+      if (page.kind === 'floor') {
+        const here = wiz.rooms.filter((r) => r.building === page.building && r.floor === page.floor);
+        const waiting = wiz.rooms.filter((r) => r.building === page.building && !r.floor);
+        const chips = ROOM_CHIPS.filter((c) => !wiz.rooms.some((r) => r.name === c.name || (r.aliases || []).includes(c.name)));
+        return `
+          <div class="wizstep">
+            <p class="wiz__eyebrow">${esc(page.building)}</p>
+            <h2 class="wiz__title" id="wiz-title">${esc(page.floor)}에<br>어떤 실이 있나요?</h2>
+            <p class="wiz__desc">없으면 비워 두고 넘어가도 돼요.</p>
+
+            ${here.length ? `
+              <p class="wiz__label">이 층에 담은 실 ${n(here.length)}곳</p>
+              <div class="wizchips wizchips--on">
+                ${here.map((r) => `<button class="wizchip is-on" type="button" data-rmdel="${esc(r.name)}">${esc(r.name)}${icon(ICONS.close, 'icon wizchip__x')}</button>`).join('')}
+              </div>` : ''}
+
+            <div class="wizadd">
+              <input class="input" id="wiz-newr" placeholder="직접 적기 (예: 과학 준비실)" autocomplete="off">
+              <button class="btn btn--ghost" type="button" id="wiz-addr">더하기</button>
             </div>
 
-            ${here.length ? `<p class="wiz__label">담은 실 ${n(here.length)}곳</p>
-            <div class="wizchips wizchips--on">
-              ${here.map((r) => `<button class="wizchip is-on" type="button" data-rmdel="${esc(r.name)}">
-                ${esc(r.name)}${r.floor ? `<small>${esc(r.floor)}</small>` : ''}${icon(ICONS.close, 'icon wizchip__x')}
-              </button>`).join('')}
-            </div>` : ''}
+            ${waiting.length ? `
+              <p class="wiz__label">층이 정해지지 않은 실</p>
+              <p class="wiz__hint">이 층에 있는 것을 탭하면 옮겨져요.</p>
+              <div class="wizchips">
+                ${waiting.map((r) => `<button class="wizchip wizchip--wait" type="button" data-rmmove="${esc(r.name)}">${esc(r.name)}<span class="wizchip__plus">+</span></button>`).join('')}
+              </div>` : ''}
 
             ${wizPick ? `
               <div class="wizask">
@@ -4626,43 +4949,14 @@
               </div>` : `
               <p class="wiz__label">자주 쓰는 실</p>
               <div class="wizchips">
-                ${chips.map((c) => `<button class="wizchip" type="button" data-rmchip="${esc(c.name)}">${esc(c.name)}<span class="wizchip__plus">+</span></button>`).join('')}
+                ${chips.slice(0, 10).map((c) => `<button class="wizchip" type="button" data-rmchip="${esc(c.name)}">${esc(c.name)}<span class="wizchip__plus">+</span></button>`).join('')}
               </div>`}
 
-            ${ledger.length ? `
-              <div class="wizledger">
-                <div class="wizledger__head">
-                  <p class="wiz__label">비품 대장에서 찾은 장소</p>
-                  <button class="mini mini--quiet" type="button" id="wiz-allled">${n(ledger.length)}곳 모두 담기</button>
-                </div>
-                <div class="wizchips">
-                  ${ledger.map((x) => `<button class="wizchip" type="button" data-rmled="${esc(x.name)}">${esc(x.name)}<b class="num">${n(x.qty)}</b></button>`).join('')}
-                </div>
-              </div>` : ''}
-
-            <div class="wizadd">
-              <input class="input" id="wiz-newr" placeholder="직접 적기 (예: 과학 준비실)" autocomplete="off">
-              <button class="btn btn--ghost" type="button" id="wiz-addr">더하기</button>
-            </div>
-
-            <details class="wizpaste">
-              <summary>한글 문서나 배치도에서 붙여넣기</summary>
-              <p class="wiz__hint">한글에서 Ctrl+A, Ctrl+C 한 뒤 아래에 붙여 주세요. 배치도 그림도 붙일 수 있어요.</p>
-              <textarea class="input wizpaste__box" id="wiz-paste" placeholder="여기에 붙여넣기 (Ctrl+V)"></textarea>
-              <div class="wizpaste__acts">
-                <span class="wizpaste__msg" id="wiz-pmsg"></span>
-                <button class="btn btn--ghost" type="button" id="wiz-pgo">읽어 오기</button>
-              </div>
-            </details>
-
-            <div class="wiz__acts">
-              <button class="bigbtn bigbtn--ghost" type="button" id="wiz-prev">이전</button>
-              <button class="bigbtn bigbtn--navy" type="button" id="wiz-next">${wiz.rooms.length ? '다음' : '지금은 건너뛰기'}</button>
-            </div>
+            ${wizActs({ skip: '남은 층은 건너뛰고 마치기' })}
           </div>`;
       }
 
-      // 4단계
+      /* ── 완료 ── */
       return `
         <div class="wizstep">
           <span class="wizdone" aria-hidden="true">${icon(ICONS.check)}</span>
@@ -4674,7 +4968,7 @@
               return `<li class="wizsum__row">
                 <p class="wizsum__name">${esc(b.name)}</p>
                 <p class="wizsum__sub">${esc(floorsOf(b).join(' · '))}</p>
-                <p class="wizsum__sub">${rs.length ? `실 ${n(rs.length)}곳 · ${esc(rs.slice(0, 6).map((r) => r.name).join(', '))}${rs.length > 6 ? ' …' : ''}` : '실은 나중에 채워도 돼요'}</p>
+                <p class="wizsum__sub">${rs.length ? `실 ${n(rs.length)}곳 · ${esc(rs.slice(0, 8).map((r) => r.name).join(', '))}${rs.length > 8 ? ' …' : ''}` : '실은 나중에 채워도 돼요'}</p>
               </li>`;
             }).join('')}
           </ul>
@@ -4685,15 +4979,21 @@
         </div>`;
     }
 
-    function mountWiz() {
+    function mountWiz(page, pages) {
       const root = document.getElementById('wizroot');
       const back = root.querySelector('.wizback');
-      const go = (n2) => { wizStep = n2; wizPick = null; drawWiz(); };
+
+      const go = (n2) => {
+        saveSpaces();                 // 넘어갈 때마다 저장해 둔다
+        wizAt = n2; wizPick = null; wizMsg = '';
+        drawWiz();
+      };
 
       root.querySelector('#wiz-close').addEventListener('click', () => closeSpaces());
       back.addEventListener('click', (e) => { if (e.target === back) closeSpaces(); });
-      root.querySelector('#wiz-prev')?.addEventListener('click', () => go(wizStep - 1));
-      root.querySelector('#wiz-next')?.addEventListener('click', () => go(wizStep + 1));
+      root.querySelector('#wiz-prev')?.addEventListener('click', () => go(wizAt - 1));
+      root.querySelector('#wiz-next')?.addEventListener('click', () => go(wizAt + 1));
+      root.querySelector('#wiz-skip')?.addEventListener('click', () => go(pages.length - 1));
       root.querySelector('#wiz-save')?.addEventListener('click', () => {
         saveSpaces();
         closeSpaces(true);
@@ -4701,12 +5001,11 @@
         render();
       });
 
-      // 1단계
+      /* 건물 더하기 */
       const addB = (name) => {
         const nm = name.trim();
         if (!nm || wiz.buildings.some((b) => b.name === nm)) return;
         wiz.buildings.push({ name: nm, down: 0, up: 4 });
-        if (!wizWhere.building) wizWhere.building = nm;
         drawWiz();
       };
       root.querySelector('#wiz-addb')?.addEventListener('click', () => addB(root.querySelector('#wiz-newb').value));
@@ -4714,13 +5013,15 @@
         if (e.key === 'Enter') { e.preventDefault(); addB(e.target.value); }
       });
 
-      // 3단계 입력
-      const addR = (name, alt = []) => {
+      /* 실 더하기 */
+      const addR = (name, alt = [], floor) => {
         const nm = name.trim();
         if (!nm) return;
-        const b = wizWhere.building || wiz.buildings[0]?.name || '';
-        if (wiz.rooms.some((r) => r.building === b && r.name === nm)) return;
-        wiz.rooms.push({ building: b, floor: wizWhere.floor || '', name: nm, aliases: alt });
+        const b = page.building || wiz.buildings[0]?.name || '';
+        const f = floor === undefined ? (page.floor || '') : floor;
+        if (wiz.rooms.some((r) => r.building === b && r.name === nm && r.floor === f)) return;
+        wiz.rooms = wiz.rooms.filter((r) => !(r.building === b && r.name === nm));
+        wiz.rooms.push({ building: b, floor: f, name: nm, aliases: alt });
         wizPick = null;
         drawWiz();
       };
@@ -4728,73 +5029,58 @@
       root.querySelector('#wiz-newr')?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); addR(e.target.value); }
       });
-      root.querySelector('#wiz-b')?.addEventListener('change', (e) => { wizWhere.building = e.target.value; wizWhere.floor = ''; drawWiz(); });
-      root.querySelector('#wiz-f')?.addEventListener('change', (e) => { wizWhere.floor = e.target.value; drawWiz(); });
+
+      /* 대장에서 담기 */
       root.querySelector('#wiz-allled')?.addEventListener('click', () => {
-        const b = wizWhere.building || wiz.buildings[0]?.name || '';
+        const b = wiz.buildings[0]?.name || '';
         for (const x of roomsFromLedger().slice(0, 24)) {
           if (!wiz.rooms.some((r) => r.name === x.name)) {
-            wiz.rooms.push({ building: b, floor: wizWhere.floor || '', name: x.name, aliases: [] });
+            wiz.rooms.push({ building: b, floor: '', name: x.name, aliases: [] });
           }
         }
         drawWiz();
       });
 
-      // 붙여넣기 (글은 규칙으로, 그림은 서버에 물어본다)
-      const pasteBox = root.querySelector('#wiz-paste');
-      if (pasteBox) {
-        pasteBox.addEventListener('paste', async (e) => {
-          const img = [...(e.clipboardData?.items || [])].find((i) => i.type.startsWith('image/'));
-          if (!img) return;
-          e.preventDefault();
-          await readImage(img.getAsFile());
+      /* 배치도 읽기 */
+      const file = root.querySelector('#wiz-file');
+      if (file) {
+        file.addEventListener('change', async (e) => {
+          const f = e.target.files[0];
+          if (!f) return;
+          if (f.size > 8 * 1024 * 1024) { wizMsg = '파일이 너무 커요. 8MB 아래로 줄여 주세요.'; drawWiz(); return; }
+          wizReading = true; wizMsg = ''; drawWiz();
+          try {
+            const base64 = await new Promise((res, rej) => {
+              const r = new FileReader();
+              r.onload = () => res(String(r.result).split(',')[1]);
+              r.onerror = rej;
+              r.readAsDataURL(f);
+            });
+            const list = await askAI({ image: base64, mime: f.type || 'application/pdf' });
+            wizReading = false;
+            if (!list) { wizMsg = aiWhy || '아직 배치도 읽기가 준비되지 않았어요. 층별로 직접 담아 주세요.'; drawWiz(); return; }
+
+            const b = wiz.buildings[0]?.name || '';
+            const known = new Set(wiz.buildings.flatMap(floorsOf));
+            let added = 0;
+            for (const r of list) {
+              if (wiz.rooms.some((x) => x.name === r.name)) continue;
+              const floor = known.has(r.floor) ? r.floor : '';
+              wiz.rooms.push({ building: b, floor, name: r.name, aliases: [] });
+              added++;
+            }
+            wizMsg = added ? `${added}곳을 찾아 담았어요. 다음 화면에서 층을 확인해 주세요.` : '새로 담을 실 이름을 찾지 못했어요.';
+            saveSpaces();
+            drawWiz();
+          } catch {
+            wizReading = false;
+            wizMsg = '파일을 읽지 못했어요.';
+            drawWiz();
+          }
         });
       }
-      root.querySelector('#wiz-pgo')?.addEventListener('click', async () => {
-        const msg = root.querySelector('#wiz-pmsg');
-        const text = pasteBox.value.trim();
-        if (!text) { msg.textContent = '붙여넣은 내용이 없어요.'; return; }
-        msg.textContent = '읽는 중이에요…';
-        let list = parseRooms(text);
-        if (list.length < 2) {
-          const smart = await askAI({ text });
-          if (smart) list = smart;
-        }
-        addMany(list, msg);
-      });
 
-      async function readImage(file) {
-        const msg = root.querySelector('#wiz-pmsg');
-        msg.textContent = '그림을 읽는 중이에요…';
-        try {
-          const base64 = await new Promise((res, rej) => {
-            const r = new FileReader();
-            r.onload = () => res(String(r.result).split(',')[1]);
-            r.onerror = rej;
-            r.readAsDataURL(file);
-          });
-          const list = await askAI({ image: base64, mime: file.type });
-          if (!list) { msg.textContent = aiWhy || '그림 읽기는 아직 준비 중이에요. 글로 붙여넣어 주세요.'; return; }
-          addMany(list, msg);
-        } catch {
-          msg.textContent = '그림을 읽지 못했어요.';
-        }
-      }
-
-      function addMany(list, msg) {
-        const b = wizWhere.building || wiz.buildings[0]?.name || '';
-        let added = 0;
-        for (const r of list) {
-          if (wiz.rooms.some((x) => x.building === b && x.name === r.name)) continue;
-          wiz.rooms.push({ building: b, floor: r.floor || wizWhere.floor || '', name: r.name, aliases: [] });
-          added++;
-        }
-        if (!added) { msg.textContent = '새로 담을 실 이름을 찾지 못했어요.'; return; }
-        drawWiz();
-        flash(`실 ${n(added)}곳을 담았어요`);
-      }
-
-      // 칩 누르기 (다시 그릴 때마다 새로 만들어지는 요소에 건다)
+      /* 칩 누르기 */
       back.addEventListener('click', (e) => {
         const b = e.target.closest('[data-bld]');
         if (b) {
@@ -4803,9 +5089,8 @@
           if (at >= 0) {
             wiz.buildings.splice(at, 1);
             wiz.rooms = wiz.rooms.filter((r) => r.building !== nm);
-            if (wizWhere.building === nm) wizWhere = { building: wiz.buildings[0]?.name || '', floor: '' };
+            drawWiz();
           } else addB(nm);
-          drawWiz();
           return;
         }
         const fl = e.target.closest('[data-fl]');
@@ -4831,22 +5116,30 @@
           return;
         }
         const led = e.target.closest('[data-rmled]');
-        if (led) { addR(led.dataset.rmled); return; }
+        if (led) {
+          const bb = wiz.buildings[0]?.name || '';
+          if (!wiz.rooms.some((r) => r.name === led.dataset.rmled)) {
+            wiz.rooms.push({ building: bb, floor: '', name: led.dataset.rmled, aliases: [] });
+          }
+          drawWiz();
+          return;
+        }
+        const mv = e.target.closest('[data-rmmove]');
+        if (mv) { addR(mv.dataset.rmmove); return; }
         const del = e.target.closest('[data-rmdel]');
         if (del) {
-          const bname = wizWhere.building;
-          wiz.rooms = wiz.rooms.filter((r) => !(r.building === bname && r.name === del.dataset.rmdel));
+          wiz.rooms = wiz.rooms.filter((r) => !(r.building === page.building && r.floor === page.floor && r.name === del.dataset.rmdel));
           drawWiz();
         }
       });
     }
 
-    // 서버(Edge Function)에 제미나이로 읽어 달라고 부탁한다. 준비가 안 됐으면 조용히 물러난다.
     let aiWhy = '';   // 서버가 알려 준 실패 이유
 
+    // 서버(Edge Function)에 제미나이로 읽어 달라고 부탁한다. 준비가 안 됐으면 조용히 물러난다.
     async function askAI(payload) {
       aiWhy = '';
-      if (!sb || !session) return null;
+      if (!sb || !session) { aiWhy = '로그인한 뒤에 쓸 수 있어요.'; return null; }
       try {
         const res = await fetch(`${SUPABASE.url}/functions/v1/parse-spaces`, {
           method: 'POST',
@@ -4859,9 +5152,8 @@
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          if (data.error === 'KEY_REJECTED') aiWhy = '제미나이 키가 거절됐어요. Supabase에 넣은 키를 확인해 주세요.';
-          else if (data.error === 'NO_KEY') aiWhy = '서버에 제미나이 키가 없어요.';
-          else aiWhy = '';
+          if (data.error === 'KEY_REJECTED') aiWhy = '제미나이 키가 거절됐어요. Supabase의 Secrets를 확인해 주세요.';
+          else if (data.error === 'NO_KEY') aiWhy = '서버에 제미나이 키가 없어요. Secrets에 GEMINI_API_KEY를 넣어 주세요.';
           return null;
         }
         return Array.isArray(data.rooms) ? data.rooms.filter((r) => r && r.name) : null;
@@ -4984,22 +5276,25 @@
           <button class="btn btn--solid" type="button" data-action="spaces">${icon(ICONS.spaces)}${hasSpaces() ? '다시 설정' : '설정 시작'}</button>
         </section>
 
+        <div class="mgrtop">
         <section class="card todo" aria-labelledby="todo-title">
-          <div class="card__head">
-            <h2 class="card__title" id="todo-title">챙길 일</h2>
-            <span class="card__meta" id="todo-meta"></span>
-          </div>
+          <button class="fold" type="button" id="todo-fold" aria-expanded="true" aria-controls="todo-body">
+            ${icon(ICONS.caret, 'icon fold__caret')}
+            <span id="todo-title">챙길 일</span>
+            <span class="fold__count num" id="todo-meta"></span>
+          </button>
           <div class="todo__body" id="todo-body" aria-live="polite"></div>
         </section>
 
         <section class="card spot" aria-labelledby="spot-title">
           <button class="fold" type="button" id="spot-fold" aria-expanded="true" aria-controls="spot-box">
             ${icon(ICONS.caret, 'icon fold__caret')}
-            <span id="spot-title">장소 미지정 비품</span>
+            <span id="spot-title">장소 미지정 물품</span>
             <span class="fold__count num" id="spot-count"></span>
           </button>
           <div class="spotbox" id="spot-box"></div>
         </section>
+        </div>
 
         <aside class="side">
           <section class="card who" aria-labelledby="who-title">
@@ -5172,6 +5467,13 @@
           </ul>`;
       }
 
+      const todoFold = view.querySelector('#todo-fold');
+      todoFold.addEventListener('click', () => {
+        const open = body.hidden;
+        body.hidden = !open;
+        todoFold.setAttribute('aria-expanded', String(open));
+      });
+
       spotFold.addEventListener('click', () => {
         const open = spotBox.hidden;
         spotBox.hidden = !open;
@@ -5203,6 +5505,15 @@
           run: () => commit({ ...state, items: [] }),
           done: (c) => `물품 ${n(c)}가지를 모두 지웠어요`,
         },
+        all: {
+          title: '학교 정보 삭제',
+          count: () => state.items.length + (state.loans || []).length,
+          unit: '건',
+          desc: () => '물품, 대여 기록, 서명, 공간 설정, 담당 정보를 모두 지우고 처음 상태로 되돌려요.',
+          warn: '삭제하면 다시 복구할 수 없습니다. 복구를 하려면 엑셀로 내려받아 주세요. 학교와 선생님 계정은 남아서 로그인은 그대로 됩니다.',
+          run: () => commit({ ...state, items: [], loans: [], recent: [], school: { ...DEFAULT_SCHOOL, name: school().name } }),
+          done: () => '학교 정보를 모두 지웠어요',
+        },
         loans: {
           title: '대여 기록·서명 삭제',
           count: () => (state.loans || []).length,
@@ -5219,13 +5530,13 @@
         const spec = WIPES[wipeKind];
 
         if (!wipeKind) {
-          wipeBox.innerHTML = Object.entries(WIPES).map(([key, w]) => `
+          wipeBox.innerHTML = ['items', 'loans', 'all'].map((key) => [key, WIPES[key]]).map(([key, w]) => `
             <div class="wipe__row">
               <div class="wipe__what">
                 <p class="wipe__name">${esc(w.title)}</p>
-                <p class="wipe__count num">${w.count() ? `${n(w.count())}${w.unit}` : '비어 있어요'}</p>
+                <p class="wipe__count num">${key === 'all' ? '모두 처음 상태로' : (w.count() ? `${n(w.count())}${w.unit}` : '비어 있어요')}</p>
               </div>
-              <button class="mini wipe__pick" type="button" data-wipe="${key}" ${w.count() ? '' : 'disabled'}>지우기</button>
+              <button class="mini wipe__pick ${key === 'all' ? 'wipe__pick--all' : ''}" type="button" data-wipe="${key}" ${w.count() || key === 'all' ? '' : 'disabled'}>지우기</button>
             </div>`).join('');
           return;
         }
@@ -5238,7 +5549,7 @@
               <p class="wipe__warn">${icon(ICONS.bell)}<span>${esc(spec.warn)}</span></p>
               <div class="wipe__acts">
                 <button class="mini mini--quiet" type="button" id="wipe-cancel">그만두기</button>
-                ${wipeKind === 'items' ? '<button class="mini mini--quiet" type="button" id="wipe-save">엑셀로 내려받기</button>' : ''}
+                ${(wipeKind === 'items' || wipeKind === 'all') && state.items.length ? '<button class="mini mini--quiet" type="button" id="wipe-save">엑셀로 내려받기</button>' : ''}
                 <button class="mini wipe__go" type="button" id="wipe-next">계속</button>
               </div>
             </div>`;
@@ -5279,10 +5590,12 @@
           return;
         }
         const spec = WIPES[wipeKind];
+        const wasAll = wipeKind === 'all';
         const count = spec.count();
         spec.run();
         wipeKind = ''; wipeStep = 1; chosen.clear();
         flash(spec.done(count));
+        if (wasAll) { render(); return; }
         drawWipe();
         update();
         drawSigns();
@@ -5468,6 +5781,9 @@
             <a class="back" href="${esc(backTo)}">${icon(ICONS.back)}${esc(backLabel(backTo))}</a>
             <h1 class="top__title" tabindex="-1">${editing ? '물품 수정' : '물품 등록'}</h1>
           </div>
+          ${!editing && canImport() ? `<div class="top__actions">
+            <button class="btn btn--ghost" type="button" id="bulk-open">${icon(ICONS.upload)}엑셀로 한꺼번에</button>
+          </div>` : ''}
         </header>
 
         <form class="sheet card" id="add-form" novalidate aria-labelledby="what-title">
@@ -5533,7 +5849,7 @@
 
         <section class="sheet card" aria-labelledby="where-title">
           <h2 class="sheet__title" id="where-title">어디에 있나요</h2>
-          <p class="sheet__desc">큰 곳부터 작은 곳 순서로 적어 주세요. 이 순서대로 길을 안내해요.</p>
+          <p class="sheet__desc">자세히 입력하면 나중에 쉽게 찾을 수 있어요. <span class="req">*</span> 표시는 꼭 적어야 해요.</p>
 
           <div class="field">
             <label class="field__label" for="f-building">건물<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
@@ -5725,6 +6041,10 @@
     }
 
     function mountAdd(view) {
+      view.querySelector('#bulk-open')?.addEventListener('click', () => {
+        openItemImport((count) => { draft = null; render(); flash(`${n(count)}개를 등록했어요`); });
+      });
+
       const form = view.querySelector('#add-form');
       let tried = false;
 
