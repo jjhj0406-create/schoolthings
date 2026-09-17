@@ -1335,6 +1335,99 @@
       .homark { flex: 1; }
       .hopast__row { flex-direction: column; align-items: stretch; }
     }
+    /* ───────── 자주 대여하는 물품 ───────── */
+    .rank { grid-column: span 5; }
+    .rank__list { list-style: none; display: grid; gap: 4px; counter-reset: r; }
+    .rankitem {
+      width: 100%; display: grid; grid-template-columns: 26px minmax(0, 1fr) auto;
+      align-items: center; gap: 12px; padding: 11px 10px; border-radius: 12px;
+      text-align: left; transition: background-color 120ms;
+    }
+    .rankitem:hover { background: var(--field); }
+    .rankitem:active { transform: scale(.99); }
+    .rankitem__no {
+      width: 26px; height: 26px; border-radius: 8px;
+      display: grid; place-items: center;
+      background: var(--field); color: var(--ink-3);
+      font-size: 13px; font-weight: 800;
+    }
+    .rank__list li:first-child .rankitem__no { background: var(--marker); color: var(--navy); }
+    .rank__list li:nth-child(2) .rankitem__no { background: var(--navy); color: #fff; }
+    .rank__list li:nth-child(3) .rankitem__no { background: var(--board); color: #fff; }
+    .rankitem__main { min-width: 0; display: grid; gap: 6px; }
+    .rankitem__name { font-size: 15px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rankitem.is-top .rankitem__name { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+    .rankitem__bar { display: block; height: 4px; border-radius: 2px; background: var(--field); overflow: hidden; }
+    .rankitem__bar span { display: block; height: 100%; border-radius: 2px; background: #c9cfdd; animation: grow 520ms cubic-bezier(.2, .8, .2, 1) both; }
+    .rank__list li:first-child .rankitem__bar span { background: var(--marker); }
+    .rank__list li:nth-child(2) .rankitem__bar span { background: var(--navy); }
+    .rank__list li:nth-child(3) .rankitem__bar span { background: var(--board); }
+    .rankitem__times { font-size: 14px; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
+    .rankitem.is-top .rankitem__times { color: var(--ink); }
+
+    .rankbox { width: min(480px, 100%); }
+    .rankbox__label { font-size: 13px; font-weight: 700; color: var(--ink-3); margin: 18px 0 8px; }
+    .rankbox__list { list-style: none; display: grid; gap: 5px; max-height: 260px; overflow: auto; }
+    .rankrow { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border-radius: 12px; background: var(--field); }
+    .rankrow.is-late { background: #fdf0f0; }
+    .rankrow.is-done { background: #f6f7fb; }
+    .rankrow__main { flex: 1; min-width: 0; }
+    .rankrow__who { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+    .rankrow__sub { font-size: 13px; color: var(--ink-2); margin-top: 2px; overflow-wrap: anywhere; }
+
+    /* ───────── 물품 문의 ───────── */
+    .board { grid-column: span 7; }
+    .btn--sm { height: 34px; padding: 0 12px; font-size: 14px; }
+    .btn--sm .icon { width: 15px; height: 15px; }
+    .board__list { list-style: none; display: grid; gap: 4px; }
+    .postrow {
+      width: 100%; display: flex; align-items: center; gap: 12px;
+      padding: 12px 10px; border-radius: 12px; text-align: left;
+      transition: background-color 120ms;
+    }
+    .postrow:hover { background: var(--field); }
+    .postrow__main { flex: 1; min-width: 0; }
+    .postrow__title {
+      display: block; font-size: 15px; font-weight: 700; letter-spacing: -0.02em;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .postrow__sub { display: block; font-size: 13px; color: var(--ink-2); margin-top: 3px; }
+    .postrow.is-solved .postrow__title { color: var(--ink-2); }
+    .postrow__cnt {
+      display: inline-flex; align-items: center; gap: 4px; flex: none;
+      padding: 5px 9px; border-radius: 8px; background: var(--field);
+      font-size: 13px; font-weight: 700; color: var(--ink-3);
+    }
+    .postrow__cnt .icon { width: 15px; height: 15px; }
+    .postrow__cnt.is-on { background: #e8f2ed; color: var(--board); }
+    .solved {
+      display: inline-flex; align-items: center; height: 20px; padding: 0 7px;
+      margin-left: 6px; border-radius: 5px;
+      background: #e8f2ed; color: var(--board); font-size: 11px; font-weight: 800;
+    }
+
+    .postbox { width: min(520px, 100%); }
+    .postbody { font-size: 15px; color: var(--ink-2); line-height: 1.6; margin-top: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .cmts { list-style: none; display: grid; gap: 5px; max-height: 260px; overflow: auto; }
+    .cmt { display: flex; align-items: flex-start; gap: 8px; padding: 11px 13px; border-radius: 12px; background: var(--field); }
+    .cmt__main { flex: 1; min-width: 0; }
+    .cmt__who { font-size: 13px; font-weight: 700; color: var(--ink-2); }
+    .cmt__when { font-weight: 500; color: var(--ink-3); margin-left: 4px; }
+    .cmt__body { font-size: 15px; line-height: 1.5; margin-top: 3px; overflow-wrap: anywhere; }
+    .cmtwrite { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: 6px; margin-top: 12px; }
+    .cmtwrite .input { height: 44px; }
+    .cmtwrite .btn { height: 44px; }
+
+    @media (max-width: 1180px) {
+      .rank { grid-column: span 5; }
+      .board { grid-column: span 7; }
+    }
+    @media (max-width: 760px) {
+      .rank, .board { grid-column: 1 / -1; }
+      .cmtwrite { grid-template-columns: 1fr; }
+      .cmtwrite .btn { width: 100%; }
+      .rankbox__list, .cmts { max-height: none; }
+    }
     .placebar { display: none; }
     .tabbar { display: none; }
 
@@ -1407,6 +1500,7 @@
       .pill { height: 26px; padding: 0 10px; }
       .loans .loan:nth-child(n+4) { display: none; }
       .week, .places { display: none; }
+      .rank, .board { display: block; }
 
       .bld__tabs { flex-wrap: nowrap; overflow-x: auto; margin: 0 -18px 14px; padding: 0 18px; scrollbar-width: none; }
       .bld__tabs::-webkit-scrollbar { display: none; }
@@ -1612,7 +1706,7 @@
 
     // 저장소: localStorage를 쓰고, 막혀 있으면(미리보기 환경 등) 메모리에만 둔다.
     const STORE_KEY = 'school-items:v1';
-    const blank = () => ({ items: [], loans: [], recent: [], handovers: [] });
+    const blank = () => ({ items: [], loans: [], recent: [], handovers: [], posts: [], comments: [] });
     let memoryStore = blank();
     let cacheOff = false;   // 기기 사본을 접었는지
     const store = {
@@ -1744,11 +1838,16 @@
     async function loadData() {
       if (!sb || me?.status !== 'active') return;
       missingTables.clear();
-      const [items, loans, hos] = await Promise.all([fetchAll('items'), fetchAll('loans'), fetchMaybe('handovers')]);
+      const [items, loans, hos, pss, cms] = await Promise.all([
+        fetchAll('items'), fetchAll('loans'), fetchMaybe('handovers'),
+        fetchMaybe('posts'), fetchMaybe('comments'),
+      ]);
       state = {
         ...state,
         items: items.map(fromRowItem),
         loans: loans.map(fromRowLoan),
+        posts: pss.map((r) => ({ id: r.id, title: r.title, body: r.body || '', who: r.who, solved: !!r.solved, createdAt: r.created_at })),
+        comments: cms.map((r) => ({ id: r.id, postId: r.post_id, who: r.who, body: r.body, createdAt: r.created_at })),
         handovers: hos.map((r) => ({
           id: r.id, startedAt: r.started_at, doneAt: r.done_at,
           fromName: r.from_name, fromPosition: r.from_position,
@@ -1816,6 +1915,14 @@
       };
       diff(prev.items || [], next.items || [], 'items', toRowItem);
       diff(prev.loans || [], next.loans || [], 'loans', toRowLoan);
+      diff(prev.posts || [], next.posts || [], 'posts', (x) => ({
+        id: x.id, school_id: me.schoolId, title: x.title, body: x.body || '',
+        who: x.who, solved: !!x.solved, created_at: x.createdAt,
+      }));
+      diff(prev.comments || [], next.comments || [], 'comments', (x) => ({
+        id: x.id, school_id: me.schoolId, post_id: x.postId,
+        who: x.who, body: x.body, created_at: x.createdAt,
+      }));
       diff(prev.handovers || [], next.handovers || [], 'handovers', (x) => ({
         id: x.id, school_id: me.schoolId,
         started_at: x.startedAt, done_at: x.doneAt,
@@ -2214,6 +2321,7 @@
       student: 'M12 4.5L21 9l-9 4.5L3 9z M7 11v4.5c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5V11',
       spaces: 'M4 20.5V9.5l8-5 8 5v11 M3 20.5h18 M9.5 20.5v-6h5v6',
       handover: 'M4 8.5h13 M13.5 5l3.5 3.5-3.5 3.5 M20 15.5H7 M10.5 12L7 15.5l3.5 3.5',
+      chat: 'M20.5 12c0 4-3.8 7-8.5 7-1 0-2-.15-2.9-.42L4 20l1.3-3.4C4.2 15.3 3.5 13.7 3.5 12c0-4 3.8-7 8.5-7s8.5 3 8.5 7z',
       manager: 'M12 12.5a4 4 0 100-8 4 4 0 000 8z M4.5 20.5a7.5 7.5 0 0115 0',
       edit: 'M4 20h4L18.5 9.5l-4-4L4 16z M14 6l4 4',
       trash: 'M5 7h14 M9.5 7V4.5h5V7 M7 7l1 12.5h8L17 7 M10.5 10.5v6 M13.5 10.5v6',
@@ -2562,6 +2670,11 @@
         prev.count += i.qty; byRoom.set(key, prev);
       }
       const places = [...byRoom.values()].sort((a, b) => b.count - a.count).slice(0, 5);
+      const ranks = rentRank();
+      const recentPosts = posts().slice().sort((a, b) => {
+        if (a.solved !== b.solved) return a.solved ? 1 : -1;   // 해결 안 된 것부터
+        return b.createdAt.localeCompare(a.createdAt);
+      }).slice(0, 5);
       const recent = [...new Set(items.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((i) => i.name))].slice(0, 5);
 
       const todayIdx = new Date().getDay() - 1;
@@ -2624,51 +2737,55 @@
           ${stockBody}
         </section>
 
-        <section class="card week" aria-labelledby="week-title">
-          <div class="card__head"><h2 class="card__title" id="week-title">이번 주 대여</h2><span class="card__meta num">총 ${weekSum}건</span></div>
-          <div class="week__chart">
-            ${week.map((w, i) => `
-              <div class="week__col ${i === todayIdx ? 'is-today' : ''}">
-                ${weekSum ? `<span class="week__val num">${w.count}</span>` : ''}
-                <span class="week__bar" style="height:${weekSum ? (w.count / weekMax) * 100 : 0}%;animation-delay:${i * 60}ms"></span>
-                <span class="week__day">${w.day}${i === todayIdx ? '<em>오늘</em>' : ''}</span>
-              </div>`).join('')}
-            ${weekSum ? '' : `<div class="week__empty"><strong>이번 주 대여 기록이 없어요</strong><span>물품을 빌리면 요일별로 쌓여요</span></div>`}
+        <section class="card rank" aria-labelledby="rank-title">
+          <div class="card__head">
+            <h2 class="card__title" id="rank-title">자주 대여하는 물품</h2>
+            <span class="card__meta">${ranks.length ? '눌러서 대여 현황 보기' : ''}</span>
           </div>
+          ${ranks.length ? `<ol class="rank__list">${ranks.map((r, i) => `
+            <li>
+              <button class="rankitem ${i < 3 ? 'is-top' : ''}" type="button" data-rank="${esc(r.name)}">
+                <span class="rankitem__no num">${i + 1}</span>
+                <span class="rankitem__main">
+                  <span class="rankitem__name">${esc(r.name)}</span>
+                  <span class="rankitem__bar"><span style="width:${(r.times / ranks[0].times) * 100}%;animation-delay:${i * 60}ms"></span></span>
+                </span>
+                <span class="rankitem__times num">${n(r.times)}번</span>
+              </button>
+            </li>`).join('')}</ol>`
+          : `<div class="empty"><strong>아직 대여 기록이 없어요</strong><span>물품을 빌리면 자주 빌리는 순서로 모여요</span></div>`}
         </section>
 
-        <section class="card loans" aria-labelledby="loans-title">
+        <section class="card board" aria-labelledby="board-title">
           <div class="card__head">
-            <h2 class="card__title" id="loans-title">대여 현황</h2>
-            ${out.length ? `<a class="linkish" href="#/rent">모두 보기</a>` : ''}
+            <h2 class="card__title" id="board-title">물품 문의</h2>
+            <button class="btn btn--solid btn--sm" type="button" id="board-write">${icon(ICONS.add)}글쓰기</button>
           </div>
-          ${out.length ? `<ul class="loans__list">${sortLoans(out).slice(0, 4).map((l) => {
-            const st = dueState(l);
-            return `<li class="loan ${st.key === 'late' ? 'is-late' : ''}">
-              <div class="loan__main">
-                <p class="loan__item">${esc(l.itemName)}${l.qty > 1 ? ` ${n(l.qty)}개` : ''}</p>
-                <p class="loan__who">${esc(l.who)}</p>
-              </div>
-              <span class="pill ${PILL[st.key]}">${esc(st.label)}</span>
+          ${recentPosts.length ? `<ul class="board__list">${recentPosts.map((p) => {
+            const cnt = commentsOf(p.id).length;
+            return `<li>
+              <button class="postrow ${p.solved ? 'is-solved' : ''}" type="button" data-post="${p.id}">
+                <span class="postrow__main">
+                  <span class="postrow__title">${esc(p.title)}${p.solved ? '<span class="solved">해결됨</span>' : ''}</span>
+                  <span class="postrow__sub">${esc(p.who)} · ${esc(timeAgo(p.createdAt))}</span>
+                </span>
+                <span class="postrow__cnt ${cnt ? 'is-on' : ''}">${icon(ICONS.chat)}<b class="num">${n(cnt)}</b></span>
+              </button>
             </li>`;
           }).join('')}</ul>`
-          : `<div class="empty"><strong>대여 중인 물품이 없어요</strong><span>물품을 빌리면 반납일과 함께 여기에 보여요</span></div>`}
-        </section>
-
-        <section class="card places" aria-labelledby="places-title">
-          <div class="card__head"><h2 class="card__title" id="places-title">많이 보관된 곳</h2></div>
-          ${places.length ? `<ul class="places__list">${places.map((p, i) => `
-            <li>
-              <a class="place" href="${p.unset ? `#/places?b=${encodeURIComponent(UNSET_B)}` : `#/places?room=${encodeURIComponent(p.key)}`}">
-                <span class="place__row"><span class="place__name">${esc(p.name)}</span><span class="place__count num">${n(p.count)}개</span></span>
-                <span class="place__track"><span class="place__fill" style="width:${(p.count / places[0].count) * 100}%;animation-delay:${i * 60}ms"></span></span>
-              </a>
-            </li>`).join('')}</ul>`
-          : `<div class="empty"><strong>아직 비어 있어요</strong><span>물품을 등록하면<br>장소별로 모여요</span></div>`}
-        </section>`;
+          : `<div class="empty"><strong>물어볼 게 있으신가요?</strong><span>“이동식 마이크는 어디 있을까요?”처럼<br>적어 두면 아는 분이 알려 줘요</span></div>`}
+        </section>        </section>`;
     }
 
     function mountHome(view) {
+      view.addEventListener('click', (e) => {
+        const r = e.target.closest('[data-rank]');
+        if (r) { openRankDetail(r.dataset.rank); return; }
+        const pRow = e.target.closest('[data-post]');
+        if (pRow) { openPost(pRow.dataset.post, () => render()); return; }
+        if (e.target.closest('#board-write')) openWrite(() => { render(); flash('문의 글을 올렸어요'); });
+      });
+
       const foot = view.querySelector('#find-foot');
       const q = view.querySelector('#q');
       const recent = JSON.parse(foot.dataset.recent);
@@ -5293,6 +5410,243 @@
         aiWhy = '서버에 닿지 못했어요. 인터넷을 확인해 주세요.';
         return null;
       }
+    }
+
+    /* ════════ 물품 문의 글 (→ src/pages/board.js) ════════ */
+    const posts = () => state.posts || [];
+    const comments = () => state.comments || [];
+    const commentsOf = (id) => comments().filter((c) => c.postId === id)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
+    // 글쓴이 이름: 로그인한 이름 → 담당 선생님 이름 순으로 채운다
+    function writerName() {
+      const meta = session?.user?.user_metadata?.full_name;
+      if (meta) return meta;
+      const mail = session?.user?.email;
+      if (mail) return mail.split('@')[0];
+      return school().teacher || '';
+    }
+
+    const timeAgo = (iso) => {
+      const min = Math.round((Date.now() - new Date(iso)) / 60000);
+      if (min < 1) return '방금';
+      if (min < 60) return `${min}분 전`;
+      const hr = Math.round(min / 60);
+      if (hr < 24) return `${hr}시간 전`;
+      const day = Math.round(hr / 24);
+      if (day < 7) return `${day}일 전`;
+      return dateShort(iso.slice(0, 10));
+    };
+
+    /* ── 자주 대여하는 물품 ── */
+    function rentRank() {
+      const map = new Map();
+      for (const l of state.loans || []) {
+        const g = map.get(l.itemName) || { name: l.itemName, times: 0, qty: 0, itemId: l.itemId };
+        g.times += 1; g.qty += l.qty;
+        map.set(l.itemName, g);
+      }
+      return [...map.values()].sort((a, b) => b.times - a.times || b.qty - a.qty).slice(0, 5);
+    }
+
+    /* ── 그 물품의 대여 현황 팝업 ── */
+    function openRankDetail(name) {
+      const all = (state.loans || []).filter((l) => l.itemName === name);
+      const out = sortLoans(all.filter((l) => !l.returnedAt));
+      const back = document.createElement('div');
+      back.className = 'signback';
+      back.innerHTML = `
+        <div class="signbox rankbox" role="dialog" aria-modal="true" aria-labelledby="rank-title">
+          <p class="signbox__title" id="rank-title">${esc(name)}</p>
+          <p class="signbox__desc">모두 ${n(all.length)}번 빌려 갔어요${out.length ? ` · 지금 ${n(out.length)}건 나가 있어요` : ' · 지금은 모두 들어와 있어요'}</p>
+
+          ${out.length ? `
+            <p class="rankbox__label">지금 빌려 간 사람</p>
+            <ul class="rankbox__list">
+              ${out.map((l) => {
+                const st = dueState(l);
+                return `<li class="rankrow ${st.key === 'late' ? 'is-late' : ''}">
+                  <div class="rankrow__main">
+                    <p class="rankrow__who">${esc(l.who)}${l.qty > 1 ? ` <span class="num">${n(l.qty)}개</span>` : ''}</p>
+                    <p class="rankrow__sub">${esc(l.path || '')}</p>
+                  </div>
+                  <span class="pill ${PILL[st.key]}">${esc(st.label)}</span>
+                </li>`;
+              }).join('')}
+            </ul>` : ''}
+
+          ${all.filter((l) => l.returnedAt).length ? `
+            <p class="rankbox__label">지난 기록</p>
+            <ul class="rankbox__list">
+              ${all.filter((l) => l.returnedAt).sort((a, b) => b.returnedAt.localeCompare(a.returnedAt)).slice(0, 5).map((l) => `
+                <li class="rankrow is-done">
+                  <div class="rankrow__main">
+                    <p class="rankrow__who">${esc(l.who)}</p>
+                    <p class="rankrow__sub">${esc(dateShort(l.outAt.slice(0, 10)))} 빌림 · ${esc(dateShort(l.returnedAt.slice(0, 10)))} 반납</p>
+                  </div>
+                </li>`).join('')}
+            </ul>` : ''}
+
+          <div class="signbox__acts">
+            <span class="signbox__spacer"></span>
+            <button class="mini mini--quiet" type="button" id="rank-close">닫기</button>
+            <a class="signbox__go" href="#/rent">대여 화면으로</a>
+          </div>
+        </div>`;
+      document.body.append(back);
+      const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      back.addEventListener('click', (e) => { if (e.target === back) close(); });
+      back.querySelector('#rank-close').addEventListener('click', close);
+      back.querySelector('.signbox__go').addEventListener('click', close);
+    }
+
+    /* ── 문의 글쓰기 ── */
+    function openWrite(onDone) {
+      const back = document.createElement('div');
+      back.className = 'signback';
+      back.innerHTML = `
+        <div class="signbox" role="dialog" aria-modal="true" aria-labelledby="w-title">
+          <p class="signbox__title" id="w-title">물품 문의 글쓰기</p>
+          <p class="signbox__desc">찾는 물품이 어디 있는지 물어보세요. 아는 선생님이 댓글로 알려 줄 거예요.</p>
+          <div class="field" style="margin-top:16px">
+            <label class="field__label" for="w-q">무엇이 궁금하세요?<span class="req" aria-hidden="true">*</span></label>
+            <input class="input" id="w-q" placeholder="예: 이동식 마이크는 어디 있을까요?" autocomplete="off" maxlength="60">
+          </div>
+          <div class="field">
+            <label class="field__label" for="w-body">더 적을 말 <small>선택</small></label>
+            <textarea class="input" id="w-body" placeholder="예: 내일 학년 행사에 써야 해요." maxlength="300"></textarea>
+          </div>
+          <div class="field">
+            <label class="field__label" for="w-who">이름<span class="req" aria-hidden="true">*</span></label>
+            <input class="input" id="w-who" placeholder="예: 김하늘" autocomplete="off" value="${esc(writerName())}" maxlength="20">
+          </div>
+          <p class="signbox__err" id="w-err" aria-live="polite"></p>
+          <div class="signbox__acts">
+            <span class="signbox__spacer"></span>
+            <button class="mini mini--quiet" type="button" id="w-cancel">취소</button>
+            <button class="signbox__go" type="button" id="w-go">올리기</button>
+          </div>
+        </div>`;
+      document.body.append(back);
+      const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      back.addEventListener('click', (e) => { if (e.target === back) close(); });
+      back.querySelector('#w-cancel').addEventListener('click', close);
+      back.querySelector('#w-q').focus();
+
+      back.querySelector('#w-go').addEventListener('click', () => {
+        const title = back.querySelector('#w-q').value.trim();
+        const who = back.querySelector('#w-who').value.trim();
+        const err = back.querySelector('#w-err');
+        if (!title) { err.textContent = '무엇이 궁금한지 적어 주세요.'; return; }
+        if (!who) { err.textContent = '이름을 적어 주세요.'; return; }
+        commit({
+          ...state,
+          posts: [...posts(), {
+            id: 'pst_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+            title, body: back.querySelector('#w-body').value.trim(),
+            who, solved: false, createdAt: new Date().toISOString(),
+          }],
+        });
+        close();
+        onDone();
+      });
+    }
+
+    /* ── 문의 글 보기 ── */
+    function openPost(id, onChange) {
+      const draw = () => {
+        const post = posts().find((p) => p.id === id);
+        if (!post) { close(); return; }
+        const list = commentsOf(id);
+        box.innerHTML = `
+          <p class="signbox__title" id="p-title">${esc(post.title)}${post.solved ? '<span class="solved">해결됨</span>' : ''}</p>
+          <p class="signbox__desc">${esc(post.who)} · ${esc(timeAgo(post.createdAt))}</p>
+          ${post.body ? `<p class="postbody">${esc(post.body)}</p>` : ''}
+
+          <p class="rankbox__label">답변 ${n(list.length)}</p>
+          ${list.length ? `<ul class="cmts">${list.map((c) => `
+            <li class="cmt">
+              <div class="cmt__main">
+                <p class="cmt__who">${esc(c.who)} <span class="cmt__when">${esc(timeAgo(c.createdAt))}</span></p>
+                <p class="cmt__body">${esc(c.body)}</p>
+              </div>
+              ${canImport() ? `<button class="act act--del" type="button" data-cdel="${c.id}" aria-label="댓글 지우기">${icon(ICONS.trash)}</button>` : ''}
+            </li>`).join('')}</ul>`
+            : '<p class="side-empty">아직 답변이 없어요. 아는 곳이면 알려 주세요.</p>'}
+
+          <div class="cmtwrite">
+            <input class="input" id="c-who" placeholder="이름" autocomplete="off" value="${esc(writerName())}" maxlength="20">
+            <input class="input" id="c-body" placeholder="예: 방송실에 있습니다." autocomplete="off" maxlength="200">
+            <button class="btn btn--solid" type="button" id="c-go">답변</button>
+          </div>
+          <p class="signbox__err" id="c-err" aria-live="polite"></p>
+
+          <div class="signbox__acts">
+            ${canImport() ? `<button class="act act--del" type="button" id="p-del">${icon(ICONS.trash)}<span class="act__label">글 지우기</span></button>` : ''}
+            <span class="signbox__spacer"></span>
+            <button class="mini mini--quiet" type="button" id="p-solve">${post.solved ? '해결 표시 풀기' : '해결됐어요'}</button>
+            <button class="mini mini--quiet" type="button" id="p-close">닫기</button>
+          </div>`;
+      };
+
+      const back = document.createElement('div');
+      back.className = 'signback';
+      back.innerHTML = '<div class="signbox postbox" role="dialog" aria-modal="true" aria-labelledby="p-title"></div>';
+      document.body.append(back);
+      const box = back.querySelector('.postbox');
+      const close = () => { back.remove(); document.removeEventListener('keydown', onKey); onChange(); };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      back.addEventListener('click', (e) => { if (e.target === back) close(); });
+      draw();
+
+      box.addEventListener('click', (e) => {
+        if (e.target.closest('#p-close')) { close(); return; }
+        if (e.target.closest('#c-go')) {
+          const who = box.querySelector('#c-who').value.trim();
+          const body = box.querySelector('#c-body').value.trim();
+          const err = box.querySelector('#c-err');
+          if (!who || !body) { err.textContent = '이름과 답변을 적어 주세요.'; return; }
+          commit({
+            ...state,
+            comments: [...comments(), {
+              id: 'cmt_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+              postId: id, who, body, createdAt: new Date().toISOString(),
+            }],
+          });
+          draw();
+          return;
+        }
+        if (e.target.closest('#p-solve')) {
+          const post = posts().find((p) => p.id === id);
+          commit({ ...state, posts: posts().map((p) => (p.id === id ? { ...p, solved: !post.solved } : p)) });
+          draw();
+          return;
+        }
+        const cd = e.target.closest('[data-cdel]');
+        if (cd) {
+          commit({ ...state, comments: comments().filter((c) => c.id !== cd.dataset.cdel) });
+          draw();
+          return;
+        }
+        if (e.target.closest('#p-del')) {
+          if (!confirm('이 글과 답변을 모두 지울까요?')) return;
+          commit({
+            ...state,
+            posts: posts().filter((p) => p.id !== id),
+            comments: comments().filter((c) => c.postId !== id),
+          });
+          close();
+        }
+      });
+
+      box.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.id === 'c-body') box.querySelector('#c-go').click();
+      });
     }
 
     /* ════════ 인수인계 (→ src/pages/handover.js) ════════ */
