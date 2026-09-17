@@ -785,11 +785,26 @@
     /* 카드 높이를 화면에 억지로 맞추지 않는다. 겹침의 원인이었다. */
     /* 카드 높이를 화면에 억지로 맞추지 않는다. 겹침의 원인이었다. */
     .main.is-manager { grid-template-rows: none; grid-auto-rows: max-content; align-content: start; }
-    .mgrtop {
+    .mgrsum {
+      grid-column: 1 / -1;
+      display: flex; flex-flow: row wrap; gap: 14px 30px; padding: 16px 22px;
+    }
+    .mgrsum__fig { display: grid; gap: 2px; }
+    .mgrsum__k { font-size: 13px; font-weight: 600; color: var(--ink-3); }
+    .mgrsum__v { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; }
+    .mgrsum__fig.is-warn .mgrsum__v { color: var(--late); }
+
+    .mgrgrid {
       grid-column: 1 / -1;
       display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;
     }
-    .todo, .spot { min-width: 0; }
+    .fold-card { min-width: 0; padding: 0 !important; overflow: hidden; }
+    .fold-card .fold { width: 100%; padding: 17px 22px; }
+    .fold-body { padding: 0 22px 22px; animation: rise 180ms ease-out both; }
+    .fold-body[hidden] { display: none; }
+    .fold-card .todo__body { max-height: 520px; margin-top: 0; }
+    .fold-card .spotbox { margin-top: 0; }
+    .fold__count { font-size: 13px; font-weight: 700; color: var(--ink-3); margin-left: auto; }
     .is-manager .side {
       grid-column: 1 / -1;
       display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
@@ -1576,8 +1591,11 @@
       .rrow { padding: 12px 14px; }
       .rrow__acts .act__label { display: none; }
       .pick__results { max-height: none; }
-      .todo, .side, .spot, .setupcard, .mgrtop { grid-column: 1 / -1; }
-      .mgrtop { grid-template-columns: 1fr; gap: 10px; }
+      .todo, .side, .spot, .setupcard, .mgrgrid, .mgrsum { grid-column: 1 / -1; }
+      .mgrgrid { grid-template-columns: 1fr; gap: 10px; }
+      .mgrsum { gap: 12px 20px; padding: 14px 16px; }
+      .fold-card .fold { padding: 15px 18px; }
+      .fold-body { padding: 0 18px 18px; }
       .setupcard .btn { width: 100%; }
       .spotpick__row { grid-template-columns: 1fr; }
       .signlist { max-height: none; }
@@ -3428,6 +3446,12 @@
     const plusDays = (days) => ymd(new Date(Date.now() + days * DAY));
     const daysBetween = (a, b) => Math.round((new Date(b + 'T00:00') - new Date(a + 'T00:00')) / DAY);
     const dateShort = (v) => (v ? `${Number(v.slice(5, 7))}월 ${Number(v.slice(8, 10))}일` : '');
+    // 반납한 때는 몇 시 몇 분까지 남긴다
+    const clock = (iso) => {
+      const d = new Date(iso);
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    };
+    const whenBack = (iso) => (iso ? `${dateShort(ymd(new Date(iso)))} ${clock(iso)}` : '');
 
     const activeLoans = () => (state.loans || []).filter((l) => !l.returnedAt);
     const doneLoans = () => (state.loans || []).filter((l) => l.returnedAt);
@@ -3443,7 +3467,7 @@
 
     // 반납일로 상태를 정한다
     function dueState(loan) {
-      if (loan.returnedAt) return { key: 'back', label: `${dateShort(loan.returnedAt.slice(0, 10))} 반납` };
+      if (loan.returnedAt) return { key: 'back', label: `${whenBack(loan.returnedAt)} 반납` };
       const diff = daysBetween(today(), loan.dueAt);
       const pt = periodText(loan);
       if (diff < 0) return { key: 'late', label: `${-diff}일 늦음` };
@@ -6083,6 +6107,7 @@
         return { color: g.color, name: v.name, sub: v.sub, href: g.href(r) };
       }));
     }
+    const todoCount = () => todoGroups().reduce((a, g) => a + g.rows.length, 0);
     const urgentCount = () => activeLoans().filter((l) => ['late', 'today'].includes(dueState(l).key)).length;
 
     function managerView() {
@@ -6105,30 +6130,70 @@
           <button class="btn btn--solid" type="button" data-action="spaces">${icon(ICONS.spaces)}${hasSpaces() ? '다시 설정' : '설정 시작'}</button>
         </section>
 
-        <div class="mgrtop">
-        <section class="card todo" aria-labelledby="todo-title">
-          <button class="fold" type="button" id="todo-fold" aria-expanded="true" aria-controls="todo-body">
-            ${icon(ICONS.caret, 'icon fold__caret')}
-            <span id="todo-title">챙길 일</span>
-            <span class="fold__count num" id="todo-meta"></span>
-          </button>
-          <div class="todo__body" id="todo-body" aria-live="polite"></div>
+        <section class="card mgrsum" aria-label="한눈에 보기">
+          <div class="mgrsum__fig"><span class="mgrsum__k">물품</span><span class="mgrsum__v num">${n(state.items.length)}</span></div>
+          <div class="mgrsum__fig"><span class="mgrsum__k">비품</span><span class="mgrsum__v num">${n(assetsOf(state.items).length)}</span></div>
+          <div class="mgrsum__fig"><span class="mgrsum__k">대여 중</span><span class="mgrsum__v num">${n(activeLoans().length)}</span></div>
+          <div class="mgrsum__fig ${urgentCount() ? 'is-warn' : ''}"><span class="mgrsum__k">늦음·오늘</span><span class="mgrsum__v num">${n(urgentCount())}</span></div>
+          <div class="mgrsum__fig ${todoCount() ? 'is-warn' : ''}"><span class="mgrsum__k">챙길 일</span><span class="mgrsum__v num">${n(todoCount())}</span></div>
+          <div class="mgrsum__fig"><span class="mgrsum__k">장소 미지정</span><span class="mgrsum__v num">${n(state.items.filter((i) => !i.building || !i.room).reduce((a, i) => a + i.qty, 0))}</span></div>
         </section>
 
-        <section class="card spot" aria-labelledby="spot-title">
-          <button class="fold" type="button" id="spot-fold" aria-expanded="true" aria-controls="spot-box">
-            ${icon(ICONS.caret, 'icon fold__caret')}
-            <span id="spot-title">장소 미지정 물품</span>
-            <span class="fold__count num" id="spot-count"></span>
-          </button>
-          <div class="spotbox" id="spot-box"></div>
-        </section>
-        </div>
+        <div class="mgrgrid">
+          <section class="card fold-card">
+            <button class="fold" type="button" data-fold="todo" aria-expanded="false" aria-controls="todo-body">
+              ${icon(ICONS.caret, 'icon fold__caret')}
+              <span>챙길 일</span>
+              <span class="fold__count num" id="todo-meta"></span>
+            </button>
+            <div class="fold-body todo__body" id="todo-body" aria-live="polite" hidden></div>
+          </section>
 
-        <aside class="side">
-          <section class="card who" aria-labelledby="who-title">
-            <div class="card__head"><h2 class="card__title" id="who-title">담당 정보</h2></div>
-            <p class="sheet__desc">왼쪽 아래와 홈 제목에 이대로 보여요.</p>
+          <section class="card fold-card">
+            <button class="fold" type="button" data-fold="spot" aria-expanded="false" aria-controls="spot-box">
+              ${icon(ICONS.caret, 'icon fold__caret')}
+              <span>장소 미지정 물품</span>
+              <span class="fold__count num" id="spot-count"></span>
+            </button>
+            <div class="fold-body spotbox" id="spot-box" hidden></div>
+          </section>
+
+          ${online() ? `
+          <section class="card fold-card">
+            <button class="fold" type="button" data-fold="team" aria-expanded="false" aria-controls="team-body">
+              ${icon(ICONS.caret, 'icon fold__caret')}
+              <span>우리 학교 선생님</span>
+              <span class="fold__count num" id="team-meta"></span>
+            </button>
+            <div class="fold-body" id="team-body" hidden>
+              <p class="sheet__desc">이 코드를 알려 주면 가입을 신청할 수 있어요. 승인해야 자료가 보여요.</p>
+            <div class="code">
+              <span class="code__val" id="team-code">${esc(me?.school?.join_code || '------')}</span>
+              <button class="mini mini--quiet" type="button" id="code-copy">복사</button>
+              <button class="mini mini--quiet" type="button" id="code-reset">새 코드</button>
+            </div>
+            <div id="team-list"></div>
+
+            </div>
+          </section>` : ''}
+
+          <section class="card fold-card">
+            <button class="fold" type="button" data-fold="signs" aria-expanded="false" aria-controls="signs-body">
+              ${icon(ICONS.caret, 'icon fold__caret')}
+              <span>대여 서명</span>
+              <span class="fold__count num" id="signs-meta"></span>
+            </button>
+            <div class="fold-body" id="signs-body" hidden></div>
+          </section>
+
+          <section class="card fold-card">
+            <button class="fold" type="button" data-fold="who" aria-expanded="false" aria-controls="who-body">
+              ${icon(ICONS.caret, 'icon fold__caret')}
+              <span>담당 정보</span>
+              <span class="fold__count">${esc(s.teacher || '아직 안 적음')}</span>
+            </button>
+            <div class="fold-body" id="who-body" hidden>
+              <p class="sheet__desc">왼쪽 아래와 홈 제목에 이대로 보여요.</p>
             <form id="who-form">
               <div class="field">
                 <label class="field__label" for="w-name">학교 이름<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
@@ -6166,37 +6231,22 @@
               <button class="who__save" type="submit">담당 정보 저장</button>
               <p class="who__done" id="w-done" aria-live="polite"></p>
             </form>
+
+            </div>
           </section>
 
-          ${online() ? `
-          <section class="card team" aria-labelledby="team-title">
-            <div class="card__head">
-              <h2 class="card__title" id="team-title">우리 학교 선생님</h2>
-              <span class="card__meta" id="team-meta"></span>
-            </div>
-            <p class="sheet__desc">이 코드를 알려 주면 가입을 신청할 수 있어요. 승인해야 자료가 보여요.</p>
-            <div class="code">
-              <span class="code__val" id="team-code">${esc(me?.school?.join_code || '------')}</span>
-              <button class="mini mini--quiet" type="button" id="code-copy">복사</button>
-              <button class="mini mini--quiet" type="button" id="code-reset">새 코드</button>
-            </div>
-            <div id="team-list"></div>
-          </section>` : ''}
-
-          <section class="card wipe" aria-labelledby="wipe-title">
-            <div class="card__head"><h2 class="card__title" id="wipe-title">기록 지우기</h2></div>
-            <p class="sheet__desc">한 번에 비울 때 쓰세요. 지운 뒤에는 되돌릴 수 없어요.</p>
+          <section class="card fold-card">
+            <button class="fold" type="button" data-fold="wipe" aria-expanded="false" aria-controls="wipe-body">
+              ${icon(ICONS.caret, 'icon fold__caret')}
+              <span>기록 지우기</span>
+            </button>
+            <div class="fold-body" id="wipe-body" hidden>
+              <p class="sheet__desc">한 번에 비울 때 쓰세요. 지운 뒤에는 되돌릴 수 없어요.</p>
             <div id="wipe-box"></div>
-          </section>
 
-          <section class="card signs" aria-labelledby="signs-title">
-            <div class="card__head">
-              <h2 class="card__title" id="signs-title">대여 서명</h2>
-              <span class="card__meta" id="signs-meta"></span>
             </div>
-            <div id="signs-body"></div>
           </section>
-        </aside>
+        </div>
 
 `;
     }
@@ -6242,7 +6292,6 @@
       /* ── 장소 미지정 비품 ── */
       const chosen = new Set();
       const spotBox = view.querySelector('#spot-box');
-      const spotFold = view.querySelector('#spot-fold');
 
       function spotGroups() {
         const map = new Map();
@@ -6296,18 +6345,15 @@
           </ul>`;
       }
 
-      const todoFold = view.querySelector('#todo-fold');
-      todoFold.addEventListener('click', () => {
-        const open = body.hidden;
-        body.hidden = !open;
-        todoFold.setAttribute('aria-expanded', String(open));
-      });
-
-      spotFold.addEventListener('click', () => {
-        const open = spotBox.hidden;
-        spotBox.hidden = !open;
-        spotFold.setAttribute('aria-expanded', String(open));
-        if (open) drawSpots();
+      // 카드 접기·펴기 한 곳에서 처리
+      view.addEventListener('click', (e) => {
+        const f = e.target.closest('[data-fold]');
+        if (!f) return;
+        const panel = view.querySelector('#' + f.getAttribute('aria-controls'));
+        const open = panel.hidden;
+        panel.hidden = !open;
+        f.setAttribute('aria-expanded', String(open));
+        if (open && f.dataset.fold === 'spot') drawSpots();
       });
 
       view.addEventListener('change', (e) => {
@@ -6334,6 +6380,19 @@
           run: () => commit({ ...state, items: [] }),
           done: (c) => `물품 ${n(c)}가지를 모두 지웠어요`,
         },
+        account: {
+          title: online() ? (isAdmin() ? '계정 삭제 (학교 지우기)' : '학교에서 나가기') : '',
+          count: () => 1,
+          unit: '',
+          desc: () => (isAdmin()
+            ? '학교를 지우고 나갑니다. 물품, 대여 기록, 서명, 공간 설정이 모두 사라지고 함께 쓰던 선생님들도 접속할 수 없게 돼요.'
+            : '이 학교에서 나갑니다. 학교 자료는 그대로 남고, 나만 볼 수 없게 돼요. 다시 들어오려면 코드로 가입 신청을 해야 해요.'),
+          warn: isAdmin()
+            ? '삭제하면 다시 복구할 수 없습니다. 우리 학교 선생님 모두가 쓸 수 없게 됩니다.'
+            : '나가면 다시 들어올 때 관리자의 승인이 필요합니다.',
+          run: null,   // 서버에서 처리한다
+          done: () => (isAdmin() ? '학교를 지웠어요' : '학교에서 나왔어요'),
+        },
         all: {
           title: '학교 정보 삭제',
           count: () => state.items.length + (state.loans || []).length,
@@ -6359,13 +6418,16 @@
         const spec = WIPES[wipeKind];
 
         if (!wipeKind) {
-          wipeBox.innerHTML = ['items', 'loans', 'all'].map((key) => [key, WIPES[key]]).map(([key, w]) => `
+          const keys = online() ? ['items', 'loans', 'all', 'account'] : ['items', 'loans', 'all'];
+          wipeBox.innerHTML = keys.map((key) => [key, WIPES[key]]).map(([key, w]) => `
             <div class="wipe__row">
               <div class="wipe__what">
                 <p class="wipe__name">${esc(w.title)}</p>
-                <p class="wipe__count num">${key === 'all' ? '모두 처음 상태로' : (w.count() ? `${n(w.count())}${w.unit}` : '비어 있어요')}</p>
+                <p class="wipe__count">${key === 'all' ? '모두 처음 상태로'
+                  : key === 'account' ? (isAdmin() ? '학교까지 함께 사라져요' : '나만 나가요')
+                  : (w.count() ? `${n(w.count())}${w.unit}` : '비어 있어요')}</p>
               </div>
-              <button class="mini wipe__pick ${key === 'all' ? 'wipe__pick--all' : ''}" type="button" data-wipe="${key}" ${w.count() || key === 'all' ? '' : 'disabled'}>지우기</button>
+              <button class="mini wipe__pick ${key === 'all' || key === 'account' ? 'wipe__pick--all' : ''}" type="button" data-wipe="${key}" ${w.count() || key === 'all' || key === 'account' ? '' : 'disabled'}>${key === 'account' ? (isAdmin() ? '삭제' : '나가기') : '지우기'}</button>
             </div>`).join('');
           return;
         }
@@ -6393,7 +6455,7 @@
             <p class="field__error" id="wipe-err"></p>
             <div class="wipe__acts">
               <button class="mini mini--quiet" type="button" id="wipe-cancel">그만두기</button>
-              <button class="mini wipe__go" type="button" id="wipe-go">${n(spec.count())}${spec.unit} 모두 지우기</button>
+              <button class="mini wipe__go" type="button" id="wipe-go">${wipeKind === 'account' ? (isAdmin() ? '계정과 학교 삭제' : '학교에서 나가기') : `${n(spec.count())}${spec.unit} 모두 지우기`}</button>
             </div>
           </div>`;
         view.querySelector('#wipe-code')?.focus();
@@ -6421,6 +6483,26 @@
         const spec = WIPES[wipeKind];
         const wasAll = wipeKind === 'all';
         const count = spec.count();
+
+        // 계정 삭제는 서버에 맡기고 로그아웃까지 한다
+        if (wipeKind === 'account') {
+          view.querySelector('#wipe-go').disabled = true;
+          sb.rpc('delete_account').then(async ({ error }) => {
+            if (error) {
+              console.error(error);
+              view.querySelector('#wipe-err').textContent = '지우지 못했어요. 잠시 뒤 다시 해 주세요.';
+              view.querySelector('#wipe-go').disabled = false;
+              return;
+            }
+            try { localStorage.removeItem(STORE_KEY); } catch {}
+            await sb.auth.signOut();
+            me = null; session = null; state = blank();
+            render();
+            flash(spec.done());
+          });
+          return;
+        }
+
         spec.run();
         wipeKind = ''; wipeStep = 1; chosen.clear();
         flash(spec.done(count));
@@ -6440,7 +6522,7 @@
               <li class="signrow">
                 <div class="signrow__main">
                   <p class="signrow__name">${esc(l.itemName)}${l.qty > 1 ? ` ${n(l.qty)}개` : ''}</p>
-                  <p class="signrow__sub">${esc(l.who)} · ${esc(dateShort(l.outAt.slice(0, 10)))} 빌림${l.returnedAt ? ` · ${esc(dateShort(l.returnedAt.slice(0, 10)))} 반납` : ''}</p>
+                  <p class="signrow__sub">${esc(l.who)} · ${esc(dateShort(l.outAt.slice(0, 10)))} 빌림${l.returnedAt ? ` · ${esc(whenBack(l.returnedAt))} 반납` : ''}</p>
                 </div>
                 <img class="signrow__img" src="${esc(l.sign)}" alt="${esc(l.who)} 서명">
               </li>`).join('')}</ul>`
