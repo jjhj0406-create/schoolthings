@@ -1366,6 +1366,20 @@
     .rankitem.is-top .rankitem__times { color: var(--ink); }
 
     .rankbox { width: min(480px, 100%); }
+    .rankbox__note { font-size: 13px; color: var(--ink-3); line-height: 1.5; margin-top: 8px; }
+    .rankbox__acts { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; margin-top: 22px; }
+    .rankbox__btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 50px; border-radius: 12px;
+      font-size: 16px; font-weight: 800; letter-spacing: -0.01em;
+      transition: background-color 120ms, transform 120ms;
+    }
+    .rankbox__btn:active { transform: scale(.98); }
+    .rankbox__btn--quiet { background: var(--field); color: var(--ink-2); }
+    .rankbox__btn--quiet:hover { background: #e7eaf2; color: var(--ink); }
+    .rankbox__btn--go { background: var(--navy); color: #fff; }
+    .rankbox__btn--go:hover { background: var(--navy-2); }
+
     .rankbox__label { font-size: 13px; font-weight: 700; color: var(--ink-3); margin: 18px 0 8px; }
     .rankbox__list { list-style: none; display: grid; gap: 5px; max-height: 260px; overflow: auto; }
     .rankrow { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border-radius: 12px; background: var(--field); }
@@ -1884,12 +1898,13 @@
       id: r.id, itemId: r.item_id, itemName: r.item_name, path: r.path, qty: r.qty, who: r.who,
       dueAt: r.due_at, period: r.period, periodNote: r.period_note, memo: r.memo,
       ...(r.who_type ? { whoType: r.who_type } : {}),
+      ...(r.by_user ? { by: r.by_user } : {}),
       ...(r.sign ? { sign: r.sign } : {}),
       outAt: r.out_at, returnedAt: r.returned_at,
     });
     const toRowLoan = (l) => ({
       id: l.id, school_id: me.schoolId, item_id: l.itemId, item_name: l.itemName, path: l.path || '',
-      qty: l.qty, who: l.who, who_type: l.whoType || 'staff', due_at: l.dueAt || null, period: l.period || '',
+      qty: l.qty, who: l.who, who_type: l.whoType || 'staff', by_user: l.by || '', due_at: l.dueAt || null, period: l.period || '',
       period_note: l.periodNote || '', memo: l.memo || '', sign: l.sign || null,
       out_at: l.outAt, returned_at: l.returnedAt,
     });
@@ -3459,6 +3474,9 @@
       return ORDER[x.key] - ORDER[y.key] || (a.dueAt || '').localeCompare(b.dueAt || '') || a.outAt.localeCompare(b.outAt);
     });
 
+    // 기록을 지우는 건 적은 사람과 관리자만
+    const canDropLoan = (l) => !online() || isAdmin() || (l.by && l.by === session?.user?.id);
+
     function loanRow(loan) {
       const st = dueState(loan);
       const gone = !state.items.some((i) => i.id === loan.itemId);
@@ -3477,7 +3495,7 @@
                    <button class="confirm__yes" type="button" data-loan-del-yes="${loan.id}">지우기</button>
                    <button class="confirm__no" type="button" data-del-cancel>그만두기</button>
                  </span>`
-              : `${askFix === loan.id ? '' : `<button class="act act--del" type="button" data-loan-del="${loan.id}" aria-label="기록 지우기">${icon(ICONS.trash)}<span class="act__label">기록 지우기</span></button>`}
+              : `${askFix === loan.id || !canDropLoan(loan) ? '' : `<button class="act act--del" type="button" data-loan-del="${loan.id}" aria-label="기록 지우기">${icon(ICONS.trash)}<span class="act__label">기록 지우기</span></button>`}
                  ${loan.returnedAt ? '' : returnControl(loan)}`}
           </div>
         </li>`;
@@ -3563,8 +3581,8 @@
     /* ── 빌리기 ── */
     let lend = null;
     const emptyLend = () => ({
-      itemId: '', qty: 1, dueAt: plusDays(7), period: '', periodNote: '', memo: '', q: '', cat: '',
-      whoType: 'staff', staffName: '', grade: '', classNo: '', studentName: '',
+      itemId: '', qty: 1, dueAt: plusDays(1), period: '', periodNote: '', memo: '', q: '', cat: '',
+      whoType: 'staff', staffName: writerName(), grade: '', classNo: '', studentName: '',
     });
 
     // 빌리는 분을 한 줄로 만든다. 학생은 학년·반까지 붙여 동명이인을 가린다.
@@ -3890,6 +3908,7 @@
             id: 'lon_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
             itemId: item.id, itemName: item.name, path: pathOf(item).join(' › '),
             qty: lend.qty, who: whoText(lend), whoType: lend.whoType, dueAt: lend.dueAt,
+          by: session?.user?.id || '',
             period: lend.period, periodNote: lend.period === 'etc' ? lend.periodNote : '',
             memo: lend.memo, sign,
             outAt: new Date().toISOString(), returnedAt: null,
@@ -5459,6 +5478,7 @@
         <div class="signbox rankbox" role="dialog" aria-modal="true" aria-labelledby="rank-title">
           <p class="signbox__title" id="rank-title">${esc(name)}</p>
           <p class="signbox__desc">모두 ${n(all.length)}번 빌려 갔어요${out.length ? ` · 지금 ${n(out.length)}건 나가 있어요` : ' · 지금은 모두 들어와 있어요'}</p>
+          ${canImport() ? '' : '<p class="rankbox__note">지난 기록은 관리 담당 선생님만 볼 수 있어요.</p>'}
 
           ${out.length ? `
             <p class="rankbox__label">지금 빌려 간 사람</p>
@@ -5475,7 +5495,7 @@
               }).join('')}
             </ul>` : ''}
 
-          ${all.filter((l) => l.returnedAt).length ? `
+          ${canImport() && all.filter((l) => l.returnedAt).length ? `
             <p class="rankbox__label">지난 기록</p>
             <ul class="rankbox__list">
               ${all.filter((l) => l.returnedAt).sort((a, b) => b.returnedAt.localeCompare(a.returnedAt)).slice(0, 5).map((l) => `
@@ -5487,10 +5507,9 @@
                 </li>`).join('')}
             </ul>` : ''}
 
-          <div class="signbox__acts">
-            <span class="signbox__spacer"></span>
-            <button class="mini mini--quiet" type="button" id="rank-close">닫기</button>
-            <a class="signbox__go" href="#/rent">대여 화면으로</a>
+          <div class="rankbox__acts">
+            <button class="rankbox__btn rankbox__btn--quiet" type="button" id="rank-close">닫기</button>
+            <a class="rankbox__btn rankbox__btn--go" href="#/rent">대여 화면으로</a>
           </div>
         </div>`;
       document.body.append(back);
@@ -5499,7 +5518,7 @@
       document.addEventListener('keydown', onKey);
       back.addEventListener('click', (e) => { if (e.target === back) close(); });
       back.querySelector('#rank-close').addEventListener('click', close);
-      back.querySelector('.signbox__go').addEventListener('click', close);
+      back.querySelector('.rankbox__btn--go').addEventListener('click', close);
     }
 
     /* ── 문의 글쓰기 ── */
@@ -7130,9 +7149,17 @@
         return;
       }
       const ldel = e.target.closest('[data-loan-del]');
-      if (ldel) { pendingDelete = ldel.dataset.loanDel; refreshView(); return; }
+      if (ldel) {
+        const target = (state.loans || []).find((l) => l.id === ldel.dataset.loanDel);
+        if (target && !canDropLoan(target)) { flash('빌린 본인이나 관리자만 지울 수 있어요', 'warn'); return; }
+        pendingDelete = ldel.dataset.loanDel;
+        refreshView();
+        return;
+      }
       const lyes = e.target.closest('[data-loan-del-yes]');
       if (lyes) {
+        const target = (state.loans || []).find((l) => l.id === lyes.dataset.loanDelYes);
+        if (target && !canDropLoan(target)) { flash('빌린 본인이나 관리자만 지울 수 있어요', 'warn'); return; }
         commit({ ...state, loans: state.loans.filter((l) => l.id !== lyes.dataset.loanDelYes) });
         pendingDelete = null;
         flash('기록을 지웠어요');
