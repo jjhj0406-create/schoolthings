@@ -1180,7 +1180,12 @@
     .wizdrop__icon { width: 28px; height: 28px; color: var(--navy); flex: none; stroke-width: 2; }
     .wizdrop__text { font-size: 17px; font-weight: 700; line-height: 1.35; }
     .wizdrop__text small { display: block; font-size: 13px; font-weight: 500; color: var(--ink-2); margin-top: 3px; }
-    .wizdrop__msg { font-size: 14px; color: var(--ink-2); line-height: 1.5; margin-top: 10px; }
+    .wizdrop__msg {
+      font-size: 14px; line-height: 1.55; margin-top: 12px;
+      padding: 12px 14px; border-radius: 12px;
+      background: var(--field); color: var(--ink-2);
+    }
+    .wizdrop__msg.is-bad { background: #fdf0f0; color: var(--late); font-weight: 600; }
 
     .wizcount { display: flex; align-items: center; gap: 8px; margin-top: 18px; padding: 13px 16px; border-radius: 13px; background: #e8f2ed; font-size: 15px; font-weight: 600; color: var(--board); }
     .wizcount .icon { width: 18px; height: 18px; flex: none; stroke-width: 2.6; }
@@ -1263,6 +1268,71 @@
       .wizfloor__rows { grid-template-columns: 1fr; }
       .wizwhere { grid-template-columns: 1fr; }
       .wiz__acts { position: sticky; bottom: 0; background: linear-gradient(transparent, var(--card) 28%); padding-top: 14px; }
+    }
+    /* ───────── 인수인계 ───────── */
+    .hostart, .holist, .hobar, .horooms { grid-column: 1 / -1; }
+    .hostart { max-width: 720px; }
+    .horow { display: grid; grid-template-columns: 1.6fr 1fr; gap: 12px; margin-top: 16px; }
+
+    .hobar { display: grid; gap: 14px; }
+    .hobar__names { font-size: 18px; font-weight: 800; letter-spacing: -0.03em; overflow-wrap: anywhere; }
+    .hobar__sub { font-size: 13px; color: var(--ink-3); margin-top: 3px; }
+    .hobar__figs { display: flex; flex-wrap: wrap; gap: 18px; }
+    .hobar__fig { display: flex; align-items: baseline; gap: 5px; font-size: 13px; font-weight: 600; color: var(--ink-3); }
+    .hobar__fig b { font-size: 22px; font-weight: 800; color: var(--board); letter-spacing: -0.03em; }
+    .hobar__fig.is-lost b { color: var(--late); }
+    .hobar__fig.is-fix b { color: #b8860b; }
+    .hobar__fig.is-left b { color: var(--ink-2); }
+    .hobar__acts { display: flex; gap: 8px; }
+    .hobar__acts .btn { flex: none; }
+    .hobar__track { height: 6px; border-radius: 3px; background: var(--field); overflow: hidden; }
+    .hobar__fill { display: block; height: 100%; border-radius: 3px; background: var(--board); transition: width 260ms cubic-bezier(.2, .8, .2, 1); }
+
+    .horooms { display: grid; gap: 8px; }
+    .horoom { border-radius: 16px; background: #f6f7fb; overflow: hidden; }
+    .horoom.is-done { background: #f2f7f4; }
+    .horoom__head { width: 100%; display: flex; align-items: center; gap: 10px; padding: 15px 16px; text-align: left; }
+    .horoom__head[aria-expanded="true"] .fold__caret { transform: rotate(180deg); }
+    .horoom__name { flex: 1; min-width: 0; font-size: 16px; font-weight: 800; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+    .horoom__count { font-size: 13px; font-weight: 700; color: var(--ink-2); flex: none; }
+    .horoom.is-done .horoom__count { color: var(--board); }
+
+    .hoitems { list-style: none; display: grid; gap: 4px; padding: 0 10px 4px; max-height: 460px; overflow: auto; }
+    .hoitem { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 10px 12px; border-radius: 12px; background: #fff; }
+    .hoitem.is-lost { background: #fdf0f0; }
+    .hoitem.is-fix { background: #fff7e6; }
+    .hoitem.is-ok { background: #f2f7f4; }
+    .hoitem__main { flex: 1; min-width: 150px; }
+    .hoitem__name { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+    .hoitem__sub { font-size: 13px; color: var(--ink-2); margin-top: 2px; overflow-wrap: anywhere; }
+    .hoitem__marks { display: flex; gap: 5px; flex: none; }
+    .homark {
+      height: 34px; padding: 0 12px; border-radius: 9px;
+      background: var(--field); font-size: 14px; font-weight: 700; color: var(--ink-2);
+      transition: background-color 120ms, color 120ms;
+    }
+    .homark:hover { color: var(--ink); }
+    .homark.is-on { background: var(--board); color: #fff; }
+    .homark--fix.is-on { background: #b8860b; }
+    .homark--lost.is-on { background: var(--late); }
+    .horoom__all { padding: 4px 16px 14px; }
+
+    .hopast { list-style: none; display: grid; gap: 8px; }
+    .hopast__row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 14px; background: var(--field); }
+    .hopast__main { flex: 1; min-width: 0; }
+    .hopast__when { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+    .hopast__who { font-size: 14px; font-weight: 600; color: var(--ink-2); margin-top: 3px; overflow-wrap: anywhere; }
+    .hopast__sum { font-size: 13px; color: var(--ink-3); margin-top: 3px; }
+    .hopast__signs { display: flex; gap: 12px; margin-top: 8px; }
+    .hopast__signs img { height: 30px; width: auto; max-width: 110px; object-fit: contain; object-position: left; opacity: .85; }
+
+    @media (max-width: 760px) {
+      .horow { grid-template-columns: 1fr; }
+      .hobar__acts { flex-direction: column; }
+      .hobar__acts .btn, .hobar__acts .mini { width: 100%; }
+      .hoitem__marks { width: 100%; }
+      .homark { flex: 1; }
+      .hopast__row { flex-direction: column; align-items: stretch; }
     }
     .placebar { display: none; }
     .tabbar { display: none; }
@@ -1541,7 +1611,7 @@
 
     // 저장소: localStorage를 쓰고, 막혀 있으면(미리보기 환경 등) 메모리에만 둔다.
     const STORE_KEY = 'school-items:v1';
-    const blank = () => ({ items: [], loans: [], recent: [] });
+    const blank = () => ({ items: [], loans: [], recent: [], handovers: [] });
     let memoryStore = blank();
     let cacheOff = false;   // 기기 사본을 접었는지
     const store = {
@@ -1660,11 +1730,18 @@
 
     async function loadData() {
       if (!sb || me?.status !== 'active') return;
-      const [items, loans] = await Promise.all([fetchAll('items'), fetchAll('loans')]);
+      const [items, loans, hos] = await Promise.all([fetchAll('items'), fetchAll('loans'), fetchAll('handovers')]);
       state = {
         ...state,
         items: items.map(fromRowItem),
         loans: loans.map(fromRowLoan),
+        handovers: hos.map((r) => ({
+          id: r.id, startedAt: r.started_at, doneAt: r.done_at,
+          fromName: r.from_name, fromPosition: r.from_position,
+          toName: r.to_name, toPosition: r.to_position,
+          checks: r.checks || {}, snapshot: r.snapshot || [],
+          signFrom: r.sign_from || '', signTo: r.sign_to || '',
+        })),
         school: me.school
           ? { name: me.school.name, address: me.school.address || '', teacher: me.school.teacher,
               position: me.school.position || '교사', place: me.school.place, tel: me.school.tel }
@@ -1680,13 +1757,14 @@
       asset: r.asset, ...(r.asset_info ? { assetInfo: r.asset_info } : {}),
       ...(r.disused ? { disused: true } : {}),
       ...(r.repair ? { repair: true } : {}),
+      ...(r.lost ? { lost: true } : {}),
       createdAt: r.created_at, ...(r.updated_at ? { updatedAt: r.updated_at } : {}),
     });
     const toRowItem = (i) => ({
       id: i.id, school_id: me.schoolId, name: i.name, category: i.category || '', qty: i.qty,
       loanable: !!i.loanable, building: i.building || '', floor: i.floor || '', room: i.room || '',
       storage: i.storage || '', shelf: i.shelf || '', memo: i.memo || '', photo: i.photo || null,
-      asset: !!i.asset, asset_info: i.assetInfo || null, disused: !!i.disused, repair: !!i.repair,
+      asset: !!i.asset, asset_info: i.assetInfo || null, disused: !!i.disused, repair: !!i.repair, lost: !!i.lost,
       created_at: i.createdAt, updated_at: i.updatedAt || null,
     });
     const fromRowLoan = (r) => ({
@@ -1724,6 +1802,14 @@
       };
       diff(prev.items || [], next.items || [], 'items', toRowItem);
       diff(prev.loans || [], next.loans || [], 'loans', toRowLoan);
+      diff(prev.handovers || [], next.handovers || [], 'handovers', (x) => ({
+        id: x.id, school_id: me.schoolId,
+        started_at: x.startedAt, done_at: x.doneAt,
+        from_name: x.fromName, from_position: x.fromPosition,
+        to_name: x.toName, to_position: x.toPosition,
+        checks: x.checks || {}, snapshot: x.snapshot || [],
+        sign_from: x.signFrom || null, sign_to: x.signTo || null,
+      }));
 
       if (JSON.stringify(prev.school) !== JSON.stringify(next.school) && next.school && isAdmin()) {
         jobs.push(sb.from('schools').update({
@@ -2110,6 +2196,7 @@
       upload: 'M12 16V5 M8 8.5l4-4 4 4 M5 19.5h14',
       student: 'M12 4.5L21 9l-9 4.5L3 9z M7 11v4.5c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5V11',
       spaces: 'M4 20.5V9.5l8-5 8 5v11 M3 20.5h18 M9.5 20.5v-6h5v6',
+      handover: 'M4 8.5h13 M13.5 5l3.5 3.5-3.5 3.5 M20 15.5H7 M10.5 12L7 15.5l3.5 3.5',
       manager: 'M12 12.5a4 4 0 100-8 4 4 0 000 8z M4.5 20.5a7.5 7.5 0 0115 0',
       edit: 'M4 20h4L18.5 9.5l-4-4L4 16z M14 6l4 4',
       trash: 'M5 7h14 M9.5 7V4.5h5V7 M7 7l1 12.5h8L17 7 M10.5 10.5v6 M13.5 10.5v6',
@@ -2124,6 +2211,7 @@
       { key: 'add',   label: '등록',        href: '#/add' },
       { key: 'rent',  label: '대여', href: '#/rent' },
       { key: 'ledger', label: '비품 대장', href: '#/ledger', tab: false },
+      { key: 'handover', label: '인수인계', href: '#/handover', tab: false, manage: true },
     ];
 
     /* ════════ 한글 검색 (→ src/lib/search.js) ════════ */
@@ -2371,7 +2459,7 @@
           ? `<a class="${cls}" href="${m.href}" ${current}>${icon(ICONS[m.key])}${label}</a>`
           : `<button class="${cls}" type="button" data-soon>${icon(ICONS[m.key])}${label}</button>`;
       };
-      const menu = MENU.filter((m) => !m.admin || isAdmin());
+      const menu = MENU.filter((m) => (!m.admin || isAdmin()) && (!m.manage || canImport()));
       document.getElementById('rail-nav').innerHTML = menu.map((m) => item(m, 'rail__item', true)).join('');
       document.getElementById('tabbar').innerHTML = menu.filter((m) => m.tab !== false).map((m) => item(m, 'tabbar__item', false)).join('');
       const s = school();
@@ -2728,6 +2816,7 @@
         it.asset ? '<span class="tag tag--asset">비품</span>' : '',
         it.disused ? '<span class="tag tag--no">불용</span>' : '',
         it.repair ? '<span class="tag tag--fix">수리 필요</span>' : '',
+        it.lost ? '<span class="tag tag--no">찾는 중</span>' : '',
         it.loanable ? '' : '<span class="tag tag--no">대여 불가</span>',
         r.why && r.why !== FIELD_WHY.memo ? `<span class="hit__why">${esc(r.why)}</span>` : '',
       ].filter(Boolean).join('');
@@ -3643,7 +3732,12 @@
           return;
         }
         // 마지막으로 빌리는 분의 서명을 받는다
-        openSign((sign) => {
+        const chosenItem = state.items.find((i) => i.id === lend.itemId);
+        const dueText = `${dateShort(lend.dueAt)}${periodText(lend) ? ` ${periodText(lend)}` : ''}까지`;
+        askSign(
+          `${whoText(lend)} 님, 여기에 서명해 주세요`,
+          `${chosenItem.name} ${n(lend.qty)}개 · ${dueText} · ${pathOf(chosenItem).join(' › ')}`,
+          (sign) => {
           const item = state.items.find((i) => i.id === lend.itemId);
           const loan = {
             id: 'lon_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -3665,170 +3759,165 @@
         });
       });
 
-      // ── 서명 받기 ──
-      function openSign(onDone) {
-        const chosen = state.items.find((i) => i.id === lend.itemId);
-        const due = `${dateShort(lend.dueAt)}${periodText(lend) ? ` ${periodText(lend)}` : ''}까지`;
-
-        const back = document.createElement('div');
-        back.className = 'signback';
-        back.innerHTML = `
-          <div class="signbox" role="dialog" aria-modal="true" aria-labelledby="sign-title">
-            <p class="signbox__title" id="sign-title">${esc(whoText(lend))} 님, 여기에 서명해 주세요</p>
-            <p class="signbox__desc">${esc(chosen.name)} ${n(lend.qty)}개 · ${esc(due)} · ${esc(pathOf(chosen).join(' › '))}</p>
-            <div class="signpad" id="sign-pad">
-              <canvas></canvas>
-              <span class="signpad__line" aria-hidden="true"></span>
-              <span class="signpad__hint">손가락이나 마우스로 이름을 써 주세요</span>
-            </div>
-            <p class="signbox__err" id="sign-err" aria-live="polite"></p>
-            <div class="signbox__acts">
-              <button class="mini mini--quiet" type="button" id="sign-clear">다시 쓰기</button>
-              <span class="signbox__spacer"></span>
-              <button class="mini mini--quiet" type="button" id="sign-cancel">취소</button>
-              <button class="signbox__go" type="button" id="sign-ok">서명 완료</button>
-            </div>
-          </div>`;
-        document.body.append(back);
-
-        const pad = back.querySelector('#sign-pad');
-        const canvas = pad.querySelector('canvas');
-        const err = back.querySelector('#sign-err');
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const w = canvas.clientWidth, h = canvas.clientHeight;
-        canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-        const ctx = canvas.getContext('2d');
-        ctx.scale(dpr, dpr);
-        ctx.strokeStyle = '#121831';
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
-        let drawing = false, drawn = false;
-        let pts = [];          // 지금 긋고 있는 획의 점들
-        let width = 2.4;       // 직전 굵기 (갑자기 변하지 않게 이어 준다)
-
-        const at = (e) => {
-          const r = canvas.getBoundingClientRect();
-          return { x: e.clientX - r.left, y: e.clientY - r.top, t: e.timeStamp || performance.now() };
-        };
-        const mid = (a2, b2) => ({ x: (a2.x + b2.x) / 2, y: (a2.y + b2.y) / 2 });
-
-        // 빠르게 그으면 가늘게, 천천히 그으면 굵게. 실제 펜처럼 보이게 한다.
-        function widthFor(a2, b2) {
-          const dist = Math.hypot(b2.x - a2.x, b2.y - a2.y);
-          const dt = Math.max(1, b2.t - a2.t);
-          const speed = dist / dt;                       // px/ms
-          const target = Math.max(1.1, 3.2 - speed * 2.4);
-          width = width * 0.7 + target * 0.3;            // 부드럽게 따라가기
-          return width;
-        }
-
-        function drawSegment() {
-          const nPts = pts.length;
-          if (nPts < 3) return;
-          const p0 = pts[nPts - 3], p1 = pts[nPts - 2], p2 = pts[nPts - 1];
-          ctx.lineWidth = widthFor(p1, p2);
-          ctx.beginPath();
-          ctx.moveTo(mid(p0, p1).x, mid(p0, p1).y);
-          // 가운뎃점에서 가운뎃점으로, 실제 찍은 점을 당김점 삼아 곡선을 그린다
-          ctx.quadraticCurveTo(p1.x, p1.y, mid(p1, p2).x, mid(p1, p2).y);
-          ctx.stroke();
-        }
-
-        function addPoint(p) {
-          pts.push(p);
-          if (pts.length === 2) {
-            ctx.lineWidth = 2.4;
-            ctx.beginPath();
-            ctx.moveTo(pts[0].x, pts[0].y);
-            ctx.lineTo(p.x, p.y);
-            ctx.stroke();
-          } else {
-            drawSegment();
-          }
-        }
-
-        canvas.addEventListener('pointerdown', (e) => {
-          e.preventDefault();
-          drawing = true;
-          width = 2.4;
-          const p = at(e);
-          pts = [p];
-          // 점 하나만 찍어도 자국이 남게
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
-          ctx.fillStyle = '#121831';
-          ctx.fill();
-          canvas.setPointerCapture(e.pointerId);
-          drawn = true; pad.classList.add('is-drawn'); err.textContent = '';
-        });
-
-        canvas.addEventListener('pointermove', (e) => {
-          if (!drawing) return;
-          e.preventDefault();
-          // 브라우저가 모아 둔 중간 점까지 모두 써서 빠르게 그어도 끊기지 않게 한다
-          const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
-          for (const ev of (events.length ? events : [e])) addPoint(at(ev));
-        });
-
-        const stop = (e) => {
-          if (!drawing) return;
-          drawing = false;
-          if (e && canvas.hasPointerCapture?.(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
-          pts = [];
-        };
-        canvas.addEventListener('pointerup', stop);
-        canvas.addEventListener('pointercancel', stop);
-
-        const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
-        const onKey = (e) => { if (e.key === 'Escape') close(); };
-        document.addEventListener('keydown', onKey);
-
-        back.addEventListener('click', (e) => { if (e.target === back) close(); });
-        back.querySelector('#sign-cancel').addEventListener('click', close);
-        back.querySelector('#sign-clear').addEventListener('click', () => {
-          ctx.clearRect(0, 0, w, h);
-          drawn = false; drawing = false; pts = []; width = 2.4;
-          pad.classList.remove('is-drawn'); err.textContent = '';
-        });
-        back.querySelector('#sign-ok').addEventListener('click', () => {
-          if (!drawn) { err.textContent = '서명을 해 주세요.'; return; }
-          const msg = onDone(shrinkSign(canvas));
-          if (msg) { err.textContent = msg; return; }
-          close();
-        });
-        back.querySelector('#sign-ok').focus();
-      }
-
-      // 빈 여백을 잘라 내고 가로 420px 안으로 줄여서 저장한다
-      function shrinkSign(canvas) {
-        const { width: W, height: H } = canvas;
-        const px = canvas.getContext('2d').getImageData(0, 0, W, H).data;
-        let x0 = W, y0 = H, x1 = 0, y1 = 0;
-        for (let y = 0; y < H; y++) {
-          for (let x = 0; x < W; x++) {
-            if (px[(y * W + x) * 4 + 3] > 8) {
-              if (x < x0) x0 = x; if (x > x1) x1 = x;
-              if (y < y0) y0 = y; if (y > y1) y1 = y;
-            }
-          }
-        }
-        if (x1 < x0) return canvas.toDataURL('image/png');
-        const pad = 10;
-        x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad);
-        x1 = Math.min(W - 1, x1 + pad); y1 = Math.min(H - 1, y1 + pad);
-        const cw = x1 - x0 + 1, ch = y1 - y0 + 1;
-        const scale = Math.min(1, 420 / cw, 140 / ch);
-        const out = document.createElement('canvas');
-        out.width = Math.round(cw * scale);
-        out.height = Math.round(ch * scale);
-        out.getContext('2d').drawImage(canvas, x0, y0, cw, ch, 0, 0, out.width, out.height);
-        return out.toDataURL('image/png');
-      }
-
       renderCats();
       renderResults();
       renderPreview();
+    }
+
+    // ── 서명 받기 (대여·인수인계에서 함께 쓴다) ──
+    function askSign(title, desc, onDone) {
+      const back = document.createElement('div');
+      back.className = 'signback';
+      back.innerHTML = `
+        <div class="signbox" role="dialog" aria-modal="true" aria-labelledby="sign-title">
+          <p class="signbox__title" id="sign-title">${esc(title)}</p>
+          <p class="signbox__desc">${esc(desc)}</p>
+          <div class="signpad" id="sign-pad">
+            <canvas></canvas>
+            <span class="signpad__line" aria-hidden="true"></span>
+            <span class="signpad__hint">손가락이나 마우스로 이름을 써 주세요</span>
+          </div>
+          <p class="signbox__err" id="sign-err" aria-live="polite"></p>
+          <div class="signbox__acts">
+            <button class="mini mini--quiet" type="button" id="sign-clear">다시 쓰기</button>
+            <span class="signbox__spacer"></span>
+            <button class="mini mini--quiet" type="button" id="sign-cancel">취소</button>
+            <button class="signbox__go" type="button" id="sign-ok">서명 완료</button>
+          </div>
+        </div>`;
+      document.body.append(back);
+
+      const pad = back.querySelector('#sign-pad');
+      const canvas = pad.querySelector('canvas');
+      const err = back.querySelector('#sign-err');
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.strokeStyle = '#121831';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      let drawing = false, drawn = false;
+      let pts = [];
+      let width = 2.4;
+
+      const at = (e) => {
+        const r = canvas.getBoundingClientRect();
+        return { x: e.clientX - r.left, y: e.clientY - r.top, t: e.timeStamp || performance.now() };
+      };
+      const mid = (a2, b2) => ({ x: (a2.x + b2.x) / 2, y: (a2.y + b2.y) / 2 });
+
+      // 빠르게 그으면 가늘게, 천천히 그으면 굵게. 실제 펜처럼 보이게 한다.
+      function widthFor(a2, b2) {
+        const dist = Math.hypot(b2.x - a2.x, b2.y - a2.y);
+        const dt = Math.max(1, b2.t - a2.t);
+        const target = Math.max(1.1, 3.2 - (dist / dt) * 2.4);
+        width = width * 0.7 + target * 0.3;
+        return width;
+      }
+
+      function drawSegment() {
+        const nPts = pts.length;
+        if (nPts < 3) return;
+        const p0 = pts[nPts - 3], p1 = pts[nPts - 2], p2 = pts[nPts - 1];
+        ctx.lineWidth = widthFor(p1, p2);
+        ctx.beginPath();
+        ctx.moveTo(mid(p0, p1).x, mid(p0, p1).y);
+        ctx.quadraticCurveTo(p1.x, p1.y, mid(p1, p2).x, mid(p1, p2).y);
+        ctx.stroke();
+      }
+
+      function addPoint(p) {
+        pts.push(p);
+        if (pts.length === 2) {
+          ctx.lineWidth = 2.4;
+          ctx.beginPath();
+          ctx.moveTo(pts[0].x, pts[0].y);
+          ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+        } else {
+          drawSegment();
+        }
+      }
+
+      canvas.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        drawing = true;
+        width = 2.4;
+        const p = at(e);
+        pts = [p];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = '#121831';
+        ctx.fill();
+        canvas.setPointerCapture(e.pointerId);
+        drawn = true; pad.classList.add('is-drawn'); err.textContent = '';
+      });
+
+      canvas.addEventListener('pointermove', (e) => {
+        if (!drawing) return;
+        e.preventDefault();
+        const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+        for (const ev of (events.length ? events : [e])) addPoint(at(ev));
+      });
+
+      const stop = (e) => {
+        if (!drawing) return;
+        drawing = false;
+        if (e && canvas.hasPointerCapture?.(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+        pts = [];
+      };
+      canvas.addEventListener('pointerup', stop);
+      canvas.addEventListener('pointercancel', stop);
+
+      const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+
+      back.addEventListener('click', (e) => { if (e.target === back) close(); });
+      back.querySelector('#sign-cancel').addEventListener('click', close);
+      back.querySelector('#sign-clear').addEventListener('click', () => {
+        ctx.clearRect(0, 0, w, h);
+        drawn = false; drawing = false; pts = []; width = 2.4;
+        pad.classList.remove('is-drawn'); err.textContent = '';
+      });
+      back.querySelector('#sign-ok').addEventListener('click', () => {
+        if (!drawn) { err.textContent = '서명을 해 주세요.'; return; }
+        const msg = onDone(shrinkSign(canvas));
+        if (msg) { err.textContent = msg; return; }
+        close();
+      });
+      back.querySelector('#sign-ok').focus();
+    }
+
+    // 빈 여백을 잘라 내고 가로 420px 안으로 줄여서 저장한다
+    function shrinkSign(canvas) {
+      const { width: W, height: H } = canvas;
+      const px = canvas.getContext('2d').getImageData(0, 0, W, H).data;
+      let x0 = W, y0 = H, x1 = 0, y1 = 0;
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          if (px[(y * W + x) * 4 + 3] > 8) {
+            if (x < x0) x0 = x;
+            if (x > x1) x1 = x;
+            if (y < y0) y0 = y;
+            if (y > y1) y1 = y;
+          }
+        }
+      }
+      if (x1 < x0) return canvas.toDataURL('image/png');
+      const pad = 10;
+      x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad);
+      x1 = Math.min(W - 1, x1 + pad); y1 = Math.min(H - 1, y1 + pad);
+      const cw = x1 - x0 + 1, ch = y1 - y0 + 1;
+      const scale = Math.min(1, 420 / cw, 140 / ch);
+      const out = document.createElement('canvas');
+      out.width = Math.round(cw * scale);
+      out.height = Math.round(ch * scale);
+      out.getContext('2d').drawImage(canvas, x0, y0, cw, ch, 0, 0, out.width, out.height);
+      return out.toDataURL('image/png');
     }
 
     /* ════════ 파일로 가져오기 (→ src/lib/ledger-file.js) ════════ */
@@ -4892,7 +4981,7 @@
               ${icon(ICONS.upload, 'icon wizdrop__icon')}
               <span class="wizdrop__text">${wizReading ? '읽는 중이에요…' : '배치도 올리기'}<small>${wizReading ? '잠시만 기다려 주세요' : 'PDF · 사진'}</small></span>
             </label>
-            ${wizMsg ? `<p class="wizdrop__msg">${esc(wizMsg)}</p>` : ''}
+            ${wizMsg ? `<p class="wizdrop__msg ${wizMsg.includes('실패') ? 'is-bad' : ''}">${esc(wizMsg)}</p>` : ''}
 
             ${ledger.length ? `
               <div class="wizledger">
@@ -5047,7 +5136,7 @@
         file.addEventListener('change', async (e) => {
           const f = e.target.files[0];
           if (!f) return;
-          if (f.size > 8 * 1024 * 1024) { wizMsg = '파일이 너무 커요. 8MB 아래로 줄여 주세요.'; drawWiz(); return; }
+          if (f.size > 8 * 1024 * 1024) { wizMsg = '학교 배치도 업로드에 실패하였습니다. 파일이 8MB를 넘어요.'; drawWiz(); return; }
           wizReading = true; wizMsg = ''; drawWiz();
           try {
             const base64 = await new Promise((res, rej) => {
@@ -5058,7 +5147,11 @@
             });
             const list = await askAI({ image: base64, mime: f.type || 'application/pdf' });
             wizReading = false;
-            if (!list) { wizMsg = aiWhy || '아직 배치도 읽기가 준비되지 않았어요. 층별로 직접 담아 주세요.'; drawWiz(); return; }
+            if (!list) {
+              wizMsg = `학교 배치도 업로드에 실패하였습니다.${aiWhy ? ` (${aiWhy})` : ''} 층별로 직접 담아 주세요.`;
+              drawWiz();
+              return;
+            }
 
             const b = wiz.buildings[0]?.name || '';
             const known = new Set(wiz.buildings.flatMap(floorsOf));
@@ -5069,12 +5162,14 @@
               wiz.rooms.push({ building: b, floor, name: r.name, aliases: [] });
               added++;
             }
-            wizMsg = added ? `${added}곳을 찾아 담았어요. 다음 화면에서 층을 확인해 주세요.` : '새로 담을 실 이름을 찾지 못했어요.';
+            wizMsg = added
+              ? `${added}곳을 찾아 담았어요. 다음 화면에서 층을 확인해 주세요.`
+              : '학교 배치도 업로드에 실패하였습니다. 새로 담을 실 이름을 찾지 못했어요.';
             saveSpaces();
             drawWiz();
           } catch {
             wizReading = false;
-            wizMsg = '파일을 읽지 못했어요.';
+            wizMsg = '학교 배치도 업로드에 실패하였습니다. 파일을 읽지 못했어요.';
             drawWiz();
           }
         });
@@ -5152,14 +5247,332 @@
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          if (data.error === 'KEY_REJECTED') aiWhy = '제미나이 키가 거절됐어요. Supabase의 Secrets를 확인해 주세요.';
-          else if (data.error === 'NO_KEY') aiWhy = '서버에 제미나이 키가 없어요. Secrets에 GEMINI_API_KEY를 넣어 주세요.';
+          // 왜 안 되는지 화면에서 바로 알 수 있게 나눠서 알려 준다
+          if (res.status === 404) aiWhy = 'Supabase에 parse-spaces 함수가 아직 없어요.';
+          else if (data.error === 'KEY_REJECTED') aiWhy = '제미나이 키가 거절됐어요. Secrets의 GEMINI_API_KEY를 확인해 주세요.';
+          else if (data.error === 'NO_KEY') aiWhy = 'Supabase Secrets에 GEMINI_API_KEY가 없어요.';
+          else if (data.error === 'NOT_SIGNED_IN') aiWhy = '로그인이 풀렸어요. 다시 로그인해 주세요.';
+          else if (data.error === 'AI_FAILED' || data.error === 'BAD_ANSWER') aiWhy = '배치도에서 실 이름을 읽지 못했어요.';
+          else aiWhy = `서버가 ${res.status} 오류를 냈어요.`;
           return null;
         }
         return Array.isArray(data.rooms) ? data.rooms.filter((r) => r && r.name) : null;
       } catch {
+        aiWhy = '서버에 닿지 못했어요. 인터넷을 확인해 주세요.';
         return null;
       }
+    }
+
+    /* ════════ 인수인계 (→ src/pages/handover.js) ════════ */
+    const handovers = () => state.handovers || [];
+    const openHandover = () => handovers().find((h) => !h.doneAt) || null;
+
+    // 인수인계는 비품만 다룬다. 없어지면 안 되는 물건이라서.
+    const handoverItems = () => assetsOf(state.items);
+
+    // 실별로 묶는다. 하루에 다 못 하니 나눠서 하도록.
+    function handoverRooms(h) {
+      const map = new Map();
+      for (const it of handoverItems()) {
+        const key = [it.building, it.floor, it.room].filter(Boolean).join(' › ') || '장소 미지정';
+        const g = map.get(key) || { key, items: [], ok: 0, lost: 0, fix: 0 };
+        g.items.push(it);
+        const mark = h.checks[it.id];
+        if (mark === 'ok') g.ok++;
+        else if (mark === 'lost') g.lost++;
+        else if (mark === 'fix') g.fix++;
+        map.set(key, g);
+      }
+      return [...map.values()].sort((a, b) => (a.key === '장소 미지정' ? 1 : b.key === '장소 미지정' ? -1 : a.key.localeCompare(b.key, 'ko')));
+    }
+
+    function handoverCount(h) {
+      const all = handoverItems();
+      let ok = 0, lost = 0, fix = 0;
+      for (const it of all) {
+        const mark = h.checks[it.id];
+        if (mark === 'ok') ok++;
+        else if (mark === 'lost') lost++;
+        else if (mark === 'fix') fix++;
+      }
+      return { total: all.length, ok, lost, fix, left: all.length - ok - lost - fix };
+    }
+
+    // 마칠 때 그 순간의 상태를 따로 복사해 둔다. 나중에 바뀌어도 이 기록은 안 바뀐다.
+    function freezeSnapshot(h) {
+      return handoverItems().map((it) => ({
+        name: assetName(it),
+        no: it.assetInfo?.no || '',
+        dept: it.assetInfo?.dept || '',
+        path: pathOf(it).join(' › ') || '장소 미지정',
+        qty: it.qty,
+        price: it.assetInfo?.price || '',
+        mark: h.checks[it.id] || 'skip',
+      }));
+    }
+
+    const MARK_LABEL = { ok: '있음', lost: '못 찾음', fix: '수리 필요', skip: '확인 안 함' };
+
+    async function exportHandover(h) {
+      const XLSX = await xlsx();
+      const c = h.snapshot.reduce((a, r) => { a[r.mark] = (a[r.mark] || 0) + 1; return a; }, {});
+      const head = [
+        ['비품 인수인계 확인서'],
+        [],
+        ['학교', school().name, '', '인계자', `${h.fromName} ${h.fromPosition}`],
+        ['날짜', dateShort(h.doneAt.slice(0, 10)), '', '인수자', `${h.toName} ${h.toPosition}`],
+        ['확인함', c.ok || 0, '못 찾음', c.lost || 0, '수리 필요', c.fix || 0, '확인 안 함', c.skip || 0],
+        [],
+        ['비품명', '고유번호', '운용부서', '보관 위치', '수량', '단가', '확인 결과'],
+      ];
+      const body = h.snapshot.map((r) => [r.name, r.no, r.dept, r.path, r.qty, r.price, MARK_LABEL[r.mark]]);
+      const ws = XLSX.utils.aoa_to_sheet([...head, ...body]);
+      ws['!cols'] = [30, 16, 14, 30, 8, 12, 12].map((wch) => ({ wch }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '인수인계 확인서');
+      XLSX.writeFile(wb, `비품 인수인계 확인서_${h.doneAt.slice(0, 10).replaceAll('-', '')}.xlsx`);
+    }
+
+    let hoOpenRoom = '';   // 지금 펼친 실
+
+    function handoverView() {
+      const h = openHandover();
+      const done = handovers().filter((x) => x.doneAt).sort((a, b) => b.doneAt.localeCompare(a.doneAt));
+
+      const header = `
+        <header class="top">
+          <div>
+            <a class="back" href="#/">${icon(ICONS.back)}홈</a>
+            <h1 class="top__title" tabindex="-1">인수인계</h1>
+          </div>
+        </header>`;
+
+      if (!h) {
+        return `
+          ${header}
+          <section class="card hostart" aria-labelledby="ho-title">
+            <div class="card__head"><h2 class="card__title" id="ho-title">비품 인수인계 시작</h2></div>
+            <p class="sheet__desc">비품 <b class="num">${n(handoverItems().length)}가지</b>를 하나씩 확인하면서 넘겨요. 확인한 것과 확인하지 않은 것이 그대로 기록에 남아요.</p>
+            <div class="horow">
+              <div class="field">
+                <label class="field__label" for="ho-from">인계자<span class="req" aria-hidden="true">*</span></label>
+                <input class="input" id="ho-from" placeholder="예: 김하늘" autocomplete="off" value="${esc(school().teacher || '')}">
+              </div>
+              <div class="field">
+                <label class="field__label" for="ho-frompos">직위</label>
+                <div class="selectbox">
+                  <select class="input" id="ho-frompos">
+                    ${POSITIONS.map((v) => `<option value="${esc(v)}" ${v === (school().position || '교사') ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+                  </select>
+                  ${icon(ICONS.caret, 'icon selectbox__caret')}
+                </div>
+              </div>
+            </div>
+            <div class="horow">
+              <div class="field">
+                <label class="field__label" for="ho-to">인수자<span class="req" aria-hidden="true">*</span></label>
+                <input class="input" id="ho-to" placeholder="예: 박서연" autocomplete="off">
+              </div>
+              <div class="field">
+                <label class="field__label" for="ho-topos">직위</label>
+                <div class="selectbox">
+                  <select class="input" id="ho-topos">
+                    ${POSITIONS.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join('')}
+                  </select>
+                  ${icon(ICONS.caret, 'icon selectbox__caret')}
+                </div>
+              </div>
+            </div>
+            <p class="field__error" id="ho-err"></p>
+            <button class="who__save" type="button" id="ho-go" ${handoverItems().length ? '' : 'disabled'}>${handoverItems().length ? '인수인계 시작' : '먼저 비품을 등록해 주세요'}</button>
+          </section>
+
+          <section class="card holist" aria-labelledby="hopast-title">
+            <div class="card__head">
+              <h2 class="card__title" id="hopast-title">지난 인수인계</h2>
+              <span class="card__meta">${done.length ? `${n(done.length)}건` : ''}</span>
+            </div>
+            ${done.length ? `<ul class="hopast">${done.map((x) => {
+              const c = x.snapshot.reduce((a, r) => { a[r.mark] = (a[r.mark] || 0) + 1; return a; }, {});
+              return `<li class="hopast__row">
+                <div class="hopast__main">
+                  <p class="hopast__when">${esc(dateShort(x.doneAt.slice(0, 10)))}</p>
+                  <p class="hopast__who">${esc(x.fromName)} ${esc(x.fromPosition)} → ${esc(x.toName)} ${esc(x.toPosition)}</p>
+                  <p class="hopast__sum">확인함 ${n(c.ok || 0)} · 못 찾음 ${n(c.lost || 0)} · 수리 ${n(c.fix || 0)} · 확인 안 함 ${n(c.skip || 0)}</p>
+                  <div class="hopast__signs">
+                    <img src="${esc(x.signFrom)}" alt="인계자 서명"><img src="${esc(x.signTo)}" alt="인수자 서명">
+                  </div>
+                </div>
+                <button class="mini mini--go" type="button" data-hoout="${esc(x.id)}">확인서</button>
+              </li>`;
+            }).join('')}</ul>` : '<p class="side-empty">아직 인수인계 기록이 없어요.</p>'}
+          </section>`;
+      }
+
+      const c = handoverCount(h);
+      const pct = c.total ? Math.round(((c.ok + c.lost + c.fix) / c.total) * 100) : 0;
+      const rooms = handoverRooms(h);
+
+      return `
+        ${header}
+        <section class="card hobar" aria-label="진행 상황">
+          <div class="hobar__who">
+            <p class="hobar__names">${esc(h.fromName)} ${esc(h.fromPosition)} → ${esc(h.toName)} ${esc(h.toPosition)}</p>
+            <p class="hobar__sub">${esc(dateShort(h.startedAt.slice(0, 10)))}에 시작했어요</p>
+          </div>
+          <div class="hobar__figs">
+            <span class="hobar__fig"><b class="num">${n(c.ok)}</b>있음</span>
+            <span class="hobar__fig is-lost"><b class="num">${n(c.lost)}</b>못 찾음</span>
+            <span class="hobar__fig is-fix"><b class="num">${n(c.fix)}</b>수리</span>
+            <span class="hobar__fig is-left"><b class="num">${n(c.left)}</b>남음</span>
+          </div>
+          <div class="hobar__acts">
+            <button class="mini mini--quiet" type="button" id="ho-cancel">그만두기</button>
+            <button class="btn btn--solid" type="button" id="ho-finish">인계 마치기</button>
+          </div>
+          <div class="hobar__track"><span class="hobar__fill" style="width:${pct}%"></span></div>
+        </section>
+
+        <section class="card horooms" aria-label="실별 확인">
+          ${rooms.map((g) => {
+            const left = g.items.length - g.ok - g.lost - g.fix;
+            const open = hoOpenRoom === g.key;
+            return `
+              <div class="horoom ${left ? '' : 'is-done'}">
+                <button class="horoom__head" type="button" data-horoom="${esc(g.key)}" aria-expanded="${open}">
+                  ${icon(ICONS.caret, 'icon fold__caret')}
+                  <span class="horoom__name">${esc(g.key)}</span>
+                  <span class="horoom__count num">${left ? `${n(g.items.length - left)} / ${n(g.items.length)}` : `${n(g.items.length)}가지 확인 끝`}</span>
+                </button>
+                ${open ? `<ul class="hoitems">
+                  ${g.items.slice(0, 200).map((it) => {
+                    const mark = h.checks[it.id] || '';
+                    return `<li class="hoitem ${mark ? 'is-' + mark : ''}">
+                      <div class="hoitem__main">
+                        <p class="hoitem__name">${esc(assetName(it))}${it.qty > 1 ? ` <span class="num">${n(it.qty)}개</span>` : ''}</p>
+                        <p class="hoitem__sub">${esc([it.assetInfo?.no, it.assetInfo?.dept].filter(Boolean).join(' · ') || '고유번호 없음')}</p>
+                      </div>
+                      <div class="hoitem__marks">
+                        <button class="homark ${mark === 'ok' ? 'is-on' : ''}" type="button" data-homark="${it.id}|ok">있음</button>
+                        <button class="homark homark--fix ${mark === 'fix' ? 'is-on' : ''}" type="button" data-homark="${it.id}|fix">수리</button>
+                        <button class="homark homark--lost ${mark === 'lost' ? 'is-on' : ''}" type="button" data-homark="${it.id}|lost">못 찾음</button>
+                      </div>
+                    </li>`;
+                  }).join('')}
+                  ${g.items.length > 200 ? `<li class="imp__more num">그 밖에 ${n(g.items.length - 200)}가지</li>` : ''}
+                </ul>
+                <div class="horoom__all">
+                  <button class="mini mini--quiet" type="button" data-hoall="${esc(g.key)}">이 실 전부 있음으로</button>
+                </div>` : ''}
+              </div>`;
+          }).join('')}
+        </section>`;
+    }
+
+    function mountHandover(view) {
+      const h = openHandover();
+
+      if (!h) {
+        view.querySelector('#ho-go')?.addEventListener('click', () => {
+          const from = view.querySelector('#ho-from').value.trim();
+          const to = view.querySelector('#ho-to').value.trim();
+          const err = view.querySelector('#ho-err');
+          if (!from || !to) { err.textContent = '인계자와 인수자 이름을 모두 적어 주세요.'; return; }
+          commit({
+            ...state,
+            handovers: [...handovers(), {
+              id: 'ho_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+              startedAt: new Date().toISOString(), doneAt: null,
+              fromName: from, fromPosition: view.querySelector('#ho-frompos').value,
+              toName: to, toPosition: view.querySelector('#ho-topos').value,
+              checks: {}, snapshot: [], signFrom: '', signTo: '',
+            }],
+          });
+          hoOpenRoom = '';
+          render();
+          flash('인수인계를 시작했어요');
+        });
+
+        view.addEventListener('click', (e) => {
+          const out = e.target.closest('[data-hoout]');
+          if (!out) return;
+          const rec = handovers().find((x) => x.id === out.dataset.hoout);
+          if (rec) exportHandover(rec).catch(() => flash('내려받지 못했어요', 'warn'));
+        });
+        return;
+      }
+
+      const save = (next) => {
+        commit({ ...state, handovers: handovers().map((x) => (x.id === h.id ? next : x)) });
+      };
+
+      view.addEventListener('click', (e) => {
+        const room = e.target.closest('[data-horoom]');
+        if (room) {
+          hoOpenRoom = hoOpenRoom === room.dataset.horoom ? '' : room.dataset.horoom;
+          render();
+          return;
+        }
+
+        const mark = e.target.closest('[data-homark]');
+        if (mark) {
+          const [id, kind] = mark.dataset.homark.split('|');
+          const checks = { ...h.checks };
+          if (checks[id] === kind) delete checks[id]; else checks[id] = kind;
+          save({ ...h, checks });
+          render();
+          return;
+        }
+
+        const all = e.target.closest('[data-hoall]');
+        if (all) {
+          const g = handoverRooms(h).find((x) => x.key === all.dataset.hoall);
+          if (!g) return;
+          const checks = { ...h.checks };
+          for (const it of g.items) if (!checks[it.id]) checks[it.id] = 'ok';
+          save({ ...h, checks });
+          render();
+          flash(`${g.key} 전부 있음으로 표시했어요`);
+          return;
+        }
+
+        if (e.target.closest('#ho-cancel')) {
+          if (!confirm('인수인계를 그만둘까요? 지금까지 확인한 내용이 사라져요.')) return;
+          commit({ ...state, handovers: handovers().filter((x) => x.id !== h.id) });
+          render();
+          return;
+        }
+
+        if (!e.target.closest('#ho-finish')) return;
+
+        // 인계자 → 인수자 순서로 서명을 받는다
+        const c = handoverCount(h);
+        const sum = `확인함 ${n(c.ok)} · 못 찾음 ${n(c.lost)} · 수리 ${n(c.fix)} · 확인 안 함 ${n(c.left)}`;
+        askSign(`${h.fromName} ${h.fromPosition} 님, 인계 서명해 주세요`, sum, (signFrom) => {
+          setTimeout(() => {
+            askSign(`${h.toName} ${h.toPosition} 님, 이 상태 그대로 인수합니다`, sum, (signTo) => {
+              const snapshot = freezeSnapshot(h);
+              const lostIds = Object.entries(h.checks).filter(([, v]) => v === 'lost').map(([k]) => k);
+              const fixIds = Object.entries(h.checks).filter(([, v]) => v === 'fix').map(([k]) => k);
+              commit({
+                ...state,
+                items: state.items.map((it) => (
+                  lostIds.includes(it.id) ? { ...it, lost: true }
+                  : fixIds.includes(it.id) ? { ...it, repair: true }
+                  : it)),
+                handovers: handovers().map((x) => (x.id === h.id
+                  ? { ...x, doneAt: new Date().toISOString(), checks: h.checks, snapshot, signFrom, signTo }
+                  : x)),
+                school: { ...school(), teacher: h.toName, position: h.toPosition },
+              });
+              render();
+              flash('인수인계를 마쳤어요');
+              return null;
+            });
+          }, 250);
+          return null;
+        });
+      });
     }
 
     /* ════════ 관리 담당 선생님 (→ src/pages/manager.js) ════════ */
@@ -5197,8 +5610,19 @@
         .slice(0, 30);
 
       const broken = state.items.filter((i) => i.repair).slice(0, 30);
+      const missing = state.items.filter((i) => i.lost).slice(0, 30);
 
       return [
+        {
+          key: 'lost', name: '찾는 중이에요', color: 'var(--late)', rows: missing, href: (it) => editHref(it, '#/manager'),
+          why: '인수인계 때 찾지 못한 비품이에요. 찾으면 표시를 풀어 주세요.',
+          row: (it) => ({
+            late: true,
+            name: assetName(it),
+            sub: `${it.assetInfo?.no || '고유번호 없음'} · ${pathOf(it).join(' › ') || '장소 미지정'}`,
+            acts: `<button class="mini mini--quiet" type="button" data-found="${it.id}">찾았어요</button>`,
+          }),
+        },
         {
           key: 'fix', name: '수리가 필요해요', color: '#b8860b', rows: broken, href: (it) => editHref(it, '#/manager'),
           why: '반납할 때 수리가 필요하다고 표시된 물품이에요.',
@@ -6179,6 +6603,7 @@
       '#/rent':   { key: 'rent', view: rentView,  mount: mountRent, title: '대여 · 학교 물품 어디 있지?' },
       '#/lend':   { key: 'rent', view: lendView,  mount: mountLend, title: '빌리기 · 학교 물품 어디 있지?' },
       '#/ledger': { key: 'ledger', view: ledgerView, mount: mountLedger, title: '비품 대장 · 학교 물품 어디 있지?' },
+      '#/handover': { key: 'handover', view: handoverView, mount: mountHandover, title: '인수인계 · 학교 물품 어디 있지?' },
       '#/manager': { key: 'manager', view: managerView, mount: mountManager, title: '관리 담당 선생님 · 학교 물품 어디 있지?' },
       '#/add':    { key: 'add',  view: addView,    mount: mountAdd,    title: '물품 등록 · 학교 물품 어디 있지?' },
     };
@@ -6218,6 +6643,7 @@
       const view = old.cloneNode(false);
       old.replaceWith(view);
       if (route.key === 'manager' && !isAdmin()) { location.hash = '#/'; return; }
+      if (route.key === 'handover' && !canImport()) { location.hash = '#/'; return; }
       view.className = 'main is-' + route.key + (path === '#/lend' ? ' is-add' : '');
       document.body.classList.toggle('is-add', route.key === 'add' || path === '#/lend');
       document.body.classList.toggle('is-room', route.key === 'place' && state.items.length > 0);
@@ -6292,6 +6718,17 @@
         flash(needFix
           ? `${loan ? loan.itemName : '물품'} 반납했어요. 수리 필요로 표시했어요`
           : `${loan ? loan.itemName : '물품'} 반납 처리했어요`);
+        refreshView();
+        return;
+      }
+
+      // 찾았어요
+      const found = e.target.closest('[data-found]');
+      if (found) {
+        const id = found.dataset.found;
+        const it = state.items.find((x) => x.id === id);
+        commit({ ...state, items: state.items.map((x) => (x.id === id ? { ...x, lost: false, updatedAt: new Date().toISOString() } : x)) });
+        flash(`${it ? it.name : '물품'} 찾음으로 바꿨어요`);
         refreshView();
         return;
       }
