@@ -60,10 +60,11 @@
     .brand__name { font-size: 16px; font-weight: 800; line-height: 1.25; letter-spacing: -0.03em; }
     .rail__nav { display: flex; flex-direction: column; gap: 4px; }
     .rail__item--admin {
-      background: rgba(255, 201, 60, .10);
-      color: #ffd97a; font-weight: 700;
+      background: rgba(255, 201, 60, .16);
+      color: var(--marker); font-weight: 800;
       position: relative;
-      box-shadow: inset 0 0 0 1px rgba(255, 201, 60, .22);
+      box-shadow: inset 0 0 0 1.5px rgba(255, 201, 60, .45);
+      text-shadow: 0 0 12px rgba(255, 201, 60, .35);
     }
     .rail__item--admin + .rail__item:not(.rail__item--admin) { margin-top: 12px; }
     .rail__item--admin + .rail__item:not(.rail__item--admin)::before {
@@ -72,7 +73,7 @@
     }
     .rail__item { position: relative; }
     .rail__item--admin .icon { color: var(--marker); }
-    .rail__item--admin:hover { background: rgba(255, 201, 60, .18); color: #fff; }
+    .rail__item--admin:hover { background: rgba(255, 201, 60, .28); color: #fff; }
     .rail__item--admin[aria-current="page"] {
       background: var(--marker); color: var(--navy); box-shadow: none;
     }
@@ -2553,8 +2554,11 @@
 
       const byRoom = new Map();
       for (const i of items) {
-        const key = `${i.building}|${i.room}`;
-        const prev = byRoom.get(key) || { name: i.room, key: `${i.building}|${i.floor}|${i.room}`, count: 0 };
+        const p = placeOf(i);
+        // 자리 없는 것은 한 줄로 모은다
+        const unset = p.building === UNSET_B;
+        const key = unset ? UNSET_B : roomKey(i);
+        const prev = byRoom.get(key) || { name: unset ? '장소 미지정' : p.room, key, count: 0, unset };
         prev.count += i.qty; byRoom.set(key, prev);
       }
       const places = [...byRoom.values()].sort((a, b) => b.count - a.count).slice(0, 5);
@@ -2655,7 +2659,7 @@
           <div class="card__head"><h2 class="card__title" id="places-title">많이 보관된 곳</h2></div>
           ${places.length ? `<ul class="places__list">${places.map((p, i) => `
             <li>
-              <a class="place" href="#/places?room=${encodeURIComponent(p.key)}">
+              <a class="place" href="${p.unset ? `#/places?b=${encodeURIComponent(UNSET_B)}` : `#/places?room=${encodeURIComponent(p.key)}`}">
                 <span class="place__row"><span class="place__name">${esc(p.name)}</span><span class="place__count num">${n(p.count)}개</span></span>
                 <span class="place__track"><span class="place__fill" style="width:${(p.count / places[0].count) * 100}%;animation-delay:${i * 60}ms"></span></span>
               </a>
@@ -3056,18 +3060,24 @@
       const i = FLOOR_ORDER.indexOf(v);
       return i >= 0 ? i : FLOOR_ORDER.length + (v || '').length;
     };
-    const roomKey = (i) => [i.building, i.floor, i.room].join('|');
+    // 자리가 안 적힌 물품도 '장소 미지정'으로 모아 보여 준다. 안 그러면 어디에도 안 보인다.
+    const UNSET_B = '장소 미지정';
+    const placeOf = (i) => (i.building && i.room
+      ? { building: i.building, floor: i.floor, room: i.room }
+      : { building: UNSET_B, floor: '미정', room: (i.assetInfo?.place || i.room || '어디인지 몰라요') });
+    const roomKey = (i) => { const p = placeOf(i); return [p.building, p.floor, p.room].join('|'); };
 
     // 건물 → 층 → 실 순으로 묶는다.
     function groupPlaces(items) {
       const buildings = new Map();
-      for (const it of items.filter((i) => i.building && i.room)) {
-        const b = buildings.get(it.building) || { name: it.building, count: 0, rooms: 0, floors: new Map() };
-        const f = b.floors.get(it.floor) || { name: it.floor, rooms: new Map() };
-        const r = f.rooms.get(it.room) || { name: it.room, key: roomKey(it), building: it.building, floor: it.floor, count: 0, kinds: 0 };
+      for (const it of items) {
+        const p = placeOf(it);
+        const b = buildings.get(p.building) || { name: p.building, count: 0, rooms: 0, floors: new Map(), unset: p.building === UNSET_B };
+        const f = b.floors.get(p.floor) || { name: p.floor, rooms: new Map() };
+        const r = f.rooms.get(p.room) || { name: p.room, key: roomKey(it), building: p.building, floor: p.floor, count: 0, kinds: 0 };
         r.count += it.qty; r.kinds += 1;
         b.count += it.qty;
-        f.rooms.set(it.room, r); b.floors.set(it.floor, f); buildings.set(it.building, b);
+        f.rooms.set(p.room, r); b.floors.set(p.floor, f); buildings.set(p.building, b);
       }
       for (const b of buildings.values()) {
         b.rooms = [...b.floors.values()].reduce((a, f) => a + f.rooms.size, 0);
@@ -3075,7 +3085,10 @@
           .map((f) => ({ ...f, roomList: [...f.rooms.values()].sort((x, y) => y.count - x.count || x.name.localeCompare(y.name, 'ko')) }))
           .sort((x, y) => floorRank(y.name) - floorRank(x.name)); // 위층이 위로
       }
-      return [...buildings.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ko'));
+      return [...buildings.values()].sort((a, b) => {
+        if (a.unset !== b.unset) return a.unset ? 1 : -1;
+        return b.count - a.count || a.name.localeCompare(b.name, 'ko');
+      });
     }
 
     // 칸 이름을 위에서 아래로 읽히게 정렬한다. 알아볼 수 없으면 등록한 순서를 따른다.
@@ -3112,7 +3125,7 @@
     function placesView(params) {
       const items = state.items;
       const buildings = groupPlaces(items);
-      const placed = items.some((i) => i.building && i.room);
+      const placed = items.length > 0;
       const want = params.get('room');
       const current = want && items.some((i) => roomKey(i) === want) ? want : (buildings[0]?.floorList[0]?.roomList[0]?.key || '');
       const [curB] = current ? current.split('|') : [''];
@@ -3160,7 +3173,7 @@
 
     function mountPlaces(view, params) {
       const items = state.items;
-      if (!items.some((i) => i.building && i.room)) return;
+      if (!items.length) return;
 
       const buildings = groupPlaces(items);
       const stack = view.querySelector('#stack');
@@ -3185,7 +3198,7 @@
 
         stack.innerHTML = rows.map((f) => {
           // '3층'은 그대로, '지하 1층'은 '지하'로 짧게
-          const short = f.name.includes('지하') ? '지하' : (FLOORS.find((x) => x.value === f.name)?.value ?? f.name);
+          const short = f.name === '미정' ? '미정' : (f.name.includes('지하') ? '지하' : (FLOORS.find((x) => x.value === f.name)?.value ?? f.name));
           return `
           <div class="floor ${f.void ? 'floor--void' : ''}">
             <div class="floor__no">${esc(short)}</div>
@@ -3212,7 +3225,7 @@
               <h2 class="roomview__name">${esc(r)}</h2>
               <p class="roomview__sum num">물품 ${n(list.length)}가지 · 모두 ${n(count)}개</p>
             </div>
-            <a class="btn btn--ghost" href="#/add?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&room=${encodeURIComponent(r)}">${icon(ICONS.add)}여기에 등록</a>
+            ${b === UNSET_B ? `<a class="btn btn--ghost" href="#/manager">${icon(ICONS.place)}자리 정하러 가기</a>` : `<a class="btn btn--ghost" href="#/add?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&room=${encodeURIComponent(r)}">${icon(ICONS.add)}여기에 등록</a>`}
           </div>
           <div class="units">
             ${units.map((u) => `
@@ -3243,7 +3256,7 @@
             <p class="placebar__name">${esc(r)}</p>
             <p class="placebar__sum num">${esc(b)} ${esc(f)} · 모두 ${n(count)}개</p>
           </div>
-          <a class="btn btn--solid" href="#/add?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&room=${encodeURIComponent(r)}">여기에 등록</a>`;
+          ${b === UNSET_B ? `<a class="btn btn--solid" href="#/manager">자리 정하러 가기</a>` : `<a class="btn btn--solid" href="#/add?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&room=${encodeURIComponent(r)}">여기에 등록</a>`}`;
       }
 
       function select(key, scroll = false) {
@@ -4859,7 +4872,8 @@
     function wizPages() {
       const pages = [{ kind: 'buildings' }, { kind: 'floors' }, { kind: 'upload' }];
       for (const b of wiz.buildings) {
-        for (const f of floorsOf(b)) pages.push({ kind: 'floor', building: b.name, floor: f });
+        // 낮은 층부터 올라간다 (지하 → 1층 → 2층 …)
+        for (const f of floorsOf(b).slice().reverse()) pages.push({ kind: 'floor', building: b.name, floor: f });
       }
       pages.push({ kind: 'done' });
       return pages;
@@ -5165,7 +5179,8 @@
             const list = await askAI({ image: base64, mime: f.type || 'application/pdf' });
             wizReading = false;
             if (!list) {
-              wizMsg = `학교 배치도 업로드에 실패하였습니다.${aiWhy ? ` (${aiWhy})` : ''} 층별로 직접 담아 주세요.`;
+              wizMsg = '학교 배치도 업로드에 실패하였습니다. 수동으로 설정해주세요.';
+              if (aiWhy) console.warn('배치도 읽기 실패:', aiWhy);
               drawWiz();
               return;
             }
@@ -5181,12 +5196,12 @@
             }
             wizMsg = added
               ? `${added}곳을 찾아 담았어요. 다음 화면에서 층을 확인해 주세요.`
-              : '학교 배치도 업로드에 실패하였습니다. 새로 담을 실 이름을 찾지 못했어요.';
+              : '학교 배치도 업로드에 실패하였습니다. 수동으로 설정해주세요.';
             saveSpaces();
             drawWiz();
           } catch {
             wizReading = false;
-            wizMsg = '학교 배치도 업로드에 실패하였습니다. 파일을 읽지 못했어요.';
+            wizMsg = '학교 배치도 업로드에 실패하였습니다. 수동으로 설정해주세요.';
             drawWiz();
           }
         });
