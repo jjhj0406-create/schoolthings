@@ -1672,6 +1672,7 @@
     let session = null;   // 로그인한 사람
     let me = null;        // { schoolId, role, status, school }
     let members = [];     // 우리 학교 구성원 (관리자만 읽어 옴)
+    const missingTables = new Set();   // 아직 만들지 않은 표
 
     const online = () => Boolean(sb);
     const isAdmin = () => !online() || me?.role === 'admin';
@@ -1728,9 +1729,21 @@
       return out;
     }
 
+    // 아직 만들지 않은 표가 있어도 앱 전체가 멈추지 않게 한다
+    async function fetchMaybe(table) {
+      try {
+        return await fetchAll(table);
+      } catch (e) {
+        console.warn(table, e);
+        missingTables.add(table);
+        return [];
+      }
+    }
+
     async function loadData() {
       if (!sb || me?.status !== 'active') return;
-      const [items, loans, hos] = await Promise.all([fetchAll('items'), fetchAll('loans'), fetchAll('handovers')]);
+      missingTables.clear();
+      const [items, loans, hos] = await Promise.all([fetchAll('items'), fetchAll('loans'), fetchMaybe('handovers')]);
       state = {
         ...state,
         items: items.map(fromRowItem),
@@ -1823,7 +1836,10 @@
       const bad = results.find((r) => r && r.error);
       if (bad) {
         console.error(bad.error);
-        flash('저장하지 못했어요. 인터넷을 확인해 주세요.', 'warn');
+        const msg = String(bad.error.message || '');
+        flash(msg.includes('schema cache')
+          ? '데이터베이스 준비가 덜 됐어요. supabase-update.sql을 실행해 주세요.'
+          : '저장하지 못했어요. 인터넷을 확인해 주세요.', 'warn');
       }
     }
 
@@ -2459,7 +2475,8 @@
           ? `<a class="${cls}" href="${m.href}" ${current}>${icon(ICONS[m.key])}${label}</a>`
           : `<button class="${cls}" type="button" data-soon>${icon(ICONS[m.key])}${label}</button>`;
       };
-      const menu = MENU.filter((m) => (!m.admin || isAdmin()) && (!m.manage || canImport()));
+      const menu = MENU.filter((m) => (!m.admin || isAdmin()) && (!m.manage || canImport())
+        && !(m.key === 'handover' && missingTables.has('handovers')));
       document.getElementById('rail-nav').innerHTML = menu.map((m) => item(m, 'rail__item', true)).join('');
       document.getElementById('tabbar').innerHTML = menu.filter((m) => m.tab !== false).map((m) => item(m, 'tabbar__item', false)).join('');
       const s = school();
@@ -6643,7 +6660,7 @@
       const view = old.cloneNode(false);
       old.replaceWith(view);
       if (route.key === 'manager' && !isAdmin()) { location.hash = '#/'; return; }
-      if (route.key === 'handover' && !canImport()) { location.hash = '#/'; return; }
+      if (route.key === 'handover' && (!canImport() || missingTables.has('handovers'))) { location.hash = '#/'; return; }
       view.className = 'main is-' + route.key + (path === '#/lend' ? ' is-add' : '');
       document.body.classList.toggle('is-add', route.key === 'add' || path === '#/lend');
       document.body.classList.toggle('is-room', route.key === 'place' && state.items.length > 0);
