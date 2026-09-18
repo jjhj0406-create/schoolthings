@@ -1457,6 +1457,62 @@
       .cmtwrite .btn { width: 100%; }
       .rankbox__list, .cmts { max-height: none; }
     }
+    /* ───────── 비품 대장 (새 구조) ───────── */
+    .lsum__fig.is-warn .lsum__value { color: var(--late); }
+    .lempty { grid-column: 1 / -1; }
+
+    .hocard {
+      grid-column: 1 / -1;
+      display: flex; flex-flow: row wrap; align-items: center; gap: 12px 20px;
+      padding: 16px 22px;
+    }
+    .hocard__main { flex: 1; min-width: 220px; }
+    .hocard__title { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+    .hocard__sub { font-size: 14px; color: var(--ink-2); line-height: 1.45; margin-top: 3px; }
+    .hocard .btn { flex: none; }
+
+    .ledger { grid-column: 1 / -1; min-height: 0; }
+    .llist { display: grid; gap: 3px; margin-top: 12px; overflow: auto; min-height: 0; }
+    .lrow {
+      width: 100%; display: flex; align-items: center; gap: 12px;
+      padding: 13px 12px; border-radius: 12px; text-align: left;
+      transition: background-color 120ms;
+    }
+    .lrow:hover { background: var(--field); }
+    .lrow:active { transform: scale(.995); }
+    .lrow__main { flex: 1; min-width: 0; }
+    .lrow__name { display: block; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lrow__name .num { font-weight: 700; color: var(--ink-2); }
+    .lrow__sub { display: block; font-size: 13px; color: var(--ink-3); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lrow__mgr {
+      flex: none; padding: 6px 11px; border-radius: 999px;
+      background: #e8f2ed; color: var(--board);
+      font-size: 13px; font-weight: 700; max-width: 40%;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .lrow__mgr.is-none { background: var(--field); color: var(--ink-3); font-weight: 600; }
+    .lrow__go { width: 16px; height: 16px; color: var(--ink-3); flex: none; }
+
+    .assetbox { width: min(520px, 100%); }
+    .mgr { margin-top: 18px; padding: 16px; border-radius: 14px; background: var(--field); }
+    .mgr__row { display: flex; gap: 8px; margin-top: 8px; }
+    .mgr__row .input { flex: 1; height: 46px; background: #fff; }
+    .mgr__row .btn { height: 46px; flex: none; }
+    .adet { margin-top: 18px; display: grid; gap: 1px; background: var(--line); border-radius: 12px; overflow: hidden; }
+    .adet__row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; padding: 11px 14px; background: #fff; }
+    .adet__row dt { font-size: 13px; font-weight: 600; color: var(--ink-3); }
+    .adet__row dd { font-size: 14px; overflow-wrap: anywhere; }
+
+    /* 펼친 카드는 가로를 다 쓴다 */
+    .fold-card.is-open { grid-column: 1 / -1; }
+
+    @media (max-width: 760px) {
+      .hocard .btn { width: 100%; }
+      .lrow__mgr { max-width: 45%; }
+      .adet__row { grid-template-columns: 84px minmax(0, 1fr); }
+      .mgr__row { flex-direction: column; }
+      .mgr__row .btn { width: 100%; }
+    }
     .placebar { display: none; }
     .tabbar { display: none; }
 
@@ -2355,6 +2411,7 @@
       spaces: 'M4 20.5V9.5l8-5 8 5v11 M3 20.5h18 M9.5 20.5v-6h5v6',
       handover: 'M4 8.5h13 M13.5 5l3.5 3.5-3.5 3.5 M20 15.5H7 M10.5 12L7 15.5l3.5 3.5',
       chat: 'M20.5 12c0 4-3.8 7-8.5 7-1 0-2-.15-2.9-.42L4 20l1.3-3.4C4.2 15.3 3.5 13.7 3.5 12c0-4 3.8-7 8.5-7s8.5 3 8.5 7z',
+      next: 'M9 6l6 6-6 6',
       manager: 'M12 12.5a4 4 0 100-8 4 4 0 000 8z M4.5 20.5a7.5 7.5 0 0115 0',
       edit: 'M4 20h4L18.5 9.5l-4-4L4 16z M14 6l4 4',
       trash: 'M5 7h14 M9.5 7V4.5h5V7 M7 7l1 12.5h8L17 7 M10.5 10.5v6 M13.5 10.5v6',
@@ -4126,10 +4183,12 @@
       state: ['상태'],
       place: ['설치장소', '보관장소', '위치'],
       note:  ['비고'],
+      manager: ['담당자', '관리자', '담당'],
     };
 
     // 내보낼 때 쓰는 열 순서. 가져온 파일과 같은 모양이라 다시 올릴 수 있다.
     const LEDGER_OUT = [
+      '담당자',
       'G2B목록번호', 'G2B물품분류명', 'G2B목록명', '물품고유번호', 'RFID 관리번호',
       '취득일자', '정리일자', '최초취득금액', '취득금액', '내용연수(취득)', '내용연수(변경)',
       '운용부서', '운용일자', '상태', '진행상태', '나이스등록', '기자재여부', '기안상태',
@@ -4231,6 +4290,7 @@
             price: toMoney(at.price >= 0 ? row[at.price] : ''),
             life: get(row, 'life2') || get(row, 'life1'),
             note: noteBits.join(' · '),
+            manager: get(row, 'manager'),
           },
           raw: { state: get(row, 'state') },
         });
@@ -4279,6 +4339,7 @@
       const body = list.map((it) => {
         const a = it.assetInfo || {};
         return [
+          a.manager || '',
           a.code || '', it.name || '', a.name || '', a.no || '', (a.note || '').includes('RFID') ? (a.note.match(/RFID\s*([^\s·]+)/) || [, ''])[1] : '',
           (a.date || '').replaceAll('-', ''), '', fromMoney(a.price), fromMoney(a.price),
           a.life || '', a.life || '', a.dept || '', '', it.disused ? '불용' : '', '', '', '', '', '',
@@ -4630,6 +4691,7 @@
               // 사람이 적어 둔 보관 자리와 메모는 덮어쓰지 않는다
               const merged = {
                 ...old, ...row,
+                assetInfo: { ...row.assetInfo, manager: row.assetInfo.manager || old.assetInfo?.manager || '' },
                 building: row.building || old.building, floor: row.floor || old.floor,
                 room: row.room || old.room, storage: row.storage || old.storage, shelf: row.shelf || old.shelf,
                 memo: old.memo || row.memo,
@@ -4698,107 +4760,183 @@
 
     function ledgerView() {
       const list = assetsOf(state.items);
-      if (!list.length) {
-        return `
-          <header class="top">
-            <div>
-              <a class="back" href="#/">${icon(ICONS.back)}홈</a>
-              <h1 class="top__title" tabindex="-1">비품 대장</h1>
-            </div>
-          </header>
-          <section class="card" style="grid-column:1/-1">
-            <div class="nohit">
-              <strong>아직 비품이 없어요</strong>
-              <span>물품을 등록할 때 ‘비품 여부’를 켜면<br>대장 내용이 여기에 모여요.</span>
-              <div class="nohit__actions">
-                ${canImport() ? '<button class="btn btn--solid" type="button" id="l-import">파일로 가져오기</button>' : ''}
-                <a class="btn btn--ghost" href="#/add">물품 등록</a>
-              </div>
-            </div>
-          </section>`;
-      }
+      const h = openHandover();
 
-      const kinds = list.length;
-      const count = list.reduce((a, i) => a + i.qty, 0);
-
-      return `
+      const head = `
         <header class="top">
           <div>
             <a class="back" href="#/">${icon(ICONS.back)}홈</a>
             <h1 class="top__title" tabindex="-1">비품 대장</h1>
           </div>
           <div class="top__actions">
-            <a class="btn btn--ghost" href="#/add">${icon(ICONS.add)}물품 등록</a>
+            ${canImport() ? `<button class="btn btn--solid" type="button" id="l-import">${icon(ICONS.upload)}파일로 가져오기</button>` : ''}
+            <button class="btn btn--ghost" type="button" id="l-csv" ${list.length ? '' : 'disabled'}>${icon(ICONS.download)}엑셀로 내려받기</button>
           </div>
-        </header>
+        </header>`;
 
-        <section class="card lsum" aria-label="대장 요약">
-          <div class="lsum__fig">
-            <span class="lsum__label">등록된 비품</span>
-            <span class="lsum__value num">${n(kinds)}<small>가지</small></span>
-          </div>
-          <div class="lsum__fig">
-            <span class="lsum__label">모두</span>
-            <span class="lsum__value num">${n(count)}<small>개</small></span>
-          </div>
+      if (!list.length) {
+        return `
+          ${head}
+          <section class="card lempty">
+            <div class="nohit">
+              <strong>아직 비품이 없어요</strong>
+              <span>학교에서 내려받은 물품목록정보 파일을 올리면<br>한 번에 채워져요.</span>
+              <div class="nohit__actions">
+                ${canImport() ? '<button class="btn btn--solid" type="button" id="l-import2">파일로 가져오기</button>' : ''}
+                <a class="btn btn--ghost" href="#/add">물품 등록</a>
+              </div>
+            </div>
+          </section>`;
+      }
+
+      const noManager = list.filter((it) => !it.assetInfo.manager).length;
+
+      return `
+        ${head}
+
+        <section class="card lsum" aria-label="비품 요약">
+          <div class="lsum__fig"><span class="lsum__label">등록된 비품</span><span class="lsum__value num">${n(list.length)}<small>가지</small></span></div>
+          <div class="lsum__fig"><span class="lsum__label">모두</span><span class="lsum__value num">${n(list.reduce((a, i) => a + i.qty, 0))}<small>개</small></span></div>
+          <div class="lsum__fig ${noManager ? 'is-warn' : ''}"><span class="lsum__label">담당 없음</span><span class="lsum__value num">${n(noManager)}<small>가지</small></span></div>
           <span class="lsum__spacer"></span>
-          ${canImport() ? `<button class="btn btn--solid" type="button" id="l-import">${icon(ICONS.upload)}파일로 가져오기</button>` : ''}
-          <button class="btn btn--ghost" type="button" id="l-csv">${icon(ICONS.download)}엑셀로 내려받기</button>
         </section>
+
+        ${canImport() ? `
+        <section class="card hocard">
+          <div class="hocard__main">
+            <p class="hocard__title">${h ? '인수인계를 하는 중이에요' : '비품 인수인계'}</p>
+            <p class="hocard__sub">${h
+              ? `${esc(h.fromName)} → ${esc(h.toName)} · ${n(handoverCount(h).ok + handoverCount(h).lost + handoverCount(h).fix)} / ${n(handoverCount(h).total)}가지 확인함`
+              : '학기 말에 비품을 하나씩 확인하면서 넘겨요. 확인한 것과 안 한 것이 기록에 남아요.'}</p>
+          </div>
+          <a class="btn ${h ? 'btn--solid' : 'btn--ghost'}" href="#/handover">${icon(ICONS.handover)}${h ? '이어서 하기' : '인수인계 시작'}</a>
+        </section>` : ''}
 
         <section class="card ledger" aria-labelledby="l-title">
           <div class="card__head">
             <h2 class="card__title" id="l-title">비품 목록</h2>
             <span class="card__meta" id="l-meta"></span>
           </div>
-          <div class="ledger__tools">
-            <div class="lfind">
-              ${icon(ICONS.find)}
-              <input id="l-q" type="search" placeholder="비품명, 고유번호, 분류번호, 부서" autocomplete="off" aria-label="대장에서 찾기">
-              <button class="lfind__clear" type="button" id="l-clear" aria-label="지우기" hidden>${icon(ICONS.close)}</button>
-            </div>
-            <div class="dept" id="l-dept" role="group" aria-label="운용부서 고르기"></div>
+
+          <div class="lfind">
+            ${icon(ICONS.find)}
+            <input id="l-q" type="search" placeholder="비품명, 고유번호, 담당자" autocomplete="off" aria-label="비품 찾기">
+            <button class="lfind__x" type="button" id="l-clear" aria-label="지우기" hidden>${icon(ICONS.close)}</button>
           </div>
-          <p class="sr-only" id="l-live" aria-live="polite"></p>
-          <div class="lwrap"><table class="ltable" id="l-table"></table></div>
-          <div class="lcards" id="l-cards"></div>
+
+          <div class="dept" id="l-depts"></div>
+          <div class="llist" id="l-list"></div>
           <div class="lmore" id="l-more"></div>
         </section>`;
     }
 
-    function mountLedger(view) {
-      view.querySelector('#l-import')?.addEventListener('click', () => {
-        openImport((count) => { render(); flash(`${n(count)}개를 가져왔어요`); });
+    /* ── 비품 하나 자세히 보기 ── */
+    function openAsset(id, onChange) {
+      const draw = () => {
+        const it = state.items.find((x) => x.id === id);
+        if (!it) { close(); return; }
+        const a = it.assetInfo || {};
+        const rows = [
+          ['담당자', a.manager || ''],
+          ['고유번호', a.no || ''],
+          ['분류번호', a.code || ''],
+          ['규격', a.spec || ''],
+          ['운용부서', a.dept || ''],
+          ['위치장소', a.place || ''],
+          ['보관 자리', pathOf(it).join(' › ') || ''],
+          ['취득일', dateLabel(a.date)],
+          ['수량', `${n(it.qty)}개`],
+          ['단가', a.price ? `${won(a.price)}원` : ''],
+          ['금액', a.price ? `${won(toNumber(a.price) * it.qty)}원` : ''],
+          ['내용연수', a.life ? `${toNumber(a.life)}년` : ''],
+          ['비고', a.note || ''],
+        ].filter(([, v]) => v);
+
+        box.innerHTML = `
+          <p class="signbox__title" id="a-title">${esc(assetName(it))}</p>
+          <p class="signbox__desc">${esc([a.dept, pathOf(it).join(' › ') || '장소 미지정'].filter(Boolean).join(' · '))}</p>
+          ${it.disused ? '<span class="tag tag--no">불용</span>' : ''}${it.repair ? '<span class="tag tag--fix">수리 필요</span>' : ''}${it.lost ? '<span class="tag tag--no">찾는 중</span>' : ''}
+
+          <div class="mgr">
+            <label class="field__label" for="a-manager">담당자</label>
+            <div class="mgr__row">
+              <input class="input" id="a-manager" placeholder="예: 김하늘" autocomplete="off" value="${esc(a.manager || '')}" maxlength="20">
+              <button class="btn btn--solid" type="button" id="a-save">저장</button>
+            </div>
+            <p class="wiz__hint">누가 맡고 있는지 적어 두면 나중에 찾기 쉬워요.</p>
+          </div>
+
+          <dl class="adet">
+            ${rows.filter(([k]) => k !== '담당자').map(([k, v]) => `<div class="adet__row"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}
+          </dl>
+
+          <div class="signbox__acts">
+            <a class="act" href="${editHref(it, '#/ledger')}">${icon(ICONS.edit)}<span class="act__label">수정</span></a>
+            <span class="signbox__spacer"></span>
+            <button class="mini mini--quiet" type="button" id="a-close">닫기</button>
+          </div>`;
+      };
+
+      const back = document.createElement('div');
+      back.className = 'signback';
+      back.innerHTML = '<div class="signbox assetbox" role="dialog" aria-modal="true" aria-labelledby="a-title"></div>';
+      document.body.append(back);
+      const box = back.querySelector('.assetbox');
+      const close = () => { back.remove(); document.removeEventListener('keydown', onKey); onChange(); };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      back.addEventListener('click', (e) => { if (e.target === back) close(); });
+      draw();
+
+      box.addEventListener('click', (e) => {
+        if (e.target.closest('#a-close')) { close(); return; }
+        if (e.target.closest('a.act')) { close(); return; }
+        if (!e.target.closest('#a-save')) return;
+        const value = box.querySelector('#a-manager').value.trim();
+        commit({
+          ...state,
+          items: state.items.map((x) => (x.id === id
+            ? { ...x, assetInfo: { ...x.assetInfo, manager: value }, updatedAt: new Date().toISOString() }
+            : x)),
+        });
+        flash(value ? `담당자를 ${value}(으)로 정했어요` : '담당자를 지웠어요');
+        draw();
       });
+      box.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.id === 'a-manager') box.querySelector('#a-save').click();
+      });
+    }
+
+    function mountLedger(view) {
+      view.querySelector('#l-import')?.addEventListener('click', openLedgerFile);
+      view.querySelector('#l-import2')?.addEventListener('click', openLedgerFile);
+      function openLedgerFile() {
+        openImport((count) => { render(); flash(`${n(count)}개를 가져왔어요`); });
+      }
 
       let all = assetsOf(state.items);
       if (!all.length) return;
 
       const input = view.querySelector('#l-q');
       const clear = view.querySelector('#l-clear');
-      const deptWrap = view.querySelector('#l-dept');
-      const table = view.querySelector('#l-table');
-      const cards = view.querySelector('#l-cards');
+      const deptWrap = view.querySelector('#l-depts');
+      const listEl = view.querySelector('#l-list');
       const meta = view.querySelector('#l-meta');
-      const live = view.querySelector('#l-live');
       let dept = '';
-      let sort = { by: 'date', dir: 'desc' };
-      let shown = [];
-      let limit = 100;   // 한 번에 그리는 줄 수. 수천 개를 한꺼번에 그리면 화면이 멈춘다.
       let deptsOpen = false;
+      let limit = 60;
+      let shown = [];
 
-      const matches = (it, q) => {
-        if (!q) return true;
-        const hay = [assetName(it), it.name, it.assetInfo.no, it.assetInfo.code, it.assetInfo.dept,
-                     it.assetInfo.spec, it.assetInfo.place, pathOf(it).join(' ')].join(' ').toLowerCase();
-        return q.toLowerCase().split(/\s+/).every((t) => hay.includes(t));
-      };
+      function update(keepLimit = false) {
+        if (!keepLimit) limit = 60;
+        const q = input.value.trim().toLowerCase();
+        clear.hidden = !input.value;
 
-      function renderDept(list) {
         const counts = new Map();
-        for (const it of list) if (it.assetInfo.dept) counts.set(it.assetInfo.dept, (counts.get(it.assetInfo.dept) || 0) + 1);
-        if (dept && !counts.has(dept)) dept = '';
-        // 부서가 많으면 큰 것부터 몇 개만 보여 주고 나머지는 접어 둔다
+        for (const it of all) {
+          const d = it.assetInfo.dept || '없음';
+          counts.set(d, (counts.get(d) || 0) + 1);
+        }
         const depts = [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a) || a.localeCompare(b, 'ko'));
         const cap = 8;
         const show = deptsOpen ? depts : depts.slice(0, cap);
@@ -4807,62 +4945,30 @@
           <button class="dept__chip" type="button" data-dept="" aria-pressed="${!dept}">전체 부서</button>
           ${show.map((d) => `<button class="dept__chip" type="button" data-dept="${esc(d)}" aria-pressed="${dept === d}">${esc(d)}<b class="num">${counts.get(d)}</b></button>`).join('')}
           ${depts.length > cap ? `<button class="dept__chip dept__more" type="button" id="dept-more">${deptsOpen ? '접기' : `부서 ${n(depts.length - cap)}개 더`}</button>` : ''}`;
-      }
 
-      function renderTable() {
-        const head = `
-          <thead>
-            <tr>
-              <th class="lname" scope="col" ${sort.by === 'name' ? `aria-sort="${sort.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>
-                <button class="lsort" type="button" data-sort="name">비품명${icon(ICONS.up)}</button>
-              </th>
-              ${LEDGER_COLS.map((c) => `
-                <th scope="col" class="${c.num ? 'lnum' : ''}" ${c.sort && sort.by === c.sort ? `aria-sort="${sort.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>
-                  ${c.sort
-                    ? `<button class="lsort" type="button" data-sort="${c.sort}">${esc(c.label)}${icon(ICONS.up)}</button>`
-                    : `<span class="lhead-plain">${esc(c.label)}</span>`}
-                </th>`).join('')}
-            </tr>
-          </thead>`;
+        shown = all.filter((it) => {
+          if (dept && (it.assetInfo.dept || '없음') !== dept) return false;
+          if (!q) return true;
+          const a = it.assetInfo;
+          return [assetName(it), it.name, a.manager, a.no, a.code, a.dept, a.spec, a.place, pathOf(it).join(' ')]
+            .filter(Boolean).some((v) => String(v).toLowerCase().includes(q));
+        }).sort((a, b) => assetName(a).localeCompare(assetName(b), 'ko'));
 
         const page = shown.slice(0, limit);
-        const body = `
-          <tbody>
-            ${page.map((it) => `
-              <tr>
-                <th class="lname" scope="row">
-                  <span class="lname__title">${esc(assetName(it))}</span>
-                  <span class="lname__where">${esc(pathOf(it).join(' › '))}</span>
-                  ${assetName(it) !== it.name || !it.loanable ? `<span class="lname__tags">
-                    ${assetName(it) !== it.name ? `<span class="tag">앱에선 ${esc(it.name)}</span>` : ''}
-                    ${it.loanable ? '' : '<span class="tag tag--no">대여 불가</span>'}
-                  </span>` : ''}
-                  <span class="lname__acts">${rowActions(it.id)}</span>
-                </th>
-                ${LEDGER_COLS.map((c) => {
-                  const v = cellText(it, c);
-                  return `<td class="${c.num ? 'lnum' : ''} ${c.note ? 'lnote' : ''} ${v ? '' : 'ldim'}">${v ? esc(v) : '—'}</td>`;
-                }).join('')}
-              </tr>`).join('')}
-          </tbody>`;
-        table.innerHTML = head + body;
+        meta.textContent = shown.length > limit ? `${n(limit)} / ${n(shown.length)}가지` : `${n(shown.length)}가지`;
 
-        cards.innerHTML = page.map((it) => `
-          <article class="lcard">
-            <div class="lcard__top">
-              <p class="lcard__name">${esc(assetName(it))}</p>
-              <span class="lcard__qty num">${n(it.qty)}개</span>
-            </div>
-            <p class="lcard__where">${esc(pathOf(it).join(' › '))}</p>
-            <div class="lcard__grid">
-              ${LEDGER_COLS.filter((c) => c.key !== 'qty' && cellText(it, c)).map((c) => `
-                <div class="lcard__cell ${c.note ? 'lcard__note' : ''}">
-                  <span class="lcard__k">${esc(c.label)}</span>
-                  <span class="lcard__v ${c.num ? 'num' : ''}">${esc(cellText(it, c))}${c.key === 'price' || c.key === 'total' ? '원' : ''}</span>
-                </div>`).join('')}
-            </div>
-            <div class="lcard__acts">${rowActions(it.id)}</div>
-          </article>`).join('');
+        listEl.innerHTML = page.length ? page.map((it) => {
+          const mg = it.assetInfo.manager;
+          return `
+            <button class="lrow" type="button" data-asset="${it.id}">
+              <span class="lrow__main">
+                <span class="lrow__name">${esc(assetName(it))}${it.qty > 1 ? ` <span class="num">${n(it.qty)}개</span>` : ''}</span>
+                <span class="lrow__sub">${esc([it.assetInfo.no, it.assetInfo.dept].filter(Boolean).join(' · ') || '고유번호 없음')}</span>
+              </span>
+              <span class="lrow__mgr ${mg ? '' : 'is-none'}">${mg ? esc(mg) : '담당 없음'}</span>
+              ${icon(ICONS.next, 'icon lrow__go')}
+            </button>`;
+        }).join('') : `<div class="nohit"><strong>찾는 비품이 없어요</strong><span>비품명, 고유번호, 담당자로 찾아보세요.</span></div>`;
 
         const more = shown.length - page.length;
         view.querySelector('#l-more').innerHTML = more
@@ -4870,59 +4976,27 @@
           : '';
       }
 
-      function update(keepLimit = false) {
-        if (!keepLimit) limit = 100;
-        const q = input.value.trim();
-        clear.hidden = !input.value;
-        const found = all.filter((it) => matches(it, q));
-        renderDept(found);
-        shown = sortAssets(found.filter((it) => !dept || it.assetInfo.dept === dept), sort.by, sort.dir);
-        meta.textContent = shown.length > limit
-          ? `${n(limit)} / ${n(shown.length)}가지`
-          : `${n(shown.length)}가지`;
-        if (!shown.length) {
-          table.innerHTML = '';
-          cards.innerHTML = `<div class="nohit"><strong>찾는 비품이 없어요</strong><span>다른 말로 찾거나 부서를 바꿔 보세요.</span></div>`;
-          view.querySelector('.lwrap').innerHTML = cards.innerHTML;
-          live.textContent = '찾은 비품이 없어요';
-          return;
-        }
-        const wrap = view.querySelector('.lwrap');
-        if (!wrap.contains(table)) { wrap.innerHTML = ''; wrap.append(table); }
-        renderTable();
-        live.textContent = `${shown.length}가지`;
-      }
+      input.addEventListener('input', () => update());
+      clear.addEventListener('click', () => { input.value = ''; update(); input.focus(); });
 
       view.addEventListener('click', (e) => {
         const d = e.target.closest('[data-dept]');
         if (d) { dept = d.dataset.dept; update(); return; }
-        const sBtn = e.target.closest('[data-sort]');
-        if (sBtn) {
-          const by = sBtn.dataset.sort;
-          // 이름은 가나다순부터, 숫자와 날짜는 큰 것부터 보는 게 자연스럽다
-          sort = sort.by === by
-            ? { by, dir: sort.dir === 'asc' ? 'desc' : 'asc' }
-            : { by, dir: by === 'name' ? 'asc' : 'desc' };
-          update();
-          return;
-        }
         if (e.target.closest('#dept-more')) { deptsOpen = !deptsOpen; update(true); return; }
-        if (e.target.closest('#l-more-go')) { limit += 200; update(true); return; }
+        if (e.target.closest('#l-more-go')) { limit += 120; update(true); return; }
         if (e.target.closest('#l-csv')) {
           exportLedger(shown).catch(() => flash('내려받지 못했어요', 'warn'));
+          return;
         }
+        const row = e.target.closest('[data-asset]');
+        if (row) openAsset(row.dataset.asset, () => { all = assetsOf(state.items); update(true); });
       });
-
-      input.addEventListener('input', update);
-      clear.addEventListener('click', () => { input.value = ''; update(); input.focus(); });
 
       view.refresh = () => {
         all = assetsOf(state.items);
-        // 비품이 하나도 안 남으면 빈 화면으로 바꿔야 한다
         if (!all.length) { render(); return; }
-        update();
+        update(true);
       };
-
       update();
     }
 
@@ -5113,7 +5187,7 @@
             </div>
 
             <div class="wizadd">
-              <input class="input" id="wiz-newb" placeholder="직접 적기 (예: 모듈형 건물)" autocomplete="off">
+              <input class="input" id="wiz-newb" placeholder="직접 적기 (예: 제2별관)" autocomplete="off">
               <button class="btn btn--ghost" type="button" id="wiz-addb">더하기</button>
             </div>
             <p class="wiz__hint">별관이 여러 개면 후관·신관처럼 <b>부르는 이름 그대로</b> 각각 적어 주세요.</p>
@@ -5354,9 +5428,7 @@
               wiz.rooms.push({ building: b, floor, name: r.name, aliases: [] });
               added++;
             }
-            wizMsg = added
-              ? `${added}곳을 찾아 담았어요. 다음 화면에서 층을 확인해 주세요.`
-              : '학교 배치도 업로드에 실패하였습니다. 수동으로 설정해주세요.';
+            wizMsg = added ? `${added}곳을 찾아 담았어요. 다음 화면에서 층을 확인해 주세요.` : '새로 담을 실 이름을 찾지 못했어요.';
             saveSpaces();
             drawWiz();
           } catch {
@@ -5439,12 +5511,10 @@
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          // 왜 안 되는지 화면에서 바로 알 수 있게 나눠서 알려 준다
           if (res.status === 404) aiWhy = 'Supabase에 parse-spaces 함수가 아직 없어요.';
           else if (data.error === 'KEY_REJECTED') aiWhy = '제미나이 키가 거절됐어요. Secrets의 GEMINI_API_KEY를 확인해 주세요.';
           else if (data.error === 'NO_KEY') aiWhy = 'Supabase Secrets에 GEMINI_API_KEY가 없어요.';
           else if (data.error === 'NOT_SIGNED_IN') aiWhy = '로그인이 풀렸어요. 다시 로그인해 주세요.';
-          else if (data.error === 'AI_FAILED' || data.error === 'BAD_ANSWER') aiWhy = '배치도에서 실 이름을 읽지 못했어요.';
           else aiWhy = `서버가 ${res.status} 오류를 냈어요.`;
           return null;
         }
@@ -5502,7 +5572,6 @@
         <div class="signbox rankbox" role="dialog" aria-modal="true" aria-labelledby="rank-title">
           <p class="signbox__title" id="rank-title">${esc(name)}</p>
           <p class="signbox__desc">모두 ${n(all.length)}번 빌려 갔어요${out.length ? ` · 지금 ${n(out.length)}건 나가 있어요` : ' · 지금은 모두 들어와 있어요'}</p>
-          ${canImport() ? '' : '<p class="rankbox__note">지난 기록은 관리 담당 선생님만 볼 수 있어요.</p>'}
 
           ${out.length ? `
             <p class="rankbox__label">지금 빌려 간 사람</p>
@@ -5519,7 +5588,7 @@
               }).join('')}
             </ul>` : ''}
 
-          ${canImport() && all.filter((l) => l.returnedAt).length ? `
+          ${all.filter((l) => l.returnedAt).length ? `
             <p class="rankbox__label">지난 기록</p>
             <ul class="rankbox__list">
               ${all.filter((l) => l.returnedAt).sort((a, b) => b.returnedAt.localeCompare(a.returnedAt)).slice(0, 5).map((l) => `
@@ -5531,9 +5600,10 @@
                 </li>`).join('')}
             </ul>` : ''}
 
-          <div class="rankbox__acts">
-            <button class="rankbox__btn rankbox__btn--quiet" type="button" id="rank-close">닫기</button>
-            <a class="rankbox__btn rankbox__btn--go" href="#/rent">대여 화면으로</a>
+          <div class="signbox__acts">
+            <span class="signbox__spacer"></span>
+            <button class="mini mini--quiet" type="button" id="rank-close">닫기</button>
+            <a class="signbox__go" href="#/rent">대여 화면으로</a>
           </div>
         </div>`;
       document.body.append(back);
@@ -5542,7 +5612,7 @@
       document.addEventListener('keydown', onKey);
       back.addEventListener('click', (e) => { if (e.target === back) close(); });
       back.querySelector('#rank-close').addEventListener('click', close);
-      back.querySelector('.rankbox__btn--go').addEventListener('click', close);
+      back.querySelector('.signbox__go').addEventListener('click', close);
     }
 
     /* ── 문의 글쓰기 ── */
@@ -6353,6 +6423,7 @@
         const open = panel.hidden;
         panel.hidden = !open;
         f.setAttribute('aria-expanded', String(open));
+        f.closest('.fold-card').classList.toggle('is-open', open);
         if (open && f.dataset.fold === 'spot') drawSpots();
       });
 
