@@ -1519,6 +1519,37 @@
     .lrow__pass .icon { width: 15px; height: 15px; }
     .lrow__pass:hover { background: var(--navy); color: #fff; }
 
+    .signacts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 18px; }
+    .signacts__btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 48px; border-radius: 12px;
+      background: var(--field); color: var(--ink-2);
+      font-size: 15px; font-weight: 700; letter-spacing: -0.01em;
+      transition: background-color 120ms, color 120ms, transform 120ms;
+    }
+    .signacts__btn:hover { background: #e7eaf2; color: var(--ink); }
+    .signacts__btn:active { transform: scale(.98); }
+    .signacts__btn--go { background: var(--navy); color: #fff; }
+    .signacts__btn--go:hover { background: var(--navy-2); color: #fff; }
+
+    .pickbar {
+      position: sticky; bottom: 0; z-index: 3;
+      display: flex; align-items: center; gap: 8px;
+      margin: 12px -22px -20px; padding: 14px 22px;
+      background: var(--card); border-top: 1px solid var(--line);
+    }
+    .pickbar[hidden] { display: none; }
+    .pickbar__info { flex: 1; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+    .lrow.is-picking { cursor: pointer; }
+    .lrow.is-picked { background: #eef3ff; }
+    .lrow__box {
+      width: 22px; height: 22px; border-radius: 7px; flex: none;
+      display: grid; place-items: center;
+      box-shadow: inset 0 0 0 1.5px #c9cfdd; background: #fff;
+    }
+    .lrow__box.is-on { background: var(--navy); box-shadow: none; color: #fff; }
+    .lrow__box .icon { width: 14px; height: 14px; stroke-width: 3; }
+
     .passbox { width: min(500px, 100%); }
     .passflow {
       display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 14px;
@@ -1552,9 +1583,18 @@
     @media (max-width: 760px) {
       .hocard .btn { width: 100%; }
       .lrow { flex-wrap: wrap; row-gap: 8px; }
-      .lrow__main { flex: 1 0 100%; }
+      .lrow__main { flex: 1 1 auto; min-width: 0; }
+      .lrow.is-picking { flex-wrap: nowrap; }
+      .lrow.is-picking .lrow__main { flex: 1; }
       .lrow__mgr { max-width: 55%; }
       .lrow__pass { margin-left: auto; }
+      .pickbar {
+        position: fixed; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom) + 62px);
+        margin: 0; padding: 12px 16px; flex-wrap: wrap; z-index: 20;
+        box-shadow: 0 -8px 24px -12px rgba(23, 32, 74, .3);
+      }
+      .pickbar__info { flex: 1 0 100%; order: -1; }
+      .pickbar .mini { flex: 1; }
       .lfind { height: 48px; }
       .passflow { grid-template-columns: 1fr; gap: 10px; }
       .passflow__arrow { transform: rotate(90deg); justify-self: center; }
@@ -4074,11 +4114,10 @@
             <span class="signpad__hint">손가락이나 마우스로 이름을 써 주세요</span>
           </div>
           <p class="signbox__err" id="sign-err" aria-live="polite"></p>
-          <div class="signbox__acts">
-            <button class="mini mini--quiet" type="button" id="sign-clear">다시 쓰기</button>
-            <span class="signbox__spacer"></span>
-            <button class="mini mini--quiet" type="button" id="sign-cancel">취소</button>
-            <button class="signbox__go" type="button" id="sign-ok">서명 완료</button>
+          <div class="signacts">
+            <button class="signacts__btn" type="button" id="sign-clear">다시 쓰기</button>
+            <button class="signacts__btn" type="button" id="sign-cancel">취소</button>
+            <button class="signacts__btn signacts__btn--go" type="button" id="sign-ok">서명 완료</button>
           </div>
         </div>`;
       document.body.append(back);
@@ -4854,6 +4893,7 @@
           <div class="card__head">
             <h2 class="card__title" id="l-title">비품 목록</h2>
             <span class="card__meta" id="l-meta"></span>
+            <button class="mini mini--quiet" type="button" id="l-pickmode">여러 개 고르기</button>
           </div>
 
           <div class="lfind">
@@ -4865,6 +4905,7 @@
           <div class="dept" id="l-depts"></div>
           <div class="llist" id="l-list"></div>
           <div class="lmore" id="l-more"></div>
+          <div class="pickbar" id="l-pickbar" hidden></div>
         </section>`;
     }
 
@@ -4955,19 +4996,76 @@
       });
     }
 
+    /* ── 서명 없이 담당자만 정하기 (처음 지정할 때) ── */
+    function openSetManager(ids, onDone) {
+      const list = ids.map((x) => state.items.find((y) => y.id === x)).filter(Boolean);
+      if (!list.length) return;
+      const first = list[0];
+
+      const back = document.createElement('div');
+      back.className = 'signback';
+      back.innerHTML = `
+        <div class="signbox" role="dialog" aria-modal="true" aria-labelledby="sm-title">
+          <p class="signbox__title" id="sm-title">담당자 지정</p>
+          <p class="signbox__desc">${esc(assetName(first))}${list.length > 1 ? ` 외 ${n(list.length - 1)}가지` : ''}의 담당자를 한꺼번에 정해요.</p>
+          <div class="field" style="margin-top:16px">
+            <label class="field__label" for="sm-name">담당자<span class="req" aria-hidden="true">*</span></label>
+            <input class="input" id="sm-name" placeholder="예: 김하늘" autocomplete="off" value="${esc(first.assetInfo?.manager || writerName())}" maxlength="20">
+          </div>
+          <p class="wiz__hint">넘겨받는 게 아니라 처음 정하는 거라면 서명 없이 이렇게 하면 돼요.</p>
+          <p class="signbox__err" id="sm-err" aria-live="polite"></p>
+          <div class="rankbox__acts">
+            <button class="rankbox__btn rankbox__btn--quiet" type="button" id="sm-cancel">그만두기</button>
+            <button class="rankbox__btn rankbox__btn--go" type="button" id="sm-go">${n(list.length)}가지에 지정</button>
+          </div>
+        </div>`;
+      document.body.append(back);
+
+      const close = (changed) => { back.remove(); document.removeEventListener('keydown', onKey); if (changed) onDone(); };
+      const onKey = (e) => { if (e.key === 'Escape') close(false); };
+      document.addEventListener('keydown', onKey);
+      back.addEventListener('click', (e) => { if (e.target === back) close(false); });
+      back.querySelector('#sm-cancel').addEventListener('click', () => close(false));
+      back.querySelector('#sm-name').focus();
+
+      const save = () => {
+        const value = back.querySelector('#sm-name').value.trim();
+        if (!value) { back.querySelector('#sm-err').textContent = '담당자 이름을 적어 주세요.'; return; }
+        const set = new Set(list.map((x) => x.id));
+        commit({
+          ...state,
+          items: state.items.map((x) => (set.has(x.id)
+            ? { ...x, assetInfo: { ...x.assetInfo, manager: value }, updatedAt: new Date().toISOString() }
+            : x)),
+        });
+        close(true);
+        flash(`${n(list.length)}가지 담당을 ${value}(으)로 정했어요`);
+      };
+      back.querySelector('#sm-go').addEventListener('click', save);
+      back.querySelector('#sm-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); });
+    }
+
     /* ── 비품 하나 인수인계: 두 사람이 서명하면 담당자가 바뀐다 ── */
-    function openPass(id, onDone) {
-      const it = state.items.find((x) => x.id === id);
-      if (!it) return;
+    function openPass(ids, onDone) {
+      const list = (Array.isArray(ids) ? ids : [ids])
+        .map((x) => state.items.find((y) => y.id === x)).filter(Boolean);
+      if (!list.length) return;
+      const many = list.length > 1;
+      const it = list[0];
       const a = it.assetInfo || {};
-      const now = a.manager || '';
+      // 여럿이면 지금 담당이 같을 때만 한 사람으로 본다
+      const mgrs = [...new Set(list.map((x) => x.assetInfo?.manager || ''))];
+      const now = many ? (mgrs.length === 1 ? mgrs[0] : '') : (a.manager || '');
+      const label = many
+        ? `${assetName(it)} 외 ${n(list.length - 1)}가지`
+        : `${assetName(it)}${a.no ? ` · ${a.no}` : ''}`;
 
       const back = document.createElement('div');
       back.className = 'signback';
       back.innerHTML = `
         <div class="signbox passbox" role="dialog" aria-modal="true" aria-labelledby="pass-title">
           <p class="signbox__title" id="pass-title">비품 인수인계</p>
-          <p class="signbox__desc">${esc(assetName(it))}${a.no ? ` · ${esc(a.no)}` : ''}</p>
+          <p class="signbox__desc">${esc(label)}${many ? ` · 한꺼번에 인계해요` : ''}</p>
 
           <div class="passflow">
             <div class="passflow__side">
@@ -4984,7 +5082,7 @@
           <div class="row" style="margin-top:16px">
             <div class="field">
               <label class="field__label" for="pass-from">인계자<span class="req" aria-hidden="true">*</span></label>
-              <input class="input" id="pass-from" placeholder="예: 김하늘" autocomplete="off" value="${esc(now)}" maxlength="20">
+              <input class="input" id="pass-from" placeholder="${many && !now ? '고른 물품의 담당이 서로 달라요' : '예: 김하늘'}" autocomplete="off" value="${esc(now)}" maxlength="20">
             </div>
             <div class="field">
               <label class="field__label" for="pass-to">인수자<span class="req" aria-hidden="true">*</span></label>
@@ -4992,7 +5090,7 @@
             </div>
           </div>
 
-          ${a.handover ? `
+          ${!many && a.handover ? `
             <p class="rankbox__label">지난 인수인계</p>
             <div class="passlast">
               <p class="passlast__who">${esc(a.handover.from || '담당 없음')} → ${esc(a.handover.to)}</p>
@@ -5006,7 +5104,7 @@
           <p class="signbox__err" id="pass-err" aria-live="polite"></p>
           <div class="rankbox__acts">
             <button class="rankbox__btn rankbox__btn--quiet" type="button" id="pass-cancel">그만두기</button>
-            <button class="rankbox__btn rankbox__btn--go" type="button" id="pass-go">서명하고 넘기기</button>
+            <button class="rankbox__btn rankbox__btn--go" type="button" id="pass-go">서명하고 인계하기</button>
           </div>
         </div>`;
       document.body.append(back);
@@ -5035,24 +5133,27 @@
         if (from === to) { err.textContent = '인계자와 인수자가 같아요.'; return; }
         err.textContent = '';
 
-        const label = `${assetName(it)}${a.no ? ` · ${a.no}` : ''}`;
         askSign(`${from} 님, 인계 서명해 주세요`, label, (signFrom) => {
           setTimeout(() => {
             askSign(`${to} 님, 이 비품을 인수합니다`, label, (signTo) => {
+              const at = new Date().toISOString();
+              const ids2 = new Set(list.map((x) => x.id));
               commit({
                 ...state,
-                items: state.items.map((x) => (x.id === id ? {
+                items: state.items.map((x) => (ids2.has(x.id) ? {
                   ...x,
                   assetInfo: {
                     ...x.assetInfo,
                     manager: to,
-                    handover: { at: new Date().toISOString(), from, to, signFrom, signTo },
+                    handover: { at, from: x.assetInfo?.manager || from, to, signFrom, signTo },
                   },
-                  updatedAt: new Date().toISOString(),
+                  updatedAt: at,
                 } : x)),
               });
               close(true);
-              flash(`${assetName(it)} 담당을 ${to} 님께 넘겼어요`);
+              flash(many
+                ? `${n(list.length)}가지 담당을 ${to} 님께 넘겼어요`
+                : `${assetName(it)} 담당을 ${to} 님께 넘겼어요`);
               return null;
             });
           }, 250);
@@ -5080,6 +5181,8 @@
       let deptsOpen = false;
       let limit = 60;
       let shown = [];
+      let picking = false;              // 여러 개 고르는 중인지
+      const picked = new Set();         // 고른 비품
 
       function update(keepLimit = false) {
         if (!keepLimit) limit = 60;
@@ -5113,17 +5216,31 @@
 
         listEl.innerHTML = page.length ? page.map((it) => {
           const mg = it.assetInfo.manager;
+          const on = picked.has(it.id);
           return `
-            <button class="lrow" type="button" data-asset="${it.id}">
+            <button class="lrow ${picking ? 'is-picking' : ''} ${on ? 'is-picked' : ''}" type="button" data-asset="${it.id}">
+              ${picking ? `<span class="lrow__box ${on ? 'is-on' : ''}" aria-hidden="true">${on ? icon(ICONS.check) : ''}</span>` : ''}
               <span class="lrow__main">
                 <span class="lrow__name">${esc(assetName(it))}${it.qty > 1 ? ` <span class="num">${n(it.qty)}개</span>` : ''}</span>
                 <span class="lrow__sub">${esc([it.assetInfo.no, it.assetInfo.dept].filter(Boolean).join(' · ') || '고유번호 없음')}</span>
               </span>
               <span class="lrow__mgr ${mg ? '' : 'is-none'}">${mg ? esc(mg) : '담당 없음'}</span>
-              <span class="lrow__pass" role="button" tabindex="0" data-pass="${it.id}">${icon(ICONS.handover)}인수인계</span>
-              ${icon(ICONS.next, 'icon lrow__go')}
+              ${picking ? '' : `<span class="lrow__pass" role="button" tabindex="0" data-pass="${it.id}">${icon(ICONS.handover)}인수인계</span>`}
+              ${picking ? '' : icon(ICONS.next, 'icon lrow__go')}
             </button>`;
         }).join('') : `<div class="nohit"><strong>찾는 비품이 없어요</strong><span>비품명, 고유번호, 담당자로 찾아보세요.</span></div>`;
+
+        // 고르기 막대
+        const bar = view.querySelector('#l-pickbar');
+        bar.hidden = !picking;
+        if (picking) {
+          const allOn = shown.length && shown.every((it) => picked.has(it.id));
+          bar.innerHTML = `
+            <button class="mini mini--quiet" type="button" id="pick-all">${allOn ? '모두 풀기' : `보이는 ${n(shown.length)}가지 모두`}</button>
+            <span class="pickbar__info">${picked.size ? `${n(picked.size)}가지 고름` : '비품을 눌러 골라 주세요'}</span>
+            <button class="mini mini--quiet" type="button" id="pick-name" ${picked.size ? '' : 'disabled'}>담당자 지정</button>
+            <button class="mini mini--go" type="button" id="pick-pass" ${picked.size ? '' : 'disabled'}>인수인계</button>`;
+        }
 
         const more = shown.length - page.length;
         view.querySelector('#l-more').innerHTML = more
@@ -5143,6 +5260,37 @@
           exportLedger(shown).catch(() => flash('내려받지 못했어요', 'warn'));
           return;
         }
+        if (e.target.closest('#l-pickmode')) {
+          picking = !picking;
+          picked.clear();
+          view.querySelector('#l-pickmode').textContent = picking ? '고르기 끝' : '여러 개 고르기';
+          update(true);
+          return;
+        }
+        if (e.target.closest('#pick-all')) {
+          const allOn = shown.length && shown.every((it) => picked.has(it.id));
+          if (allOn) picked.clear();
+          else shown.forEach((it) => picked.add(it.id));
+          update(true);
+          return;
+        }
+        if (e.target.closest('#pick-pass')) {
+          openPass([...picked], () => {
+            all = assetsOf(state.items);
+            picked.clear();
+            update(true);
+          });
+          return;
+        }
+        if (e.target.closest('#pick-name')) {
+          openSetManager([...picked], () => {
+            all = assetsOf(state.items);
+            picked.clear();
+            update(true);
+          });
+          return;
+        }
+
         const pass = e.target.closest('[data-pass]');
         if (pass) {
           e.stopPropagation();
@@ -5150,7 +5298,14 @@
           return;
         }
         const row = e.target.closest('[data-asset]');
-        if (row) openAsset(row.dataset.asset, () => { all = assetsOf(state.items); update(true); });
+        if (!row) return;
+        if (picking) {
+          const id = row.dataset.asset;
+          picked.has(id) ? picked.delete(id) : picked.add(id);
+          update(true);
+          return;
+        }
+        openAsset(row.dataset.asset, () => { all = assetsOf(state.items); update(true); });
       });
 
       view.refresh = () => {
