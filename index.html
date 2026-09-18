@@ -1472,7 +1472,9 @@
     .hocard .btn { flex: none; }
 
     .ledger { grid-column: 1 / -1; min-height: 0; }
-    .llist { display: grid; gap: 3px; margin-top: 12px; overflow: auto; min-height: 0; }
+    .lcount { font-size: 13px; font-weight: 700; color: var(--ink-3); margin-top: 14px; flex: none; }
+    .ledger .dept { flex: none; }
+    .llist { display: grid; gap: 3px; margin-top: 6px; overflow: auto; min-height: 0; }
     .lrow {
       width: 100%; display: flex; align-items: center; gap: 12px;
       padding: 13px 12px; border-radius: 12px; text-align: left;
@@ -1495,14 +1497,14 @@
 
     /* 찾기 칸 */
     .lfind {
-      display: flex; align-items: center; gap: 10px;
-      height: 52px; padding: 0 14px; margin-top: 14px;
-      border-radius: 13px; background: var(--field);
+      display: flex; align-items: center; gap: 10px; flex: none;
+      height: 56px; padding: 0 16px; margin: 16px 0 14px;
+      border-radius: 14px; background: var(--field);
       transition: box-shadow 120ms, background-color 120ms;
     }
     .lfind:focus-within { background: #fff; box-shadow: inset 0 0 0 1.5px var(--navy); }
     .lfind__mark { width: 19px; height: 19px; color: var(--ink-3); flex: none; }
-    .lfind input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; font-size: 16px; font-weight: 500; }
+    .lfind input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; font-size: 17px; font-weight: 500; }
     .lfind input::placeholder { color: var(--ink-3); font-weight: 400; }
     .lfind input::-webkit-search-cancel-button { display: none; }
     .lfind__x { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-3); flex: none; }
@@ -1582,12 +1584,18 @@
 
     @media (max-width: 760px) {
       .hocard .btn { width: 100%; }
-      .lrow { flex-wrap: wrap; row-gap: 8px; }
-      .lrow__main { flex: 1 1 auto; min-width: 0; }
-      .lrow.is-picking { flex-wrap: nowrap; }
-      .lrow.is-picking .lrow__main { flex: 1; }
-      .lrow__mgr { max-width: 55%; }
-      .lrow__pass { margin-left: auto; }
+      .lrow {
+        display: grid; grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center; row-gap: 10px; column-gap: 10px;
+      }
+      .lrow__main { grid-column: 1 / -1; }
+      .lrow__mgr { max-width: none; justify-self: start; }
+      .lrow__pass { justify-self: end; }
+      .lrow__go { display: none; }
+      .lrow.is-picking { grid-template-columns: auto minmax(0, 1fr); }
+      .lrow.is-picking .lrow__box { grid-row: 1; grid-column: 1; }
+      .lrow.is-picking .lrow__main { grid-column: 2; }
+      .lrow.is-picking .lrow__mgr { grid-column: 2; }
       .pickbar {
         position: fixed; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom) + 62px);
         margin: 0; padding: 12px 16px; flex-wrap: wrap; z-index: 20;
@@ -1595,7 +1603,7 @@
       }
       .pickbar__info { flex: 1 0 100%; order: -1; }
       .pickbar .mini { flex: 1; }
-      .lfind { height: 48px; }
+      .lfind { height: 52px; margin: 14px 0 12px; }
       .passflow { grid-template-columns: 1fr; gap: 10px; }
       .passflow__arrow { transform: rotate(90deg); justify-self: center; }
       .adet__row { grid-template-columns: 84px minmax(0, 1fr); }
@@ -4892,7 +4900,6 @@
         <section class="card ledger" aria-labelledby="l-title">
           <div class="card__head">
             <h2 class="card__title" id="l-title">비품 목록</h2>
-            <span class="card__meta" id="l-meta"></span>
             <button class="mini mini--quiet" type="button" id="l-pickmode">여러 개 고르기</button>
           </div>
 
@@ -4903,6 +4910,7 @@
           </div>
 
           <div class="dept" id="l-depts"></div>
+          <p class="lcount num" id="l-meta"></p>
           <div class="llist" id="l-list"></div>
           <div class="lmore" id="l-more"></div>
           <div class="pickbar" id="l-pickbar" hidden></div>
