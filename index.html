@@ -4538,7 +4538,7 @@
     }
 
     /* ════════ 물품 엑셀로 한꺼번에 등록 (→ src/lib/item-file.js) ════════ */
-    const ITEM_COLS = ['물품 이름', '분류', '수량', '대여 가능', '건물', '층', '실', '보관함', '칸', '메모'];
+    const ITEM_COLS = ['물품 이름(필수)', '분류(선택)', '수량(필수)', '대여 가능(필수)', '비품 여부(선택)', '건물(필수)', '층(필수)', '실(필수)', '보관함(선택)', '칸(선택)', '메모(선택)'];
     const ITEM_IN = {
       name:     ['물품 이름', '물품이름', '이름', '품명', '물품명'],
       category: ['분류', '종류', '카테고리'],
@@ -4550,6 +4550,7 @@
       storage:  ['보관함', '수납함', '캐비닛'],
       shelf:    ['칸', '선반'],
       memo:     ['메모', '비고', '한마디'],
+      asset:    ['비품 여부', '비품', '비품여부'],
     };
 
     const YES = ['예', 'o', 'O', 'ㅇ', 'y', 'Y', 'yes', 'TRUE', 'true', '1', '가능', '대여가능'];
@@ -4567,15 +4568,17 @@
     }
 
     function rowsToPlainItems(rows) {
+      // '물품 이름(필수)'처럼 괄호 표시가 붙어도 알아본다
+      const head = (v) => cellStr(v).replace(/\s*[(（][^)）]*[)）]\s*/g, '').trim();
       let hr = -1;
       for (let r = 0; r < Math.min(rows.length, 20); r++) {
-        const cells = (rows[r] || []).map(cellStr);
+        const cells = (rows[r] || []).map(head);
         if (cells.some((c) => ITEM_IN.name.includes(c))) { hr = r; break; }
       }
       if (hr < 0) return { error: 'NO_HEADER' };
 
       const seenCol = {};
-      rows[hr].forEach((h, i) => { const k = cellStr(h); if (k && !(k in seenCol)) seenCol[k] = i; });
+      rows[hr].forEach((h, i) => { const k = head(h); if (k && !(k in seenCol)) seenCol[k] = i; });
       const at = {};
       for (const [key, names] of Object.entries(ITEM_IN)) {
         at[key] = names.reduce((acc, nm) => (acc >= 0 ? acc : (nm in seenCol ? seenCol[nm] : -1)), -1);
@@ -4604,7 +4607,8 @@
           storage: get(row, 'storage'),
           shelf: get(row, 'shelf'),
           memo: get(row, 'memo'),
-          asset: false,
+          asset: YES.includes(get(row, 'asset')),
+          ...(YES.includes(get(row, 'asset')) ? { assetInfo: { name } } : {}),
         });
       }
       return { items, blank };
@@ -4616,12 +4620,12 @@
     async function downloadItemForm() {
       const XLSX = await xlsx();
       const sample = [
-        ['휴대용 빔프로젝터', '수업 기기', 2, '예', '본관', '3층', '과학 준비실', '2번 캐비닛', '위에서 2칸', '파란 상자 안에 있어요'],
-        ['줄넘기', '체육', 40, '예', '체육관', '1층', '체육 창고', '왼쪽 바구니', '', ''],
-        ['예) 이 줄부터 지우고 적어 주세요', '', '', '', '', '', '', '', '', ''],
+        ['휴대용 빔프로젝터', '수업 기기', 2, '예', '예', '본관', '3층', '과학 준비실', '2번 캐비닛', '위에서 2칸', '파란 상자 안에 있어요'],
+        ['줄넘기', '체육', 40, '아니요', '아니요', '체육관', '1층', '체육 창고', '왼쪽 바구니', '', ''],
+        ['예) 이 줄부터 지우고 적어 주세요', '', '', '', '', '', '', '', '', '', ''],
       ];
       const ws = XLSX.utils.aoa_to_sheet([ITEM_COLS, ...sample]);
-      ws['!cols'] = [22, 12, 8, 10, 12, 10, 16, 14, 14, 30].map((wch) => ({ wch }));
+      ws['!cols'] = [22, 12, 9, 13, 13, 12, 10, 16, 14, 14, 30].map((wch) => ({ wch }));
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, '물품 등록 양식');
       XLSX.writeFile(wb, '물품 등록 양식.xlsx');
@@ -4631,11 +4635,11 @@
     async function downloadItems(list) {
       const XLSX = await xlsx();
       const body = list.map((it) => [
-        it.name, it.category || '', it.qty, it.loanable ? '예' : '아니오',
+        it.name, it.category || '', it.qty, it.loanable ? '예' : '아니요', it.asset ? '예' : '아니요',
         it.building || '', it.floor || '', it.room || '', it.storage || '', it.shelf || '', it.memo || '',
       ]);
       const ws = XLSX.utils.aoa_to_sheet([ITEM_COLS, ...body]);
-      ws['!cols'] = [22, 12, 8, 10, 12, 10, 16, 14, 14, 30].map((wch) => ({ wch }));
+      ws['!cols'] = [22, 12, 9, 13, 13, 12, 10, 16, 14, 14, 30].map((wch) => ({ wch }));
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, '물품 목록');
       XLSX.writeFile(wb, `물품 목록_${ymd(new Date()).replaceAll('-', '')}.xlsx`);
@@ -4755,7 +4759,8 @@
                 ...old, ...row,
                 category: row.category || old.category,
                 memo: row.memo || old.memo,
-                asset: old.asset, ...(old.assetInfo ? { assetInfo: old.assetInfo } : {}),
+                asset: old.asset || row.asset,
+                ...(old.assetInfo ? { assetInfo: old.assetInfo } : (row.assetInfo ? { assetInfo: row.assetInfo } : {})),
                 id: old.id, createdAt: old.createdAt, updatedAt: new Date().toISOString(),
               };
             } else {
@@ -5741,12 +5746,10 @@
             <label class="wizdrop ${wizReading ? 'is-busy' : ''}" id="wiz-drop">
               <input type="file" id="wiz-file" accept="image/*,.pdf,application/pdf" ${wizReading ? 'disabled' : ''}>
               ${icon(ICONS.upload, 'icon wizdrop__icon')}
-              <span class="wizdrop__text">${wizReading ? '읽는 중이에요…' : '배치도 올리기'}<small>${wizReading ? '잠시만 기다려 주세요' : 'PDF · 사진'}</small></span>
+              <span class="wizdrop__text">${wizReading ? 'AI가 배치도를 읽는 중이에요…' : '배치도 올리기'}<small>${wizReading ? '보통 10~30초 걸려요. 붐비면 조금 더 걸려요.' : 'PDF · 사진'}</small></span>
             </label>
             ${wizMsg ? `<p class="wizdrop__msg ${wizMsg.includes('실패') ? 'is-bad' : ''}">${esc(wizMsg)}</p>` : ''}
             ${aiWhy ? `<p class="wizdrop__why">${esc(aiWhy)}</p>` : ''}
-            <button class="wizdrop__check" type="button" id="wiz-probe">AI 연결 확인</button>
-            ${probeMsg ? `<pre class="wizdrop__probe">${esc(probeMsg)}</pre>` : ''}
 
             ${ledger.length ? `
               <div class="wizledger">
@@ -6098,6 +6101,9 @@
           if (res.status === 404) aiWhy = `${AI_FUNCTION} 함수를 찾지 못했어요.`;
           else if (data.error === 'NO_KEY') aiWhy = 'Supabase Secrets에 GEMINI_API_KEY가 없어요.';
           else if (data.error === 'NOT_SIGNED_IN') aiWhy = '로그인이 풀렸어요. 다시 로그인해 주세요.';
+          else if (data.status === 503 || data.status === 429 || /UNAVAILABLE|high demand|RESOURCE_EXHAUSTED/.test(String(data.detail))) {
+            aiWhy = '지금 AI 사용자가 많아 잠시 붐벼요. 몇 번 다시 시도했지만 자리가 나지 않았어요. 1~2분 뒤에 다시 올려 주세요.';
+          }
           else if (data.detail) aiWhy = `구글이 거절했어요 (${data.status || res.status}) ${pickReason(data.detail)}`;
           else aiWhy = `서버가 ${res.status} 오류를 냈어요.`;
           return null;
@@ -7317,7 +7323,8 @@
     function floorChoices(d) {
       const b = spaces().buildings.find((x) => x.name === d.building);
       if (!b) return FLOORS;
-      return floorsOf(b).map((v) => ({ value: v, short: v.includes('지하') ? v.replace('지하 ', 'B').replace('층', '') : v.replace('층', '') }));
+      // 낮은 층부터: 지하 → 1층 → 2층 …
+      return floorsOf(b).slice().reverse().map((v) => ({ value: v, short: v.includes('지하') ? v.replace('지하 ', 'B').replace('층', '') : v.replace('층', '') }));
     }
 
     function addView(params) {
