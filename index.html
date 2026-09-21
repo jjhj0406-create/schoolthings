@@ -802,7 +802,7 @@
     .fold-card .fold { width: 100%; padding: 17px 22px; }
     .fold-body { padding: 0 22px 22px; animation: rise 180ms ease-out both; }
     .fold-body[hidden] { display: none; }
-    .fold-card .todo__body { max-height: 520px; margin-top: 0; }
+    .fold-card .todo__body { max-height: 560px; margin: 0; padding: 4px 22px 22px; }
     .fold-card .spotbox { margin-top: 0; }
     .fold__count { font-size: 13px; font-weight: 700; color: var(--ink-3); margin-left: auto; }
     .is-manager .side {
@@ -1534,6 +1534,17 @@
     }
     .lrow__pass .icon { width: 15px; height: 15px; }
     .lrow__pass:hover { background: var(--navy); color: #fff; }
+
+    .pickchips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .pickchips[hidden], .pickchips:empty { display: none; }
+    .pickchip {
+      height: 36px; padding: 0 13px; border-radius: 10px;
+      background: var(--field); color: var(--ink-2);
+      font-size: 14px; font-weight: 700;
+      transition: background-color 120ms, color 120ms;
+    }
+    .pickchip:hover { color: var(--ink); background: #e7eaf2; }
+    .pickchip.is-on { background: var(--navy); color: #fff; }
 
     .signacts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 18px; }
     .signacts__btn {
@@ -2893,7 +2904,6 @@
       const stockBody = total === 0
         ? `<div class="stock__bar" aria-hidden="true"></div>
            <div class="stock__cta">
-             <p>아직 등록된 물품이 없어요. 등록하면 여기서 세어 드려요.</p>
              <a class="btn btn--solid" href="#/add">첫 물품 등록</a>
            </div>`
         : `<div class="stock__bar" aria-hidden="true">${stock.filter((s) => s.count > 0).map((s) => `<span style="flex:${s.count} 0 0;background:${s.color}"></span>`).join('')}</div>
@@ -3397,14 +3407,41 @@
         b.count += it.qty;
         f.rooms.set(p.room, r); b.floors.set(p.floor, f); buildings.set(p.building, b);
       }
+      // 학교 공간 설정에서 정한 건물·층·실은 물품이 없어도 자리를 깔아 둔다
+      const sp = spaces();
+      const ensure = (bName, fName) => {
+        const b = buildings.get(bName) || { name: bName, count: 0, rooms: 0, floors: new Map(), unset: false, configured: true };
+        b.configured = true;
+        const f = b.floors.get(fName) || { name: fName, rooms: new Map() };
+        b.floors.set(fName, f); buildings.set(bName, b);
+        return f;
+      };
+      for (const cb of sp.buildings) {
+        for (const fName of floorsOf(cb)) ensure(cb.name, fName);
+      }
+      for (const cr of sp.rooms) {
+        const fName = cr.floor || '미정';
+        const f = ensure(cr.building, fName);
+        if (!f.rooms.has(cr.name)) {
+          f.rooms.set(cr.name, {
+            name: cr.name, key: [cr.building, fName, cr.name].join('|'),
+            building: cr.building, floor: fName, count: 0, kinds: 0, empty: true,
+          });
+        }
+      }
+
       for (const b of buildings.values()) {
         b.rooms = [...b.floors.values()].reduce((a, f) => a + f.rooms.size, 0);
         b.floorList = [...b.floors.values()]
           .map((f) => ({ ...f, roomList: [...f.rooms.values()].sort((x, y) => y.count - x.count || x.name.localeCompare(y.name, 'ko')) }))
           .sort((x, y) => floorRank(y.name) - floorRank(x.name)); // 위층이 위로
       }
+      const order = new Map(sp.buildings.map((b, i) => [b.name, i]));
       return [...buildings.values()].sort((a, b) => {
         if (a.unset !== b.unset) return a.unset ? 1 : -1;
+        const ia = order.has(a.name) ? order.get(a.name) : 99;
+        const ib = order.has(b.name) ? order.get(b.name) : 99;
+        if (ia !== ib) return ia - ib;
         return b.count - a.count || a.name.localeCompare(b.name, 'ko');
       });
     }
@@ -3443,9 +3480,10 @@
     function placesView(params) {
       const items = state.items;
       const buildings = groupPlaces(items);
-      const placed = items.length > 0;
+      const placed = items.length > 0 || hasSpaces();
       const want = params.get('room');
-      const current = want && items.some((i) => roomKey(i) === want) ? want : (buildings[0]?.floorList[0]?.roomList[0]?.key || '');
+      const current = want && items.some((i) => roomKey(i) === want) ? want
+        : (buildings[0]?.floorList.flatMap((f) => f.roomList)[0]?.key || '');
       const [curB] = current ? current.split('|') : [''];
       const building = buildings.find((b) => b.name === (params.get('b') || curB)) || buildings[0];
 
@@ -3491,7 +3529,7 @@
 
     function mountPlaces(view, params) {
       const items = state.items;
-      if (!items.length) return;
+      if (!items.length && !hasSpaces()) return;
 
       const buildings = groupPlaces(items);
       const stack = view.querySelector('#stack');
@@ -3523,7 +3561,7 @@
             <div class="floor__rooms">
               ${f.roomList.length ? f.roomList.map((r) => `
                 <button class="room" type="button" data-room="${esc(r.key)}" aria-current="${r.key === current}">${esc(r.name)}</button>`).join('')
-              : '<span class="floor__none">등록된 물품 없음</span>'}
+              : '<span class="floor__none">정한 실이 없어요</span>'}
             </div>
           </div>`;
         }).join('');
@@ -3531,8 +3569,32 @@
 
       function renderRoom() {
         const list = items.filter((i) => roomKey(i) === current);
-        if (!list.length) { roomview.innerHTML = ''; return; }
-        const [b, f, r] = current.split('|');
+        const [b, f, r] = (current || '||').split('|');
+        if (!list.length) {
+          roomview.innerHTML = current ? `
+            <div class="roomview__head">
+              <div>
+                <p class="roomview__crumb"><span>${esc(b)}</span><span>${esc(f)}</span></p>
+                <h2 class="roomview__name">${esc(r)}</h2>
+                <p class="roomview__sum">아직 등록된 물품이 없어요</p>
+              </div>
+            </div>
+            <div class="nohit">
+              <strong>${esc(r)}에 둔 물품을 등록해 보세요</strong>
+              <span>건물·층·실이 미리 채워진 채로 등록 화면이 열려요.</span>
+              <div class="nohit__actions">
+                <a class="btn btn--solid" href="#/add?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f === '미정' ? '' : f)}&room=${encodeURIComponent(r)}">${icon(ICONS.add)}여기에 등록</a>
+              </div>
+            </div>` : `
+            <div class="nohit">
+              <strong>이 건물에는 아직 정한 실이 없어요</strong>
+              <span>학교 공간 설정하기에서 층별로 실을 담으면 여기에 보여요.</span>
+              <div class="nohit__actions">
+                <button class="btn btn--solid" type="button" data-action="spaces">학교 공간 설정하기</button>
+              </div>
+            </div>`;
+          return;
+        }
         const count = list.reduce((a, i) => a + i.qty, 0);
         const units = groupRoom(list);
 
@@ -3590,14 +3652,15 @@
       const want = params.get('room');
       const found = want && items.some((i) => roomKey(i) === want) ? want : '';
       if (found) building = buildings.find((b) => b.name === found.split('|')[0]) || building;
-      select(found || building.floorList[0].roomList[0].key);
+      const firstKey = (b) => b.floorList.flatMap((f) => f.roomList)[0]?.key || '';
+      select(found || firstKey(building));
 
       view.addEventListener('click', (e) => {
         const bTab = e.target.closest('[data-bld]');
         if (bTab) {
           building = buildings.find((b) => b.name === bTab.dataset.bld);
           view.querySelectorAll('[data-bld]').forEach((t) => t.setAttribute('aria-pressed', t === bTab));
-          select(building.floorList[0].roomList[0].key);
+          select(firstKey(building));
           return;
         }
         const room = e.target.closest('[data-room]');
@@ -5950,7 +6013,7 @@
         }
         return `알 수 없는 답이에요 (${res.status})\n${raw.slice(0, 220)}`;
       } catch (e) {
-        return `⑤ 서버에 닿지 못함\n${String(e?.message || e)}\n주소: ${url}`;
+        return `⑤ 서버에 닿지 못함\n${String(e?.message || e)}\n\n가장 흔한 원인: 함수의 JWT 확인이 켜져 있어요.\nSupabase → Edge Functions → parse-spaces → 설정에서\n'Enforce JWT Verification'을 꺼 주세요.\n\n그래도 같으면 함수 이름이 parse-spaces가 맞는지 확인해 주세요.`;
       }
     }
 
@@ -7209,7 +7272,10 @@
             });
       }
       const d = draft;
-      const spaceBuildings = () => [...new Set([...spaces().buildings.map((b) => b.name), ...uniq('building'), ...BUILDING_HINTS])];
+      // 학교 공간을 설정했으면 그 건물만, 아니면 쓰던 이름과 기본 예시를
+      const spaceBuildings = () => (hasSpaces()
+        ? [...new Set([...spaces().buildings.map((b) => b.name), ...uniq('building')])]
+        : [...new Set([...uniq('building'), ...BUILDING_HINTS])]);
       const spaceRooms = (b, f) => [...new Set([
         ...spaces().rooms.filter((r) => (!b || r.building === b) && (!f || !r.floor || r.floor === f)).map((r) => r.name),
         ...uniq('room'),
@@ -7294,7 +7360,10 @@
 
           <div class="field">
             <label class="field__label" for="f-building">건물<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
-            <input class="input" id="f-building" name="building" form="add-form" list="l-building" placeholder="예: 본관" autocomplete="off" value="${esc(d.building)}" aria-describedby="e-building">
+            ${hasSpaces() ? `<div class="pickchips" id="b-chips">
+              ${spaces().buildings.map((b) => `<button class="pickchip ${d.building === b.name ? 'is-on' : ''}" type="button" data-pickb="${esc(b.name)}">${esc(b.name)}</button>`).join('')}
+            </div>` : ''}
+            <input class="input" id="f-building" name="building" form="add-form" list="l-building" placeholder="${hasSpaces() ? '위에서 고르거나 직접 적기' : '예: 본관'}" autocomplete="off" value="${esc(d.building)}" aria-describedby="e-building">
             <datalist id="l-building">${opts(spaceBuildings())}</datalist>
             <p class="field__error" id="e-building"></p>
           </div>
@@ -7309,7 +7378,8 @@
 
           <div class="field">
             <label class="field__label" for="f-room">실<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
-            <input class="input" id="f-room" name="room" form="add-form" list="l-room" placeholder="예: 과학 준비실" autocomplete="off" value="${esc(d.room)}" aria-describedby="e-room">
+            <div class="pickchips" id="r-chips"></div>
+            <input class="input" id="f-room" name="room" form="add-form" list="l-room" placeholder="${hasSpaces() ? '위에서 고르거나 직접 적기' : '예: 과학 준비실'}" autocomplete="off" value="${esc(d.room)}" aria-describedby="e-room">
             <datalist id="l-room">${opts(spaceRooms(d.building, d.floor))}</datalist>
             <p class="field__error" id="e-room"></p>
           </div>
@@ -7493,8 +7563,42 @@
       const assetSwitch = view.querySelector('#f-asset');
 
       let shownFloors = '';
+      let shownRooms = '';
+      view.addEventListener('click', (e) => {
+        const bc = e.target.closest('[data-pickb]');
+        if (bc) {
+          const box = view.querySelector('#f-building');
+          box.value = bc.dataset.pickb;
+          box.dispatchEvent(new Event('input', { bubbles: true }));
+          return;
+        }
+        const rc = e.target.closest('[data-pickr]');
+        if (rc) {
+          const box = view.querySelector('#f-room');
+          box.value = rc.dataset.pickr;
+          box.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+
       const sync = () => {
         draft = readForm(form);
+        // 건물 칩 표시
+        for (const b of view.querySelectorAll('[data-pickb]')) b.classList.toggle('is-on', b.dataset.pickb === draft.building);
+        // 그 건물·층에 설정한 실을 칩으로
+        const roomNames = hasSpaces()
+          ? spaces().rooms.filter((r) => r.building === draft.building && (!draft.floor || !r.floor || r.floor === draft.floor)).map((r) => r.name)
+          : [];
+        const rKey = roomNames.join('|') + '#' + draft.room;
+        if (rKey !== shownRooms) {
+          shownRooms = rKey;
+          const rc = view.querySelector('#r-chips');
+          if (rc) {
+            rc.innerHTML = roomNames.slice(0, 30).map((nm) => `<button class="pickchip ${draft.room === nm ? 'is-on' : ''}" type="button" data-pickr="${esc(nm)}">${esc(nm)}</button>`).join('');
+            rc.hidden = !roomNames.length;
+          }
+          const dl = view.querySelector('#l-room');
+          if (dl) dl.innerHTML = [...new Set([...roomNames, ...uniq('room')])].map((v) => `<option value="${esc(v)}"></option>`).join('');
+        }
         // 건물을 바꾸면 그 건물의 층으로 갈아 끼운다
         const list = floorChoices(draft);
         const key = list.map((f) => f.value).join('|');
