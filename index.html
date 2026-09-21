@@ -5987,6 +5987,18 @@
 
     let aiWhy = '';   // 서버가 알려 준 실패 이유
 
+    // 구글이 보낸 오류에서 사람이 읽을 부분만 꺼낸다
+    function pickReason(raw) {
+      try {
+        const j = JSON.parse(raw);
+        const e = j.error || {};
+        const why = (e.details || []).map((d) => d.reason).filter(Boolean).join(', ');
+        return `${e.status || ''} ${e.message || ''}${why ? ` [${why}]` : ''}`.trim().slice(0, 240);
+      } catch {
+        return String(raw || '').slice(0, 240);
+      }
+    }
+
     // 어디까지 되고 어디서 막혔는지 한 번에 알려 준다
     async function probeAI() {
       if (!online()) return '로그인 방식이 아니라 AI를 쓸 수 없어요. Supabase 설정을 먼저 해 주세요.';
@@ -6009,10 +6021,17 @@
         if (res.status === 404) return `① 함수 없음\n${url} 주소에 함수가 없어요.\n대시보드의 함수 주소 끝부분과 AI_FUNCTION 값이 같은지 확인해 주세요.`;
         if (res.status === 401) return '② 로그인 문제\n함수가 요청을 거절했어요. 다시 로그인해 보세요.';
         if (data.error === 'NO_KEY') return '③ 키 없음\n함수는 있는데 GEMINI_API_KEY가 없어요.\nEdge Functions → Secrets에 넣어 주세요.';
-        if (data.ok === false) return `④ 키 거절\n구글이 키를 받지 않았어요 (${data.status}).\n${String(data.detail || '').slice(0, 220)}`;
+        if (data.ok === false && data.step === 'key') return `④ 키 거절\n구글이 키를 받지 않았어요 (${data.status}).\n${pickReason(data.detail)}`;
+        if (data.ok === false && data.step === 'generate') {
+          const lines = (data.tries || []).map((t) => `· ${t.model} → ${t.status}\n  ${pickReason(t.detail)}`).join('\n');
+          return `⑥ 목록은 보이는데 생성이 막혀요\n${lines}`;
+        }
+        if (data.ok === true && data.step === 'generate') {
+          return `모두 정상이에요.\n실제로 답을 받은 모델: ${data.model}`;
+        }
         if (data.ok === true) {
           return data.models?.length
-            ? `모두 정상이에요.\n쓸 수 있는 모델: ${data.models.slice(0, 6).join(', ')}`
+            ? `키는 통해요.\n쓸 수 있는 모델: ${data.models.slice(0, 6).join(', ')}\n(함수 코드를 최신으로 바꾸면 생성까지 시험해요)`
             : '키는 통했는데 쓸 수 있는 모델이 안 보여요.\nGoogle Cloud에서 Generative Language API를 켜 주세요.';
         }
         return `알 수 없는 답이에요 (${res.status})\n${raw.slice(0, 220)}`;
@@ -6037,10 +6056,10 @@
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          if (res.status === 404) aiWhy = 'Supabase에 parse-spaces 함수가 아직 없어요.';
-          else if (data.error === 'KEY_REJECTED') aiWhy = '제미나이 키가 거절됐어요. Secrets의 GEMINI_API_KEY를 확인해 주세요.';
+          if (res.status === 404) aiWhy = `${AI_FUNCTION} 함수를 찾지 못했어요.`;
           else if (data.error === 'NO_KEY') aiWhy = 'Supabase Secrets에 GEMINI_API_KEY가 없어요.';
           else if (data.error === 'NOT_SIGNED_IN') aiWhy = '로그인이 풀렸어요. 다시 로그인해 주세요.';
+          else if (data.detail) aiWhy = `구글이 거절했어요 (${data.status || res.status}) ${pickReason(data.detail)}`;
           else aiWhy = `서버가 ${res.status} 오류를 냈어요.`;
           return null;
         }
