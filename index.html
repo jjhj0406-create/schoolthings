@@ -1202,6 +1202,20 @@
       background: var(--field); color: var(--ink-2);
     }
     .wizdrop__msg.is-bad { background: #fdf0f0; color: var(--late); font-weight: 600; }
+    .wizdrop__why { font-size: 13px; color: var(--ink-2); line-height: 1.5; margin-top: 8px; }
+    .wizdrop__check {
+      display: block; margin-top: 10px; padding: 8px 0;
+      font-size: 13px; font-weight: 700; color: var(--ink-2);
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+    .wizdrop__check:hover { color: var(--ink); }
+    .wizdrop__check[disabled] { opacity: .55; }
+    .wizdrop__probe {
+      margin-top: 8px; padding: 12px 14px; border-radius: 12px;
+      background: #11182c; color: #e6e9f2;
+      font-size: 12.5px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
 
     .wizcount { display: flex; align-items: center; gap: 8px; margin-top: 18px; padding: 13px 16px; border-radius: 13px; background: #e8f2ed; font-size: 15px; font-weight: 600; color: var(--board); }
     .wizcount .icon { width: 18px; height: 18px; flex: none; stroke-width: 2.6; }
@@ -5325,7 +5339,7 @@
     }
 
     /* ════════ 우리 학교 공간 설정하기 (→ src/pages/spaces.js) ════════ */
-    const BUILDING_CHIPS = ['본관', '별관', '체육관', '급식동', '유치원', '후관', '신관'];
+    const BUILDING_CHIPS = ['본관', '별관', '체육관', '급식동', '유치원', '모듈형 건물', '후관', '신관'];
 
     // 이름이 갈리는 실은 다르게 부르는 말을 함께 담아 둔다
     const ROOM_CHIPS = [
@@ -5418,6 +5432,65 @@
         .map(([name, qty]) => ({ name, qty }));
     }
 
+    /* ── 배치도에서 실 이름 뽑기 ── */
+    const PLAN_SKIP = new Set(['계단', '화장실', '엘리베이터', '복도', '창고', '정문', '중정', '주차장',
+      '주출입구', '부출입구', '중앙현관', '학급배치도', '교실배치도', '학년도', '학기교실']);
+
+    function parsePlanText(text) {
+      const found = [];
+      const seen = new Set();
+      const push = (name, floor = '') => {
+        const n2 = name.trim();
+        if (n2.length < 2 || n2.length > 14 || seen.has(n2) || PLAN_SKIP.has(n2)) return;
+        if (/학기|배치도/.test(n2)) return;
+        seen.add(n2);
+        found.push({ name: n2, floor });
+      };
+
+      for (const rawLine of String(text).split(/\r?\n/)) {
+        const line = rawLine
+          .replace(/\([^)]*\)/g, ' ')                       // 괄호 설명은 버린다
+          .replace(/([가-힣])\s+(?=[가-힣])/g, '$1')          // 낱자 사이 공백을 붙인다
+          .trim();
+        if (!line) continue;
+
+        const fm = line.match(/(지하\s*\d+|B\d|\d+)\s*(F|층)/i);
+        const floor = fm ? (/지하|B/i.test(fm[1]) ? `지하 ${fm[1].replace(/\D/g, '')}층` : `${fm[1]}층`) : '';
+
+        // 붙어 있는 학급 표기를 하나씩 끊는다: 5-25-35-4 → 5-2 · 5-3 · 5-4
+        for (const m of line.matchAll(/(\d{1,2})-(\d{1,2})(?=(?:\d{1,2}-|[^\d-]|$))/g)) {
+          push(`${m[1]}-${m[2]}`, floor);
+        }
+        // 붙어 있는 실 이름을 끊는다: 실과실준비실컴퓨터실 → 실과실 · 준비실 · 컴퓨터실
+        for (const m of line.matchAll(/([가-힣]{1,7}?)(교실|각실|실|관|당)/g)) {
+          push((m[1] + m[2]).replace(/^\d+-\d+/, ''), floor);
+        }
+      }
+      return found;
+    }
+
+    // PDF 안에 글자가 있으면 서버 없이 그 자리에서 읽는다
+    async function readPdfText(file) {
+      const base = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/';
+      const pdfjs = await import(base + 'pdf.min.mjs');
+      pdfjs.GlobalWorkerOptions.workerSrc = base + 'pdf.worker.min.mjs';
+      const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+      let out = '';
+      for (let i = 1; i <= Math.min(doc.numPages, 5); i++) {
+        const page = await doc.getPage(i);
+        const content = await page.getTextContent();
+        let last = null;
+        for (const item of content.items) {
+          const y = Math.round(item.transform[5]);
+          if (last !== null && Math.abs(y - last) > 3) out += '\n';
+          out += item.str;
+          last = y;
+        }
+        out += '\n';
+      }
+      return out;
+    }
+
     /* ── 설정 화면 ── */
     let wizOpen = false;
     let wizAt = 0;           // 지금 몇 번째 화면인지
@@ -5425,6 +5498,7 @@
     let wizPick = null;      // 이름을 고르는 중인 칩
     let wizMsg = '';         // 배치도 읽기 알림
     let wizReading = false;
+    let probeMsg = '';   // AI 연결 확인 결과
 
     // 건물과 층이 정해지면 화면 목록이 만들어진다
     function wizPages() {
@@ -5511,7 +5585,7 @@
             </div>
 
             <div class="wizadd">
-              <input class="input" id="wiz-newb" placeholder="직접 적기 (예: 제2별관)" autocomplete="off">
+              <input class="input" id="wiz-newb" placeholder="직접 적기 (예: 모듈형 건물)" autocomplete="off">
               <button class="btn btn--ghost" type="button" id="wiz-addb">더하기</button>
             </div>
             <p class="wiz__hint">별관이 여러 개면 후관·신관처럼 <b>부르는 이름 그대로</b> 각각 적어 주세요.</p>
@@ -5571,6 +5645,9 @@
               <span class="wizdrop__text">${wizReading ? '읽는 중이에요…' : '배치도 올리기'}<small>${wizReading ? '잠시만 기다려 주세요' : 'PDF · 사진'}</small></span>
             </label>
             ${wizMsg ? `<p class="wizdrop__msg ${wizMsg.includes('실패') ? 'is-bad' : ''}">${esc(wizMsg)}</p>` : ''}
+            ${aiWhy ? `<p class="wizdrop__why">${esc(aiWhy)}</p>` : ''}
+            <button class="wizdrop__check" type="button" id="wiz-probe">AI 연결 확인</button>
+            ${probeMsg ? `<pre class="wizdrop__probe">${esc(probeMsg)}</pre>` : ''}
 
             ${ledger.length ? `
               <div class="wizledger">
@@ -5663,7 +5740,7 @@
 
       const go = (n2) => {
         saveSpaces();                 // 넘어갈 때마다 저장해 둔다
-        wizAt = n2; wizPick = null; wizMsg = '';
+        wizAt = n2; wizPick = null; wizMsg = ''; probeMsg = ''; aiWhy = '';
         drawWiz();
       };
 
@@ -5719,6 +5796,14 @@
         drawWiz();
       });
 
+      /* AI가 붙어 있는지 확인 */
+      root.querySelector('#wiz-probe')?.addEventListener('click', async () => {
+        probeMsg = '확인하는 중이에요…';
+        drawWiz();
+        probeMsg = await probeAI();
+        drawWiz();
+      });
+
       /* 배치도 읽기 */
       const file = root.querySelector('#wiz-file');
       if (file) {
@@ -5728,13 +5813,29 @@
           if (f.size > 8 * 1024 * 1024) { wizMsg = '학교 배치도 업로드에 실패하였습니다. 파일이 8MB를 넘어요.'; drawWiz(); return; }
           wizReading = true; wizMsg = ''; drawWiz();
           try {
-            const base64 = await new Promise((res, rej) => {
-              const r = new FileReader();
-              r.onload = () => res(String(r.result).split(',')[1]);
-              r.onerror = rej;
-              r.readAsDataURL(f);
-            });
-            const list = await askAI({ image: base64, mime: f.type || 'application/pdf' });
+            let list = null;
+
+            // 1) PDF 안에 글자가 있으면 그 자리에서 읽는다 (서버가 없어도 된다)
+            if (/pdf/i.test(f.type) || /\.pdf$/i.test(f.name)) {
+              try {
+                const text = await readPdfText(f);
+                const got = parsePlanText(text);
+                if (got.length >= 3) list = got;
+              } catch (e) {
+                console.warn('PDF 글자 읽기 실패', e);
+              }
+            }
+
+            // 2) 안 되면 서버에 부탁한다 (사진이거나 글자가 없는 PDF)
+            if (!list) {
+              const base64 = await new Promise((res, rej) => {
+                const r = new FileReader();
+                r.onload = () => res(String(r.result).split(',')[1]);
+                r.onerror = rej;
+                r.readAsDataURL(f);
+              });
+              list = await askAI({ image: base64, mime: f.type || 'application/pdf' });
+            }
             wizReading = false;
             if (!list) {
               wizMsg = '학교 배치도 업로드에 실패하였습니다. 수동으로 설정해주세요.';
@@ -5818,6 +5919,40 @@
     }
 
     let aiWhy = '';   // 서버가 알려 준 실패 이유
+
+    // 어디까지 되고 어디서 막혔는지 한 번에 알려 준다
+    async function probeAI() {
+      if (!online()) return '로그인 방식이 아니라 AI를 쓸 수 없어요. Supabase 설정을 먼저 해 주세요.';
+      if (!session) return '로그인이 필요해요.';
+      const url = `${SUPABASE.url}/functions/v1/parse-spaces`;
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: SUPABASE.anonKey,
+          },
+          body: JSON.stringify({ probe: true }),
+        });
+        const raw = await res.text();
+        let data = {};
+        try { data = JSON.parse(raw); } catch { /* 형식이 아닐 수도 있다 */ }
+
+        if (res.status === 404) return '① 함수 없음\nSupabase에 parse-spaces 함수가 아직 없어요.\nEdge Functions에서 그 이름으로 올려 주세요.';
+        if (res.status === 401) return '② 로그인 문제\n함수가 요청을 거절했어요. 다시 로그인해 보세요.';
+        if (data.error === 'NO_KEY') return '③ 키 없음\n함수는 있는데 GEMINI_API_KEY가 없어요.\nEdge Functions → Secrets에 넣어 주세요.';
+        if (data.ok === false) return `④ 키 거절\n구글이 키를 받지 않았어요 (${data.status}).\n${String(data.detail || '').slice(0, 220)}`;
+        if (data.ok === true) {
+          return data.models?.length
+            ? `모두 정상이에요.\n쓸 수 있는 모델: ${data.models.slice(0, 6).join(', ')}`
+            : '키는 통했는데 쓸 수 있는 모델이 안 보여요.\nGoogle Cloud에서 Generative Language API를 켜 주세요.';
+        }
+        return `알 수 없는 답이에요 (${res.status})\n${raw.slice(0, 220)}`;
+      } catch (e) {
+        return `⑤ 서버에 닿지 못함\n${String(e?.message || e)}\n주소: ${url}`;
+      }
+    }
 
     // 서버(Edge Function)에 제미나이로 읽어 달라고 부탁한다. 준비가 안 됐으면 조용히 물러난다.
     async function askAI(payload) {
