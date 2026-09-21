@@ -1973,6 +1973,10 @@
     // open.neis.go.kr 에서 무료로 바로 받을 수 있어요. 비워 두면 주소를 직접 적으면 돼요.
     const NEIS_KEY = '619ceb6595654ae1ab781003ee16fcb3';
 
+    // 배치도를 읽는 Supabase Edge Function의 주소 이름(slug).
+    // 대시보드에서 함수 주소 끝부분을 보고 적어 주세요. 예: .../functions/v1/smooth-task → 'smooth-task'
+    const AI_FUNCTION = 'smooth-task';
+
     let sb = null;        // Supabase 연결. 설정이 없으면 null
     let session = null;   // 로그인한 사람
     let me = null;        // { schoolId, role, status, school }
@@ -5987,7 +5991,7 @@
     async function probeAI() {
       if (!online()) return '로그인 방식이 아니라 AI를 쓸 수 없어요. Supabase 설정을 먼저 해 주세요.';
       if (!session) return '로그인이 필요해요.';
-      const url = `${SUPABASE.url}/functions/v1/parse-spaces`;
+      const url = `${SUPABASE.url}/functions/v1/${AI_FUNCTION}`;
       try {
         const res = await fetch(url, {
           method: 'POST',
@@ -6002,7 +6006,7 @@
         let data = {};
         try { data = JSON.parse(raw); } catch { /* 형식이 아닐 수도 있다 */ }
 
-        if (res.status === 404) return '① 함수 없음\nSupabase에 parse-spaces 함수가 아직 없어요.\nEdge Functions에서 그 이름으로 올려 주세요.';
+        if (res.status === 404) return `① 함수 없음\n${url} 주소에 함수가 없어요.\n대시보드의 함수 주소 끝부분과 AI_FUNCTION 값이 같은지 확인해 주세요.`;
         if (res.status === 401) return '② 로그인 문제\n함수가 요청을 거절했어요. 다시 로그인해 보세요.';
         if (data.error === 'NO_KEY') return '③ 키 없음\n함수는 있는데 GEMINI_API_KEY가 없어요.\nEdge Functions → Secrets에 넣어 주세요.';
         if (data.ok === false) return `④ 키 거절\n구글이 키를 받지 않았어요 (${data.status}).\n${String(data.detail || '').slice(0, 220)}`;
@@ -6013,7 +6017,7 @@
         }
         return `알 수 없는 답이에요 (${res.status})\n${raw.slice(0, 220)}`;
       } catch (e) {
-        return `⑤ 서버에 닿지 못함\n${String(e?.message || e)}\n\n가장 흔한 원인: 함수의 JWT 확인이 켜져 있어요.\nSupabase → Edge Functions → parse-spaces → 설정에서\n'Enforce JWT Verification'을 꺼 주세요.\n\n그래도 같으면 함수 이름이 parse-spaces가 맞는지 확인해 주세요.`;
+        return `⑤ 서버에 닿지 못함\n${String(e?.message || e)}\n\n가장 흔한 원인: 함수의 JWT 확인이 켜져 있어요.\nSupabase → Edge Functions → parse-spaces → 설정에서\n'Enforce JWT Verification'을 꺼 주세요.\n\n그래도 같으면 함수 주소가 맞는지 확인해 주세요.\n지금 부르는 주소: ${url}`;
       }
     }
 
@@ -6022,7 +6026,7 @@
       aiWhy = '';
       if (!sb || !session) { aiWhy = '로그인한 뒤에 쓸 수 있어요.'; return null; }
       try {
-        const res = await fetch(`${SUPABASE.url}/functions/v1/parse-spaces`, {
+        const res = await fetch(`${SUPABASE.url}/functions/v1/${AI_FUNCTION}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
