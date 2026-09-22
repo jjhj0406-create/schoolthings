@@ -1702,6 +1702,25 @@
     .prow__name .num { color: var(--ink-2); }
     .prow__sub, .crow__sub { font-size: 13px; color: var(--ink-2); margin-top: 2px; overflow-wrap: anywhere; }
     .crow__acts { display: flex; align-items: center; gap: 5px; flex: none; }
+    .crow { align-items: flex-start; }
+    .rboard { margin-top: 8px; }
+    .rboard summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--ink-2); list-style: none; }
+    .rboard summary::-webkit-details-marker { display: none; }
+    .rboard summary::before { content: '▸ '; color: var(--ink-3); }
+    .rboard[open] summary::before { content: '▾ '; }
+    .rboard summary .is-warn { color: var(--late); }
+    .rboard__grp { margin-top: 10px; }
+    .rboard__label { font-size: 12px; font-weight: 700; color: var(--ink-3); margin-bottom: 5px; }
+    .rboard__rooms { display: flex; flex-wrap: wrap; gap: 5px; }
+    .rchip { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 9px; border-radius: 8px; font-size: 13px; font-weight: 700; background: #fff; }
+    .rchip small { font-size: 11px; font-weight: 700; opacity: .8; }
+    .rchip.is-in { background: #e8f2ed; color: var(--board); }
+    .rchip.is-none { background: #eef0f6; color: var(--ink-2); }
+    .rchip.is-wait { background: #fdf0f0; color: var(--late); }
+    .rboard__out { font-size: 12px; color: var(--ink-3); margin-top: 8px; }
+    .give__other, .give__manual button { margin-top: 8px; font-size: 13px; font-weight: 700; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
+    .give__manual { font-size: 14px; color: var(--ink-2); line-height: 1.5; padding: 12px 14px; border-radius: 12px; background: var(--field); }
+    .give__manual button { display: block; }
     .crow.is-shut .crow__main { opacity: .65; }
     .crow__tag { display: inline-flex; height: 20px; padding: 0 7px; margin-left: 6px; border-radius: 5px; background: #e7eaf2; color: var(--ink-2); font-size: 11px; font-weight: 800; align-items: center; }
 
@@ -6801,6 +6820,20 @@
       }
 
       const fixed = [info.building, info.floor, info.room].filter(Boolean).join(' › ');
+
+      // 학교 공간 설정에 담긴 실을 목록으로 (건물 → 낮은 층부터)
+      const sp = info.spaces && Array.isArray(info.spaces.buildings) ? info.spaces : { buildings: [], rooms: [] };
+      const placeGroups = [];
+      for (const b of sp.buildings) {
+        const floors = [...floorsOf(b).slice().reverse(), ''];
+        for (const f of floors) {
+          const list = (sp.rooms || []).filter((r) => r.building === b.name && (r.floor || '') === f);
+          if (list.length) placeGroups.push({ label: `${b.name}${f ? ` ${f}` : ''}`, rooms: list.map((r) => ({ key: [b.name, f, r.name].join('|'), name: r.name })) });
+        }
+      }
+      const canPick = !fixed && placeGroups.length > 0;
+      let place = '';        // 고른 실 (건물|층|실)
+      let manual = !canPick; // 목록에 없어서 직접 적는지
       let rows = [{ name: '', qty: 1, building: '', floor: '', room: '', storage: '', memo: '' }];
       let who = '';
       let nothing = false;   // 낼 물품이 없다고 답하는 경우
@@ -6818,7 +6851,7 @@
               <span>개</span>
             </div>
           </div>
-          ${fixed ? '' : `
+          ${fixed || !manual ? '' : `
             <div class="grow__place">
               <input class="input" data-k="building" placeholder="건물 (예: 본관)" value="${esc(r.building)}" maxlength="40">
               <input class="input" data-k="floor" placeholder="층 (예: 3층)" value="${esc(r.floor)}" maxlength="20">
@@ -6831,7 +6864,7 @@
         root.innerHTML = shell(`
           <p class="give__school">${esc(info.school || '')}</p>
           <h1 class="gate__title">${esc(info.title || '물품 모으기')}</h1>
-          <p class="gate__desc">갖고 있는 물품을 적어 주세요. 한 번에 여러 개를 낼 수 있어요.${info.due_date ? `<br><b>${esc(dateShort(info.due_date))}까지</b> 받아요.` : ''}</p>
+          <p class="gate__desc">공유할 물품을 작성해주세요! 여러 개 한번에 제출도 가능합니다.${info.due_date ? `<br><b>${esc(dateShort(info.due_date))}까지</b> 제출해주시면 감사하겠습니다 :)` : ''}</p>
           ${fixed ? `<p class="give__fixed">${icon(ICONS.place)}<span>모두 <b>${esc(fixed)}</b>에 있는 물품으로 받아요</span></p>` : ''}
 
           <div class="field" style="margin-top:18px">
@@ -6839,9 +6872,25 @@
             <input class="input" id="g-who" placeholder="예: 3학년 2반 김하늘" value="${esc(who)}" maxlength="30">
           </div>
 
+          ${canPick ? `
+            <div class="field">
+              <label class="field__label" for="g-place">어디에 있는 물품인가요?<span class="req" aria-hidden="true">*</span></label>
+              ${manual ? `
+                <p class="give__manual">목록에 없는 곳이라 아래 줄마다 건물·층·실을 적어 주세요.
+                  <button type="button" id="g-back">목록에서 고르기</button></p>` : `
+                <div class="selectbox">
+                  <select class="input" id="g-place">
+                    <option value="">실을 골라 주세요</option>
+                    ${placeGroups.map((g) => `<optgroup label="${esc(g.label)}">${g.rooms.map((r) => `<option value="${esc(r.key)}" ${place === r.key ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</optgroup>`).join('')}
+                  </select>
+                  ${icon(ICONS.caret, 'icon selectbox__caret')}
+                </div>
+                <button class="give__other" type="button" id="g-other">목록에 없어요 · 직접 적기</button>`}
+            </div>` : ''}
+
           <label class="give__none">
             <input type="checkbox" id="g-none" ${nothing ? 'checked' : ''}>
-            <span><b>낼 물품이 없어요</b><small>없다고 알려 주시면 담당 선생님이 응답한 것으로 알 수 있어요</small></span>
+            <span><b>제출할 물품 없음</b></span>
           </label>
 
           ${nothing ? '' : `
@@ -6855,6 +6904,7 @@
 
       root.addEventListener('change', (e) => {
         if (e.target.id === 'g-none') { nothing = e.target.checked; draw(); }
+        if (e.target.id === 'g-place') { place = e.target.value; }
       });
 
       root.addEventListener('input', (e) => {
@@ -6878,6 +6928,8 @@
         }
         const del = e.target.closest('[data-del]');
         if (del) { rows.splice(Number(del.dataset.del), 1); draw(); return; }
+        if (e.target.closest('#g-other')) { manual = true; place = ''; draw(); return; }
+        if (e.target.closest('#g-back')) { manual = false; draw(); return; }
         if (e.target.closest('#g-again')) {
           rows = [{ name: '', qty: 1, building: '', floor: '', room: '', storage: '', memo: '' }];
           nothing = false;
@@ -6887,10 +6939,20 @@
         if (!e.target.closest('#g-send')) return;
 
         const err = root.querySelector('#g-err');
-        const list = nothing ? [] : rows.filter((r) => r.name.trim());
+        let list = nothing ? [] : rows.filter((r) => r.name.trim());
         if (!who.trim()) { err.textContent = '적는 분 이름을 적어 주세요.'; root.querySelector('#g-who').focus(); return; }
-        if (!nothing && !list.length) { err.textContent = '물품 이름을 적거나 “낼 물품이 없어요”를 골라 주세요.'; return; }
-        if (!nothing && !fixed && list.some((r) => !r.room.trim())) { err.textContent = '각 물품이 있는 실을 적어 주세요.'; return; }
+        if (canPick && !manual && !place) { err.textContent = '어디에 있는 물품인지 실을 골라 주세요.'; root.querySelector('#g-place')?.focus(); return; }
+        if (!nothing && !list.length) { err.textContent = '물품 이름을 적거나 “제출할 물품 없음”을 골라 주세요.'; return; }
+        if (!nothing && !fixed && manual && list.some((r) => !r.room.trim())) { err.textContent = '각 물품이 있는 실을 적어 주세요.'; return; }
+
+        // 목록에서 고른 실을 모든 줄에 붙인다. '없음'이어도 어느 실의 응답인지 남긴다.
+        if (canPick && !manual) {
+          const [pb, pf, pr] = place.split('|');
+          list = list.map((r) => ({ ...r, building: pb, floor: pf, room: pr }));
+          if (nothing) list = [{ building: pb, floor: pf, room: pr }];
+        } else if (nothing && manual && rows[0]) {
+          list = [{ building: rows[0].building, floor: rows[0].floor, room: rows[0].room }];
+        }
 
         const btn = e.target.closest('#g-send');
         btn.disabled = true; btn.textContent = '보내는 중이에요…';
@@ -6923,6 +6985,55 @@
       }
     }
 
+    // 학교 전체 링크: 공간 설정의 실마다 냈는지, 없다고 했는지, 아직인지
+    function roomBoard(c) {
+      const sp = spaces();
+      if (placeOfCollect(c) || !sp.rooms.length) return null;
+      const got = submissions().filter((x) => x.collectId === c.id && x.status !== 'rejected');
+      const same = (x, r) => x.building === r.building && x.room === r.name && (!r.floor || !x.floor || x.floor === r.floor);
+
+      const groups = [];
+      for (const b of sp.buildings) {
+        for (const f of [...floorsOf(b).slice().reverse(), '']) {
+          const rooms = sp.rooms.filter((r) => r.building === b.name && (r.floor || '') === f);
+          if (!rooms.length) continue;
+          groups.push({
+            label: `${b.name}${f ? ` ${f}` : ''}`,
+            rooms: rooms.map((r) => {
+              const mine = got.filter((x) => same(x, r));
+              const things = mine.filter((x) => x.status !== 'none');
+              return {
+                name: r.name,
+                state: things.length ? 'in' : (mine.length ? 'none' : 'wait'),
+                count: things.reduce((a, x) => a + 1, 0),
+              };
+            }),
+          });
+        }
+      }
+      const all = groups.flatMap((g) => g.rooms);
+      const waiting = all.filter((r) => r.state === 'wait').length;
+      const outside = got.filter((x) => !sp.rooms.some((r) => same(x, r)));
+      return { groups, waiting, total: all.length, outside };
+    }
+
+    function roomBoardHTML(c) {
+      const bd = roomBoard(c);
+      if (!bd) return '';
+      return `
+        <details class="rboard">
+          <summary>실별 응답 보기 · <b class="${bd.waiting ? 'is-warn' : ''}">미제출 ${n(bd.waiting)}곳</b> / ${n(bd.total)}곳</summary>
+          ${bd.groups.map((g) => `
+            <div class="rboard__grp">
+              <p class="rboard__label">${esc(g.label)}</p>
+              <div class="rboard__rooms">
+                ${g.rooms.map((r) => `<span class="rchip is-${r.state}">${esc(r.name)}<small>${r.state === 'in' ? `${n(r.count)}개` : r.state === 'none' ? '없음' : '미제출'}</small></span>`).join('')}
+              </div>
+            </div>`).join('')}
+          ${bd.outside.length ? `<p class="rboard__out">목록에 없는 곳에서 낸 물품 ${n(bd.outside.length)}개도 있어요.</p>` : ''}
+        </details>`;
+    }
+
     /* ── 관리 담당 화면의 '물품 모으기' ── */
     function collectsHTML() {
       const list = collects().slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -6945,9 +7056,9 @@
             </div>
           </div>
           <div class="field">
-            <label class="field__label">장소 <small>정해 두면 받는 사람은 이름과 수량만 적어요</small></label>
+            <label class="field__label">장소 <small>${hasSpaces() ? '비우면 학교 전체 링크 — 받는 사람이 자기 실을 골라요' : '정해 두면 받는 사람은 이름과 수량만 적어요'}</small></label>
             <div class="coll__place">
-              <input class="input" id="c-b" list="c-bl" placeholder="건물 (비우면 직접 적게)" autocomplete="off">
+              <input class="input" id="c-b" list="c-bl" placeholder="건물 (비우면 학교 전체)" autocomplete="off">
               <input class="input" id="c-f" placeholder="층" autocomplete="off">
               <input class="input" id="c-r" list="c-rl" placeholder="실" autocomplete="off">
               <datalist id="c-bl">${[...new Set([...spaces().buildings.map((b) => b.name), ...state.items.map((i) => i.building)])].filter(Boolean).map((v) => `<option value="${esc(v)}"></option>`).join('')}</datalist>
@@ -6994,8 +7105,9 @@
               return `<li class="crow ${shut ? 'is-shut' : ''}">
                 <div class="crow__main">
                   <p class="crow__title">${esc(c.title)}${shut ? '<span class="crow__tag">마감</span>' : ''}</p>
-                  <p class="crow__sub">${c.dueDate ? `${esc(dateShort(c.dueDate))}까지 · ` : ''}${c.autoApprove ? '바로 등록' : '검토 후 등록'}${placeOfCollect(c) ? ` · ${esc(placeOfCollect(c))}` : ''}</p>
+                  <p class="crow__sub">${c.dueDate ? `${esc(dateShort(c.dueDate))}까지 · ` : ''}${c.autoApprove ? '바로 등록' : '검토 후 등록'} · ${placeOfCollect(c) ? esc(placeOfCollect(c)) : '<b>학교 전체</b>'}</p>
                   <p class="crow__sub">응답 ${n(people)}명${none ? ` (없음 ${n(none)})` : ''} · 물품 ${n(things)}개${wait ? ` · <b>검토 대기 ${n(wait)}</b>` : ''}</p>
+                  ${roomBoardHTML(c)}
                 </div>
                 <div class="crow__acts">
                   ${wait ? `<button class="mini mini--go" type="button" data-capply="${c.id}">반영하기</button>` : ''}
