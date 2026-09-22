@@ -1667,6 +1667,19 @@
     .give .bigbtn { width: 100%; margin-top: 16px; }
 
     /* ───────── 물품 모으기 (관리) ───────── */
+    .coll__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .coll__stamp { font-size: 13px; color: var(--ink-3); }
+    .coll__bar .mini { display: inline-flex; align-items: center; gap: 5px; }
+    .coll__bar .mini .icon { width: 14px; height: 14px; }
+    .give__none {
+      display: flex; align-items: flex-start; gap: 12px; margin-top: 16px;
+      padding: 14px 16px; border-radius: 14px; background: var(--field); cursor: pointer;
+      box-shadow: inset 0 0 0 1.5px transparent;
+    }
+    .give__none:has(input:checked) { box-shadow: inset 0 0 0 1.5px var(--navy); background: #fff; }
+    .give__none input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--navy); flex: none; }
+    .give__none b { display: block; font-size: 15px; }
+    .give__none small { display: block; font-size: 13px; color: var(--ink-2); margin-top: 3px; line-height: 1.45; }
     .coll__label { font-size: 13px; font-weight: 700; color: var(--ink-3); margin: 18px 0 8px; }
     .coll__new { padding: 16px; border-radius: 14px; background: var(--field); }
     .coll__new .coll__label { margin-top: 0; }
@@ -1689,7 +1702,7 @@
     .prow__name .num { color: var(--ink-2); }
     .prow__sub, .crow__sub { font-size: 13px; color: var(--ink-2); margin-top: 2px; overflow-wrap: anywhere; }
     .crow__acts { display: flex; align-items: center; gap: 5px; flex: none; }
-    .crow.is-shut { opacity: .65; }
+    .crow.is-shut .crow__main { opacity: .65; }
     .crow__tag { display: inline-flex; height: 20px; padding: 0 7px; margin-left: 6px; border-radius: 5px; background: #e7eaf2; color: var(--ink-2); font-size: 11px; font-weight: 800; align-items: center; }
 
     @media (max-width: 760px) {
@@ -2630,6 +2643,7 @@
       handover: 'M4 8.5h13 M13.5 5l3.5 3.5-3.5 3.5 M20 15.5H7 M10.5 12L7 15.5l3.5 3.5',
       chat: 'M20.5 12c0 4-3.8 7-8.5 7-1 0-2-.15-2.9-.42L4 20l1.3-3.4C4.2 15.3 3.5 13.7 3.5 12c0-4 3.8-7 8.5-7s8.5 3 8.5 7z',
       next: 'M9 6l6 6-6 6',
+      refresh: 'M20 11a8 8 0 10-2.3 5.7 M20 5v6h-6',
       manager: 'M12 12.5a4 4 0 100-8 4 4 0 000 8z M4.5 20.5a7.5 7.5 0 0115 0',
       edit: 'M4 20h4L18.5 9.5l-4-4L4 16z M14 6l4 4',
       trash: 'M5 7h14 M9.5 7V4.5h5V7 M7 7l1 12.5h8L17 7 M10.5 10.5v6 M13.5 10.5v6',
@@ -6789,6 +6803,7 @@
       const fixed = [info.building, info.floor, info.room].filter(Boolean).join(' › ');
       let rows = [{ name: '', qty: 1, building: '', floor: '', room: '', storage: '', memo: '' }];
       let who = '';
+      let nothing = false;   // 낼 물품이 없다고 답하는 경우
 
       const rowHTML = (r, i) => `
         <div class="grow" data-i="${i}">
@@ -6824,13 +6839,23 @@
             <input class="input" id="g-who" placeholder="예: 3학년 2반 김하늘" value="${esc(who)}" maxlength="30">
           </div>
 
-          <div class="grows">${rows.map(rowHTML).join('')}</div>
-          <button class="give__add" type="button" id="g-add">${icon(ICONS.add)}한 줄 더</button>
+          <label class="give__none">
+            <input type="checkbox" id="g-none" ${nothing ? 'checked' : ''}>
+            <span><b>낼 물품이 없어요</b><small>없다고 알려 주시면 담당 선생님이 응답한 것으로 알 수 있어요</small></span>
+          </label>
+
+          ${nothing ? '' : `
+            <div class="grows">${rows.map(rowHTML).join('')}</div>
+            <button class="give__add" type="button" id="g-add">${icon(ICONS.add)}한 줄 더</button>`}
 
           <p class="gate__err" id="g-err" aria-live="polite"></p>
-          <button class="bigbtn bigbtn--navy" type="button" id="g-send">${n(rows.filter((r) => r.name.trim()).length || rows.length)}개 내기</button>`);
+          <button class="bigbtn bigbtn--navy" type="button" id="g-send">${nothing ? '없음으로 내기' : `${n(rows.filter((r) => r.name.trim()).length || rows.length)}개 내기`}</button>`);
       };
       draw();
+
+      root.addEventListener('change', (e) => {
+        if (e.target.id === 'g-none') { nothing = e.target.checked; draw(); }
+      });
 
       root.addEventListener('input', (e) => {
         if (e.target.id === 'g-who') { who = e.target.value; return; }
@@ -6855,20 +6880,21 @@
         if (del) { rows.splice(Number(del.dataset.del), 1); draw(); return; }
         if (e.target.closest('#g-again')) {
           rows = [{ name: '', qty: 1, building: '', floor: '', room: '', storage: '', memo: '' }];
+          nothing = false;
           draw();
           return;
         }
         if (!e.target.closest('#g-send')) return;
 
         const err = root.querySelector('#g-err');
-        const list = rows.filter((r) => r.name.trim());
+        const list = nothing ? [] : rows.filter((r) => r.name.trim());
         if (!who.trim()) { err.textContent = '적는 분 이름을 적어 주세요.'; root.querySelector('#g-who').focus(); return; }
-        if (!list.length) { err.textContent = '물품 이름을 한 개 이상 적어 주세요.'; return; }
-        if (!fixed && list.some((r) => !r.room.trim())) { err.textContent = '각 물품이 있는 실을 적어 주세요.'; return; }
+        if (!nothing && !list.length) { err.textContent = '물품 이름을 적거나 “낼 물품이 없어요”를 골라 주세요.'; return; }
+        if (!nothing && !fixed && list.some((r) => !r.room.trim())) { err.textContent = '각 물품이 있는 실을 적어 주세요.'; return; }
 
         const btn = e.target.closest('#g-send');
         btn.disabled = true; btn.textContent = '보내는 중이에요…';
-        const { data, error: sendErr } = await sb.rpc('submit_items', { link_code: code, submitter: who.trim(), rows: list });
+        const { data, error: sendErr } = await sb.rpc('submit_items', { link_code: code, submitter: who.trim(), rows: list, nothing });
         if (sendErr) {
           btn.disabled = false; btn.textContent = `${n(list.length)}개 내기`;
           err.textContent = String(sendErr.message).includes('CLOSED') ? '마감된 링크예요.' : '보내지 못했어요. 잠시 뒤 다시 해 주세요.';
@@ -6876,10 +6902,25 @@
         }
         root.innerHTML = shell(`
           <span class="waitmark is-done" aria-hidden="true">${icon(ICONS.check)}</span>
-          <h1 class="gate__title">${n(data?.count || list.length)}개를 냈어요</h1>
-          <p class="gate__desc">${data?.auto ? '바로 학교 물품 목록에 올라갔어요.' : '담당 선생님이 확인한 뒤 목록에 올려요.'}<br>고맙습니다.</p>
+          <h1 class="gate__title">${nothing ? '없음으로 냈어요' : `${n(data?.count || list.length)}개를 냈어요`}</h1>
+          <p class="gate__desc">${nothing ? '담당 선생님께 응답이 전해졌어요.' : (data?.auto ? '바로 학교 물품 목록에 올라갔어요.' : '담당 선생님이 확인한 뒤 목록에 올려요.')}<br>고맙습니다.</p>
           <div class="gate__acts"><button class="bigbtn bigbtn--ghost" type="button" id="g-again">더 내기</button></div>`);
       });
+    }
+
+    let collPulledAt = '';   // 마지막으로 서버에서 받아 온 때
+
+    // 다른 사람이 낸 물품은 서버에만 있다. 필요할 때 다시 받아 온다.
+    async function pullCollects() {
+      if (!sb || me?.status !== 'active') return false;
+      try {
+        await loadData();
+        collPulledAt = new Date().toISOString();
+        return true;
+      } catch (e) {
+        console.error(e);
+        return false;
+      }
     }
 
     /* ── 관리 담당 화면의 '물품 모으기' ── */
@@ -6887,6 +6928,10 @@
       const list = collects().slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       const pend = submissions().filter((x) => x.status === 'pending');
       return `
+        <div class="coll__bar">
+          <span class="coll__stamp">${collPulledAt ? `${esc(clock(collPulledAt))}에 확인함` : '아직 확인 전'}</span>
+          <button class="mini mini--quiet" type="button" id="c-pull">${icon(ICONS.refresh)}새로 받아 오기</button>
+        </div>
         <div class="coll__new">
           <p class="coll__label">새 링크 만들기</p>
           <div class="row">
@@ -6941,16 +6986,20 @@
             ${list.map((c) => {
               const got = submissions().filter((x) => x.collectId === c.id);
               const wait = got.filter((x) => x.status === 'pending').length;
+              const people = new Set(got.map((x) => x.who).filter(Boolean)).size;
+              const none = new Set(got.filter((x) => x.status === 'none').map((x) => x.who)).size;
+              const things = got.filter((x) => x.status !== 'none' && x.status !== 'rejected').length;
               const over = c.dueDate && c.dueDate < today();
               const shut = c.closed || over;
               return `<li class="crow ${shut ? 'is-shut' : ''}">
                 <div class="crow__main">
                   <p class="crow__title">${esc(c.title)}${shut ? '<span class="crow__tag">마감</span>' : ''}</p>
                   <p class="crow__sub">${c.dueDate ? `${esc(dateShort(c.dueDate))}까지 · ` : ''}${c.autoApprove ? '바로 등록' : '검토 후 등록'}${placeOfCollect(c) ? ` · ${esc(placeOfCollect(c))}` : ''}</p>
-                  <p class="crow__sub">받은 물품 ${n(got.length)}개${wait ? ` · <b>검토 대기 ${n(wait)}</b>` : ''}</p>
+                  <p class="crow__sub">응답 ${n(people)}명${none ? ` (없음 ${n(none)})` : ''} · 물품 ${n(things)}개${wait ? ` · <b>검토 대기 ${n(wait)}</b>` : ''}</p>
                 </div>
                 <div class="crow__acts">
-                  <button class="mini mini--go" type="button" data-ccopy="${c.id}">링크 복사</button>
+                  ${wait ? `<button class="mini mini--go" type="button" data-capply="${c.id}">반영하기</button>` : ''}
+                  <button class="mini ${wait ? 'mini--quiet' : 'mini--go'}" type="button" data-ccopy="${c.id}">링크 복사</button>
                   <button class="mini mini--quiet" type="button" data-cshut="${c.id}">${c.closed ? '다시 열기' : '마감'}</button>
                   <button class="act act--del" type="button" data-cdel="${c.id}" aria-label="지우기">${icon(ICONS.trash)}</button>
                 </div>
@@ -6964,6 +7013,39 @@
       if (!box) return;
 
       box.addEventListener('click', async (e) => {
+        if (e.target.closest('#c-pull')) {
+          const b = e.target.closest('#c-pull');
+          b.disabled = true;
+          const ok = await pullCollects();
+          redraw();
+          flash(ok ? '최신 제출을 받아 왔어요' : '받아 오지 못했어요', ok ? 'ok' : 'warn');
+          return;
+        }
+
+        const ap = e.target.closest('[data-capply]');
+        if (ap) {
+          ap.disabled = true;
+          await pullCollects();   // 반영 직전에 최신으로
+          const cid = ap.dataset.capply;
+          const pend = submissions().filter((x) => x.collectId === cid && x.status === 'pending');
+          if (!pend.length) { redraw(); flash('새로 반영할 물품이 없어요'); return; }
+          const now = new Date().toISOString();
+          const made = pend.map((x) => ({
+            id: newId(), name: x.name, category: x.category || '기타', qty: x.qty, loanable: true,
+            building: x.building, floor: x.floor, room: x.room, storage: x.storage || '', shelf: '',
+            memo: x.memo || '', asset: false, createdAt: now,
+          }));
+          const ids = new Set(pend.map((x) => x.id));
+          commit({
+            ...state,
+            items: [...state.items, ...made],
+            submissions: submissions().map((x) => (ids.has(x.id) ? { ...x, status: 'done' } : x)),
+          });
+          redraw();
+          flash(`${n(made.length)}개를 물품 목록에 반영했어요`);
+          return;
+        }
+
         if (e.target.closest('#c-make')) {
           const title = box.querySelector('#c-title').value.trim();
           if (!title) { flash('제목을 적어 주세요', 'warn'); box.querySelector('#c-title').focus(); return; }
@@ -7399,6 +7481,12 @@
         f.setAttribute('aria-expanded', String(open));
         f.closest('.fold-card').classList.toggle('is-open', open);
         if (open && f.dataset.fold === 'spot') drawSpots();
+        if (open && f.dataset.fold === 'coll') {
+          pullCollects().then(() => {
+            const b = view.querySelector('#coll-body');
+            if (b) b.innerHTML = collectsHTML();
+          });
+        }
       });
 
       view.addEventListener('change', (e) => {
