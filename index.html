@@ -1640,6 +1640,73 @@
       .mgr__row { flex-direction: column; }
       .mgr__row .btn { width: 100%; }
     }
+    /* ───────── 물품 내기 (링크) ───────── */
+    .give { width: min(560px, 100%); margin: 0 auto; padding: 28px 0 40px; }
+    .give__brand { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .give__card { background: var(--card); border-radius: 22px; padding: 26px 24px; box-shadow: 0 2px 6px rgba(23, 32, 74, .06), 0 20px 50px -24px rgba(23, 32, 74, .35); }
+    .give__school { font-size: 13px; font-weight: 700; color: var(--board); margin-bottom: 6px; }
+    .give__fixed { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: #e8f2ed; color: var(--board); font-size: 14px; line-height: 1.45; }
+    .give__fixed .icon { width: 17px; height: 17px; flex: none; }
+    .grows { display: grid; gap: 10px; margin-top: 18px; }
+    .grow { padding: 12px 14px 14px; border-radius: 14px; background: var(--field); display: grid; gap: 8px; }
+    .grow__top { display: flex; align-items: center; justify-content: space-between; }
+    .grow__no { font-size: 12px; font-weight: 800; color: var(--ink-3); }
+    .grow__del { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-3); }
+    .grow__del:hover { background: #e7eaf2; color: var(--ink); }
+    .grow__del .icon { width: 15px; height: 15px; }
+    .grow .input { background: #fff; height: 46px; }
+    .grow__main { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 8px; }
+    .grow__qty { position: relative; }
+    .grow__qty .input { width: 100%; padding-right: 30px; text-align: center; }
+    .grow__qty span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; font-weight: 600; color: var(--ink-3); }
+    .grow__place { display: grid; grid-template-columns: 1fr 0.8fr 1fr; gap: 8px; }
+    .grow__more { font-size: 14px; }
+    .give__add { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 46px; margin-top: 10px; border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--line); font-size: 15px; font-weight: 700; color: var(--ink-2); }
+    .give__add:hover { background: var(--field); color: var(--ink); }
+    .give__add .icon { width: 16px; height: 16px; }
+    .give .bigbtn { width: 100%; margin-top: 16px; }
+
+    /* ───────── 물품 모으기 (관리) ───────── */
+    .coll__label { font-size: 13px; font-weight: 700; color: var(--ink-3); margin: 18px 0 8px; }
+    .coll__new { padding: 16px; border-radius: 14px; background: var(--field); }
+    .coll__new .coll__label { margin-top: 0; }
+    .coll__new .input { background: #fff; }
+    .coll__new .btn { margin-top: 14px; width: 100%; height: 48px; }
+    .coll__place { display: grid; grid-template-columns: 1.2fr 0.8fr 1.2fr; gap: 8px; }
+    .coll__mode { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+    .coll__opt { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 12px; background: #fff; cursor: pointer; box-shadow: inset 0 0 0 1.5px transparent; }
+    .coll__opt:has(input:checked) { box-shadow: inset 0 0 0 1.5px var(--navy); }
+    .coll__opt input { margin-top: 3px; accent-color: var(--navy); }
+    .coll__opt b { display: block; font-size: 15px; }
+    .coll__opt small { display: block; font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+    .coll__pend { margin-top: 18px; }
+    .coll__pendhead { display: flex; align-items: center; justify-content: space-between; }
+    .coll__pendhead .coll__label { margin: 0; }
+    .coll__plist, .coll__list { list-style: none; display: grid; gap: 5px; margin-top: 8px; max-height: 380px; overflow: auto; }
+    .prow, .crow { display: flex; align-items: center; gap: 8px; padding: 11px 13px; border-radius: 12px; background: var(--field); }
+    .prow__main, .crow__main { flex: 1; min-width: 0; }
+    .prow__name, .crow__title { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+    .prow__name .num { color: var(--ink-2); }
+    .prow__sub, .crow__sub { font-size: 13px; color: var(--ink-2); margin-top: 2px; overflow-wrap: anywhere; }
+    .crow__acts { display: flex; align-items: center; gap: 5px; flex: none; }
+    .crow.is-shut { opacity: .65; }
+    .crow__tag { display: inline-flex; height: 20px; padding: 0 7px; margin-left: 6px; border-radius: 5px; background: #e7eaf2; color: var(--ink-2); font-size: 11px; font-weight: 800; align-items: center; }
+
+    @media (max-width: 760px) {
+      .give { padding: 16px 0 32px; }
+      .give__card { padding: 22px 18px; border-radius: 18px; }
+      .grow__place { grid-template-columns: 1fr 1fr; }
+      .grow__place .input:last-child { grid-column: 1 / -1; }
+      .coll__place { grid-template-columns: 1fr 1fr; }
+      .coll__place .input:nth-child(3) { grid-column: 1 / -1; }
+      .coll__mode { grid-template-columns: 1fr; }
+      .coll__new .row { grid-template-columns: 1fr; }
+      .coll__new input[type="date"] { width: 100%; min-width: 0; }
+      .crow { flex-wrap: wrap; }
+      .crow__acts { width: 100%; justify-content: flex-end; }
+      .prow { flex-wrap: wrap; }
+      .prow__main { flex: 1 0 100%; }
+    }
     .placebar { display: none; }
     .tabbar { display: none; }
 
@@ -1921,7 +1988,7 @@
 
     // 저장소: localStorage를 쓰고, 막혀 있으면(미리보기 환경 등) 메모리에만 둔다.
     const STORE_KEY = 'school-items:v1';
-    const blank = () => ({ items: [], loans: [], recent: [], handovers: [], posts: [], comments: [] });
+    const blank = () => ({ items: [], loans: [], recent: [], handovers: [], posts: [], comments: [], collects: [], submissions: [] });
     let memoryStore = blank();
     let cacheOff = false;   // 기기 사본을 접었는지
     const store = {
@@ -2057,14 +2124,24 @@
     async function loadData() {
       if (!sb || me?.status !== 'active') return;
       missingTables.clear();
-      const [items, loans, hos, pss, cms] = await Promise.all([
+      const [items, loans, hos, pss, cms, cols, subs] = await Promise.all([
         fetchAll('items'), fetchAll('loans'), fetchMaybe('handovers'),
         fetchMaybe('posts'), fetchMaybe('comments'),
+        fetchMaybe('collects'), fetchMaybe('submissions'),
       ]);
       state = {
         ...state,
         items: items.map(fromRowItem),
         loans: loans.map(fromRowLoan),
+        collects: cols.map((r) => ({
+          id: r.id, code: r.code, title: r.title, dueDate: r.due_date, autoApprove: !!r.auto_approve,
+          building: r.building, floor: r.floor, room: r.room, closed: !!r.closed, createdAt: r.created_at,
+        })),
+        submissions: subs.map((r) => ({
+          id: r.id, collectId: r.collect_id, who: r.who, name: r.name, qty: r.qty, category: r.category,
+          building: r.building, floor: r.floor, room: r.room, storage: r.storage, memo: r.memo,
+          status: r.status, createdAt: r.created_at,
+        })),
         posts: pss.map((r) => ({ id: r.id, title: r.title, body: r.body || '', who: r.who, solved: !!r.solved, createdAt: r.created_at })),
         comments: cms.map((r) => ({ id: r.id, postId: r.post_id, who: r.who, body: r.body, createdAt: r.created_at })),
         handovers: hos.map((r) => ({
@@ -2135,6 +2212,16 @@
       };
       diff(prev.items || [], next.items || [], 'items', toRowItem);
       diff(prev.loans || [], next.loans || [], 'loans', toRowLoan);
+      diff(prev.collects || [], next.collects || [], 'collects', (x) => ({
+        id: x.id, school_id: me.schoolId, code: x.code, title: x.title, due_date: x.dueDate || null,
+        auto_approve: !!x.autoApprove, building: x.building || '', floor: x.floor || '', room: x.room || '',
+        closed: !!x.closed, created_at: x.createdAt,
+      }));
+      diff(prev.submissions || [], next.submissions || [], 'submissions', (x) => ({
+        id: x.id, school_id: me.schoolId, collect_id: x.collectId, who: x.who || '', name: x.name, qty: x.qty,
+        category: x.category || '', building: x.building || '', floor: x.floor || '', room: x.room || '',
+        storage: x.storage || '', memo: x.memo || '', status: x.status, created_at: x.createdAt,
+      }));
       diff(prev.posts || [], next.posts || [], 'posts', (x) => ({
         id: x.id, school_id: me.schoolId, title: x.title, body: x.body || '',
         who: x.who, solved: !!x.solved, created_at: x.createdAt,
@@ -6664,6 +6751,293 @@
       });
     }
 
+    /* ════════ 물품 모으기 — 링크로 받기 (→ src/pages/give.js) ════════ */
+    const collects = () => state.collects || [];
+    const submissions = () => state.submissions || [];
+    const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(8)))
+      .map((b) => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join('');
+    const giveLink = (c) => `${location.origin}${location.pathname}#/give?c=${c.code}`;
+    const placeOfCollect = (c) => [c.building, c.floor, c.room].filter(Boolean).join(' › ');
+
+    /* ── 받는 사람이 여는 화면 (로그인 없이) ── */
+    async function mountGive(root, code) {
+      const shell = (inner) => `
+        <div class="give">
+          <div class="give__brand">
+            <span class="gate__mark">${icon(ICONS.place)}</span>
+            <span class="gate__name">학교 물품 어디 있지?</span>
+          </div>
+          <div class="give__card">${inner}</div>
+        </div>`;
+
+      if (!sb || !code) {
+        root.innerHTML = shell('<h1 class="gate__title">열 수 없는 링크예요</h1><p class="gate__desc">받은 주소를 다시 확인해 주세요.</p>');
+        return;
+      }
+      root.innerHTML = shell('<p class="gate__desc">불러오는 중이에요…</p>');
+
+      const { data: info, error } = await sb.rpc('collect_info', { link_code: code });
+      if (error || !info) {
+        root.innerHTML = shell('<h1 class="gate__title">찾을 수 없는 링크예요</h1><p class="gate__desc">지워졌거나 주소가 잘못됐어요. 보낸 분께 다시 받아 주세요.</p>');
+        return;
+      }
+      if (!info.open) {
+        root.innerHTML = shell(`<h1 class="gate__title">마감된 링크예요</h1><p class="gate__desc"><b>${esc(info.title || '물품 모으기')}</b>는 이제 받지 않아요.<br>필요하면 보낸 분께 말씀해 주세요.</p>`);
+        return;
+      }
+
+      const fixed = [info.building, info.floor, info.room].filter(Boolean).join(' › ');
+      let rows = [{ name: '', qty: 1, building: '', floor: '', room: '', storage: '', memo: '' }];
+      let who = '';
+
+      const rowHTML = (r, i) => `
+        <div class="grow" data-i="${i}">
+          <div class="grow__top">
+            <span class="grow__no num">${i + 1}</span>
+            ${rows.length > 1 ? `<button class="grow__del" type="button" data-del="${i}" aria-label="이 줄 지우기">${icon(ICONS.close)}</button>` : ''}
+          </div>
+          <div class="grow__main">
+            <input class="input" data-k="name" placeholder="물품 이름 (예: 휴대용 빔프로젝터)" value="${esc(r.name)}" maxlength="60">
+            <div class="grow__qty">
+              <input class="input num" data-k="qty" type="number" inputmode="numeric" min="1" value="${esc(r.qty)}" aria-label="수량">
+              <span>개</span>
+            </div>
+          </div>
+          ${fixed ? '' : `
+            <div class="grow__place">
+              <input class="input" data-k="building" placeholder="건물 (예: 본관)" value="${esc(r.building)}" maxlength="40">
+              <input class="input" data-k="floor" placeholder="층 (예: 3층)" value="${esc(r.floor)}" maxlength="20">
+              <input class="input" data-k="room" placeholder="실 (예: 과학실)" value="${esc(r.room)}" maxlength="40">
+            </div>`}
+          <input class="input grow__more" data-k="storage" placeholder="보관 자리 (선택, 예: 2번 캐비닛)" value="${esc(r.storage)}" maxlength="40">
+        </div>`;
+
+      const draw = () => {
+        root.innerHTML = shell(`
+          <p class="give__school">${esc(info.school || '')}</p>
+          <h1 class="gate__title">${esc(info.title || '물품 모으기')}</h1>
+          <p class="gate__desc">갖고 있는 물품을 적어 주세요. 한 번에 여러 개를 낼 수 있어요.${info.due_date ? `<br><b>${esc(dateShort(info.due_date))}까지</b> 받아요.` : ''}</p>
+          ${fixed ? `<p class="give__fixed">${icon(ICONS.place)}<span>모두 <b>${esc(fixed)}</b>에 있는 물품으로 받아요</span></p>` : ''}
+
+          <div class="field" style="margin-top:18px">
+            <label class="field__label" for="g-who">적는 분<span class="req" aria-hidden="true">*</span></label>
+            <input class="input" id="g-who" placeholder="예: 3학년 2반 김하늘" value="${esc(who)}" maxlength="30">
+          </div>
+
+          <div class="grows">${rows.map(rowHTML).join('')}</div>
+          <button class="give__add" type="button" id="g-add">${icon(ICONS.add)}한 줄 더</button>
+
+          <p class="gate__err" id="g-err" aria-live="polite"></p>
+          <button class="bigbtn bigbtn--navy" type="button" id="g-send">${n(rows.filter((r) => r.name.trim()).length || rows.length)}개 내기</button>`);
+      };
+      draw();
+
+      root.addEventListener('input', (e) => {
+        if (e.target.id === 'g-who') { who = e.target.value; return; }
+        const k = e.target.dataset.k;
+        const box = e.target.closest('[data-i]');
+        if (!k || !box) return;
+        const i = Number(box.dataset.i);
+        rows[i][k] = k === 'qty' ? Math.max(1, parseInt(e.target.value, 10) || 1) : e.target.value;
+        const btn = root.querySelector('#g-send');
+        if (btn) btn.textContent = `${n(rows.filter((r) => r.name.trim()).length || 1)}개 내기`;
+      });
+
+      root.addEventListener('click', async (e) => {
+        if (e.target.closest('#g-add')) {
+          const last = rows[rows.length - 1];
+          rows.push({ name: '', qty: 1, building: last.building, floor: last.floor, room: last.room, storage: '', memo: '' });
+          draw();
+          root.querySelectorAll('[data-k="name"]')[rows.length - 1]?.focus();
+          return;
+        }
+        const del = e.target.closest('[data-del]');
+        if (del) { rows.splice(Number(del.dataset.del), 1); draw(); return; }
+        if (e.target.closest('#g-again')) {
+          rows = [{ name: '', qty: 1, building: '', floor: '', room: '', storage: '', memo: '' }];
+          draw();
+          return;
+        }
+        if (!e.target.closest('#g-send')) return;
+
+        const err = root.querySelector('#g-err');
+        const list = rows.filter((r) => r.name.trim());
+        if (!who.trim()) { err.textContent = '적는 분 이름을 적어 주세요.'; root.querySelector('#g-who').focus(); return; }
+        if (!list.length) { err.textContent = '물품 이름을 한 개 이상 적어 주세요.'; return; }
+        if (!fixed && list.some((r) => !r.room.trim())) { err.textContent = '각 물품이 있는 실을 적어 주세요.'; return; }
+
+        const btn = e.target.closest('#g-send');
+        btn.disabled = true; btn.textContent = '보내는 중이에요…';
+        const { data, error: sendErr } = await sb.rpc('submit_items', { link_code: code, submitter: who.trim(), rows: list });
+        if (sendErr) {
+          btn.disabled = false; btn.textContent = `${n(list.length)}개 내기`;
+          err.textContent = String(sendErr.message).includes('CLOSED') ? '마감된 링크예요.' : '보내지 못했어요. 잠시 뒤 다시 해 주세요.';
+          return;
+        }
+        root.innerHTML = shell(`
+          <span class="waitmark is-done" aria-hidden="true">${icon(ICONS.check)}</span>
+          <h1 class="gate__title">${n(data?.count || list.length)}개를 냈어요</h1>
+          <p class="gate__desc">${data?.auto ? '바로 학교 물품 목록에 올라갔어요.' : '담당 선생님이 확인한 뒤 목록에 올려요.'}<br>고맙습니다.</p>
+          <div class="gate__acts"><button class="bigbtn bigbtn--ghost" type="button" id="g-again">더 내기</button></div>`);
+      });
+    }
+
+    /* ── 관리 담당 화면의 '물품 모으기' ── */
+    function collectsHTML() {
+      const list = collects().slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      const pend = submissions().filter((x) => x.status === 'pending');
+      return `
+        <div class="coll__new">
+          <p class="coll__label">새 링크 만들기</p>
+          <div class="row">
+            <div class="field">
+              <label class="field__label" for="c-title">제목<span class="req" aria-hidden="true">*</span></label>
+              <input class="input" id="c-title" placeholder="예: 3학년 교실 물품 조사" maxlength="40">
+            </div>
+            <div class="field">
+              <label class="field__label" for="c-due">마감일</label>
+              <input class="input" id="c-due" type="date" value="${plusDays(7)}">
+            </div>
+          </div>
+          <div class="field">
+            <label class="field__label">장소 <small>정해 두면 받는 사람은 이름과 수량만 적어요</small></label>
+            <div class="coll__place">
+              <input class="input" id="c-b" list="c-bl" placeholder="건물 (비우면 직접 적게)" autocomplete="off">
+              <input class="input" id="c-f" placeholder="층" autocomplete="off">
+              <input class="input" id="c-r" list="c-rl" placeholder="실" autocomplete="off">
+              <datalist id="c-bl">${[...new Set([...spaces().buildings.map((b) => b.name), ...state.items.map((i) => i.building)])].filter(Boolean).map((v) => `<option value="${esc(v)}"></option>`).join('')}</datalist>
+              <datalist id="c-rl">${[...new Set([...spaces().rooms.map((r) => r.name), ...state.items.map((i) => i.room)])].filter(Boolean).map((v) => `<option value="${esc(v)}"></option>`).join('')}</datalist>
+            </div>
+          </div>
+          <div class="coll__mode" role="radiogroup" aria-label="받은 물품 처리">
+            <label class="coll__opt"><input type="radio" name="c-mode" value="review" checked><span><b>검토 후 등록</b><small>제가 보고 올릴게요</small></span></label>
+            <label class="coll__opt"><input type="radio" name="c-mode" value="auto"><span><b>바로 등록</b><small>받자마자 목록에 올라가요</small></span></label>
+          </div>
+          <button class="btn btn--solid" type="button" id="c-make">${icon(ICONS.add)}링크 만들기</button>
+        </div>
+
+        ${pend.length ? `
+          <div class="coll__pend">
+            <div class="coll__pendhead">
+              <p class="coll__label">검토 기다리는 물품 ${n(pend.length)}개</p>
+              <button class="mini mini--go" type="button" id="c-okall">모두 등록</button>
+            </div>
+            <ul class="coll__plist">
+              ${pend.slice(0, 100).map((x) => `
+                <li class="prow">
+                  <div class="prow__main">
+                    <p class="prow__name">${esc(x.name)} <span class="num">${n(x.qty)}개</span></p>
+                    <p class="prow__sub">${esc([x.building, x.floor, x.room].filter(Boolean).join(' › ') || '장소 없음')}${x.storage ? ` · ${esc(x.storage)}` : ''} · ${esc(x.who)}</p>
+                  </div>
+                  <button class="mini mini--go" type="button" data-cok="${x.id}">등록</button>
+                  <button class="mini mini--quiet" type="button" data-cno="${x.id}">빼기</button>
+                </li>`).join('')}
+            </ul>
+          </div>` : ''}
+
+        ${list.length ? `
+          <p class="coll__label">만든 링크</p>
+          <ul class="coll__list">
+            ${list.map((c) => {
+              const got = submissions().filter((x) => x.collectId === c.id);
+              const wait = got.filter((x) => x.status === 'pending').length;
+              const over = c.dueDate && c.dueDate < today();
+              const shut = c.closed || over;
+              return `<li class="crow ${shut ? 'is-shut' : ''}">
+                <div class="crow__main">
+                  <p class="crow__title">${esc(c.title)}${shut ? '<span class="crow__tag">마감</span>' : ''}</p>
+                  <p class="crow__sub">${c.dueDate ? `${esc(dateShort(c.dueDate))}까지 · ` : ''}${c.autoApprove ? '바로 등록' : '검토 후 등록'}${placeOfCollect(c) ? ` · ${esc(placeOfCollect(c))}` : ''}</p>
+                  <p class="crow__sub">받은 물품 ${n(got.length)}개${wait ? ` · <b>검토 대기 ${n(wait)}</b>` : ''}</p>
+                </div>
+                <div class="crow__acts">
+                  <button class="mini mini--go" type="button" data-ccopy="${c.id}">링크 복사</button>
+                  <button class="mini mini--quiet" type="button" data-cshut="${c.id}">${c.closed ? '다시 열기' : '마감'}</button>
+                  <button class="act act--del" type="button" data-cdel="${c.id}" aria-label="지우기">${icon(ICONS.trash)}</button>
+                </div>
+              </li>`;
+            }).join('')}
+          </ul>` : ''}`;
+    }
+
+    function mountCollects(view, redraw) {
+      const box = view.querySelector('#coll-body');
+      if (!box) return;
+
+      box.addEventListener('click', async (e) => {
+        if (e.target.closest('#c-make')) {
+          const title = box.querySelector('#c-title').value.trim();
+          if (!title) { flash('제목을 적어 주세요', 'warn'); box.querySelector('#c-title').focus(); return; }
+          const c = {
+            id: 'col_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+            code: newCode(), title,
+            dueDate: box.querySelector('#c-due').value || null,
+            autoApprove: box.querySelector('input[name="c-mode"]:checked').value === 'auto',
+            building: box.querySelector('#c-b').value.trim(),
+            floor: normalFloor(box.querySelector('#c-f').value),
+            room: box.querySelector('#c-r').value.trim(),
+            closed: false, createdAt: new Date().toISOString(),
+          };
+          commit({ ...state, collects: [...collects(), c] });
+          try { await navigator.clipboard.writeText(giveLink(c)); flash('링크를 만들고 복사했어요. 메신저에 붙여 넣으세요'); }
+          catch { flash('링크를 만들었어요'); }
+          redraw();
+          return;
+        }
+
+        const cp = e.target.closest('[data-ccopy]');
+        if (cp) {
+          const c = collects().find((x) => x.id === cp.dataset.ccopy);
+          try { await navigator.clipboard.writeText(giveLink(c)); flash('링크를 복사했어요'); }
+          catch { prompt('이 주소를 복사해 주세요', giveLink(c)); }
+          return;
+        }
+        const sh = e.target.closest('[data-cshut]');
+        if (sh) {
+          commit({ ...state, collects: collects().map((x) => (x.id === sh.dataset.cshut ? { ...x, closed: !x.closed } : x)) });
+          redraw();
+          return;
+        }
+        const dl = e.target.closest('[data-cdel]');
+        if (dl) {
+          if (!confirm('이 링크를 지울까요? 받은 기록도 함께 지워져요. 이미 등록한 물품은 남아요.')) return;
+          commit({
+            ...state,
+            collects: collects().filter((x) => x.id !== dl.dataset.cdel),
+            submissions: submissions().filter((x) => x.collectId !== dl.dataset.cdel),
+          });
+          redraw();
+          return;
+        }
+
+        const ok = e.target.closest('[data-cok]');
+        const all = e.target.closest('#c-okall');
+        const no = e.target.closest('[data-cno]');
+        if (!ok && !all && !no) return;
+
+        const ids = new Set(all ? submissions().filter((x) => x.status === 'pending').map((x) => x.id)
+          : [(ok || no).dataset.cok || (ok || no).dataset.cno]);
+        if (no) {
+          commit({ ...state, submissions: submissions().map((x) => (ids.has(x.id) ? { ...x, status: 'rejected' } : x)) });
+          flash('뺐어요');
+          redraw();
+          return;
+        }
+        const now = new Date().toISOString();
+        const made = submissions().filter((x) => ids.has(x.id)).map((x) => ({
+          id: newId(), name: x.name, category: x.category || '기타', qty: x.qty, loanable: true,
+          building: x.building, floor: x.floor, room: x.room, storage: x.storage || '', shelf: '',
+          memo: x.memo || '', asset: false, createdAt: now,
+        }));
+        commit({
+          ...state,
+          items: [...state.items, ...made],
+          submissions: submissions().map((x) => (ids.has(x.id) ? { ...x, status: 'done' } : x)),
+        });
+        flash(`${n(made.length)}개를 등록했어요`);
+        redraw();
+      });
+    }
+
     /* ════════ 관리 담당 선생님 (→ src/pages/manager.js) ════════ */
     const ASSET_NEED = [
       { key: 'no', label: '고유번호' }, { key: 'code', label: '분류번호' },
@@ -6835,6 +7209,16 @@
             <div id="team-list"></div>
 
             </div>
+          </section>` : ''}
+
+          ${online() ? `
+          <section class="card fold-card">
+            <button class="fold" type="button" data-fold="coll" aria-expanded="false" aria-controls="coll-body">
+              ${icon(ICONS.caret, 'icon fold__caret')}
+              <span>물품 모으기</span>
+              <span class="fold__count num">${(() => { const w = submissions().filter((x) => x.status === 'pending').length; return w ? `검토 대기 ${n(w)}` : (collects().length ? `링크 ${n(collects().length)}개` : '링크로 받기'); })()}</span>
+            </button>
+            <div class="fold-body" id="coll-body" hidden>${collectsHTML()}</div>
           </section>` : ''}
 
           <section class="card fold-card">
@@ -7300,7 +7684,13 @@
         drawTeam();
       });
 
-      view.refresh = () => { update(); drawSigns(); drawTeam(); drawWipe(); drawSpots(); };
+      const redrawColl = () => {
+        const b = view.querySelector('#coll-body');
+        if (b) b.innerHTML = collectsHTML();
+      };
+      mountCollects(view, redrawColl);
+
+      view.refresh = () => { update(); drawSigns(); drawTeam(); drawWipe(); drawSpots(); redrawColl(); };
       update();
       drawSigns();
       drawTeam();
@@ -7813,9 +8203,26 @@
     }
 
     function render(focus = false) {
-      const gate = gateKind();
       const app = document.getElementById('app');
       const gateRoot = document.getElementById('gate');
+
+      // 물품 모으기 링크는 로그인 없이 연다
+      if (location.hash.startsWith('#/give')) {
+        app.hidden = true;
+        gateRoot.hidden = false;
+        gateRoot.className = 'gate';
+        const code = new URLSearchParams(location.hash.split('?')[1] || '').get('c');
+        document.title = '물품 내기 · 학교 물품 어디 있지?';
+        if (gateRoot.dataset.give !== code) {
+          gateRoot.dataset.give = code || '';
+          const fresh = gateRoot.cloneNode(false);
+          gateRoot.replaceWith(fresh);
+          mountGive(fresh, code);
+        }
+        return;
+      }
+
+      const gate = gateKind();
       app.hidden = Boolean(gate);
       gateRoot.hidden = !gate;
       if (gate) {
