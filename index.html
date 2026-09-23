@@ -1667,7 +1667,20 @@
     .give .bigbtn { width: 100%; margin-top: 16px; }
 
     /* ───────── 물품 모으기 (관리) ───────── */
-    .coll__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .coll__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .coll__barbtns { display: flex; gap: 6px; }
+    .coll__whole {
+      display: flex; align-items: flex-start; gap: 10px; margin-top: 14px;
+      padding: 13px 15px; border-radius: 13px; background: #fff; cursor: pointer;
+      box-shadow: inset 0 0 0 1.5px transparent;
+    }
+    .coll__whole:has(input:checked) { box-shadow: inset 0 0 0 1.5px var(--navy); }
+    .coll__whole input { width: 19px; height: 19px; margin-top: 2px; accent-color: var(--navy); flex: none; }
+    .coll__whole b { display: block; font-size: 15px; }
+    .coll__whole small { display: block; font-size: 13px; color: var(--ink-2); margin-top: 2px; line-height: 1.45; }
+    .coll__new .field[hidden] { display: none; }
+    .archbox { width: min(640px, 100%); }
+    .arch__list { max-height: 440px; }
     .coll__stamp { font-size: 13px; color: var(--ink-3); }
     .coll__bar .mini { display: inline-flex; align-items: center; gap: 5px; }
     .coll__bar .mini .icon { width: 14px; height: 14px; }
@@ -6970,7 +6983,8 @@
       });
     }
 
-    let collPulledAt = '';   // 마지막으로 서버에서 받아 온 때
+    let collPulledAt = '';    // 마지막으로 서버에서 받아 온 때
+    let keepCollOpen = false; // 새로 고침 뒤 카드를 다시 펼친다
 
     // 다른 사람이 낸 물품은 서버에만 있다. 필요할 때 다시 받아 온다.
     async function pullCollects() {
@@ -7035,14 +7049,59 @@
     }
 
     /* ── 관리 담당 화면의 '물품 모으기' ── */
+    const collShut = (c) => c.closed || (c.dueDate && c.dueDate < today());
+
+    function collStat(c) {
+      const got = submissions().filter((x) => x.collectId === c.id && x.status !== 'rejected');
+      return {
+        people: new Set(got.map((x) => x.who).filter(Boolean)).size,
+        none: new Set(got.filter((x) => x.status === 'none').map((x) => x.who)).size,
+        things: got.filter((x) => x.status !== 'none').length,
+        wait: got.filter((x) => x.status === 'pending').length,
+      };
+    }
+
+    function collRowHTML(c, archived = false) {
+      const st = collStat(c);
+      const shut = collShut(c);
+      return `
+        <li class="crow ${shut ? 'is-shut' : ''}">
+          <div class="crow__main">
+            <p class="crow__title">${esc(c.title)}${shut ? '<span class="crow__tag">마감</span>' : ''}</p>
+            <p class="crow__sub">${c.dueDate ? `${esc(dateShort(c.dueDate))}까지 · ` : ''}${c.autoApprove ? '바로 등록' : '검토 후 등록'} · ${placeOfCollect(c) ? esc(placeOfCollect(c)) : '<b>학교 전체</b>'}</p>
+            <p class="crow__sub">응답 ${n(st.people)}명${st.none ? ` (없음 ${n(st.none)})` : ''} · 물품 ${n(st.things)}개${st.wait ? ` · <b>검토 대기 ${n(st.wait)}</b>` : ''}</p>
+            ${roomBoardHTML(c)}
+          </div>
+          <div class="crow__acts">
+            ${archived
+              ? `${st.wait ? `<button class="mini mini--go" type="button" data-capply="${c.id}">반영하기</button>` : ''}
+                 <button class="mini mini--quiet" type="button" data-cxls="${c.id}">엑셀로 받기</button>
+                 <button class="mini mini--quiet" type="button" data-cshut="${c.id}">다시 열기</button>`
+              : `<button class="mini mini--go" type="button" data-ccopy="${c.id}">링크 복사</button>
+                 ${c.autoApprove
+                   ? `<button class="mini mini--quiet" type="button" data-cshut="${c.id}">마감</button>`
+                   : `<button class="mini mini--quiet" type="button" data-cdone="${c.id}">마감하고 반영하기</button>`}`}
+            <button class="act act--del" type="button" data-cdel="${c.id}" aria-label="지우기">${icon(ICONS.trash)}</button>
+          </div>
+        </li>`;
+    }
+
     function collectsHTML() {
-      const list = collects().slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      const all = collects().slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      const live = all.filter((c) => !collShut(c));
+      const done = all.filter((c) => collShut(c));
       const pend = submissions().filter((x) => x.status === 'pending');
+      const wholeDefault = hasSpaces();
+
       return `
         <div class="coll__bar">
-          <span class="coll__stamp">${collPulledAt ? `${esc(clock(collPulledAt))}에 확인함` : '아직 확인 전'}</span>
-          <button class="mini mini--quiet" type="button" id="c-pull">${icon(ICONS.refresh)}새로 받아 오기</button>
+          <span class="coll__stamp">${collPulledAt ? `${esc(clock(collPulledAt))}에 확인함` : '화면을 열 때 받아 왔어요'}</span>
+          <div class="coll__barbtns">
+            <button class="mini mini--quiet" type="button" id="c-refresh">${icon(ICONS.refresh)}새로 고침</button>
+            <button class="mini mini--quiet" type="button" id="c-arch">물품 모으기 자료${done.length ? ` ${n(done.length)}` : ''}</button>
+          </div>
         </div>
+
         <div class="coll__new">
           <p class="coll__label">새 링크 만들기</p>
           <div class="row">
@@ -7055,16 +7114,23 @@
               <input class="input" id="c-due" type="date" value="${plusDays(7)}">
             </div>
           </div>
-          <div class="field">
-            <label class="field__label">장소 <small>${hasSpaces() ? '비우면 학교 전체 링크 — 받는 사람이 자기 실을 골라요' : '정해 두면 받는 사람은 이름과 수량만 적어요'}</small></label>
+
+          <label class="coll__whole">
+            <input type="checkbox" id="c-whole" ${wholeDefault ? 'checked' : ''}>
+            <span><b>학교 전체에서 받기</b><small>받는 분이 자기 실을 목록에서 골라요${wholeDefault ? '' : ' (학교 공간 설정이 필요해요)'}</small></span>
+          </label>
+
+          <div class="field" id="c-placebox" ${wholeDefault ? 'hidden' : ''}>
+            <label class="field__label">장소 <small>작성 하면 받은 사람이 이름과 수량만 적어서 더 편리해요</small></label>
             <div class="coll__place">
-              <input class="input" id="c-b" list="c-bl" placeholder="건물 (비우면 학교 전체)" autocomplete="off">
+              <input class="input" id="c-b" list="c-bl" placeholder="건물 (예: 본관)" autocomplete="off">
               <input class="input" id="c-f" placeholder="층" autocomplete="off">
               <input class="input" id="c-r" list="c-rl" placeholder="실" autocomplete="off">
               <datalist id="c-bl">${[...new Set([...spaces().buildings.map((b) => b.name), ...state.items.map((i) => i.building)])].filter(Boolean).map((v) => `<option value="${esc(v)}"></option>`).join('')}</datalist>
               <datalist id="c-rl">${[...new Set([...spaces().rooms.map((r) => r.name), ...state.items.map((i) => i.room)])].filter(Boolean).map((v) => `<option value="${esc(v)}"></option>`).join('')}</datalist>
             </div>
           </div>
+
           <div class="coll__mode" role="radiogroup" aria-label="받은 물품 처리">
             <label class="coll__opt"><input type="radio" name="c-mode" value="review" checked><span><b>검토 후 등록</b><small>제가 보고 올릴게요</small></span></label>
             <label class="coll__opt"><input type="radio" name="c-mode" value="auto"><span><b>바로 등록</b><small>받자마자 목록에 올라가요</small></span></label>
@@ -7091,84 +7157,172 @@
             </ul>
           </div>` : ''}
 
-        ${list.length ? `
-          <p class="coll__label">만든 링크</p>
-          <ul class="coll__list">
-            ${list.map((c) => {
-              const got = submissions().filter((x) => x.collectId === c.id);
-              const wait = got.filter((x) => x.status === 'pending').length;
-              const people = new Set(got.map((x) => x.who).filter(Boolean)).size;
-              const none = new Set(got.filter((x) => x.status === 'none').map((x) => x.who)).size;
-              const things = got.filter((x) => x.status !== 'none' && x.status !== 'rejected').length;
-              const over = c.dueDate && c.dueDate < today();
-              const shut = c.closed || over;
-              return `<li class="crow ${shut ? 'is-shut' : ''}">
-                <div class="crow__main">
-                  <p class="crow__title">${esc(c.title)}${shut ? '<span class="crow__tag">마감</span>' : ''}</p>
-                  <p class="crow__sub">${c.dueDate ? `${esc(dateShort(c.dueDate))}까지 · ` : ''}${c.autoApprove ? '바로 등록' : '검토 후 등록'} · ${placeOfCollect(c) ? esc(placeOfCollect(c)) : '<b>학교 전체</b>'}</p>
-                  <p class="crow__sub">응답 ${n(people)}명${none ? ` (없음 ${n(none)})` : ''} · 물품 ${n(things)}개${wait ? ` · <b>검토 대기 ${n(wait)}</b>` : ''}</p>
-                  ${roomBoardHTML(c)}
-                </div>
-                <div class="crow__acts">
-                  ${wait ? `<button class="mini mini--go" type="button" data-capply="${c.id}">반영하기</button>` : ''}
-                  <button class="mini ${wait ? 'mini--quiet' : 'mini--go'}" type="button" data-ccopy="${c.id}">링크 복사</button>
-                  <button class="mini mini--quiet" type="button" data-cshut="${c.id}">${c.closed ? '다시 열기' : '마감'}</button>
-                  <button class="act act--del" type="button" data-cdel="${c.id}" aria-label="지우기">${icon(ICONS.trash)}</button>
-                </div>
-              </li>`;
-            }).join('')}
-          </ul>` : ''}`;
+        ${live.length ? `
+          <p class="coll__label">받고 있는 링크</p>
+          <ul class="coll__list">${live.map((c) => collRowHTML(c)).join('')}</ul>`
+        : '<p class="side-empty">받고 있는 링크가 없어요. 위에서 하나 만들어 보세요.</p>'}`;
+    }
+
+    /* ── 마감한 링크 모아 보기 ── */
+    function openArchive(onChange) {
+      const back = document.createElement('div');
+      back.className = 'signback';
+      back.innerHTML = '<div class="signbox archbox" role="dialog" aria-modal="true" aria-labelledby="ar-title"></div>';
+      document.body.append(back);
+      const box = back.querySelector('.archbox');
+      const close = () => { back.remove(); document.removeEventListener('keydown', onKey); onChange(); };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      back.addEventListener('click', (e) => { if (e.target === back) close(); });
+
+      const draw = () => {
+        const done = collects().filter(collShut).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        const wait = done.reduce((a, c) => a + collStat(c).wait, 0);
+        box.innerHTML = `
+          <p class="signbox__title" id="ar-title">물품 모으기 자료</p>
+          <p class="signbox__desc">마감한 링크와 받은 내용이 여기에 모여요.${wait ? ` 아직 <b>${n(wait)}개</b>가 반영을 기다려요.` : ''}</p>
+          ${done.length
+            ? `<ul class="coll__list arch__list">${done.map((c) => collRowHTML(c, true)).join('')}</ul>`
+            : '<p class="side-empty">마감한 링크가 아직 없어요.</p>'}
+          <div class="signbox__acts">
+            <span class="signbox__spacer"></span>
+            <button class="mini mini--quiet" type="button" id="ar-close">닫기</button>
+          </div>`;
+      };
+      draw();
+      box.addEventListener('click', async (e) => {
+        if (e.target.closest('#ar-close')) { close(); return; }
+        const handled = await collectAction(e, draw);
+        if (handled === 'gone') close();
+      });
+    }
+
+    // 링크 줄의 단추들은 관리 화면과 자료 화면에서 똑같이 쓴다
+    async function collectAction(e, redraw) {
+      const cp = e.target.closest('[data-ccopy]');
+      if (cp) {
+        const c = collects().find((x) => x.id === cp.dataset.ccopy);
+        try { await navigator.clipboard.writeText(giveLink(c)); flash('링크를 복사했어요'); }
+        catch { prompt('이 주소를 복사해 주세요', giveLink(c)); }
+        return true;
+      }
+
+      const sh = e.target.closest('[data-cshut]');
+      if (sh) {
+        commit({ ...state, collects: collects().map((x) => (x.id === sh.dataset.cshut ? { ...x, closed: !x.closed, dueDate: x.closed ? null : x.dueDate } : x)) });
+        redraw();
+        return true;
+      }
+
+      const dn = e.target.closest('[data-cdone]');
+      const ap = e.target.closest('[data-capply]');
+      if (dn || ap) {
+        const btn = dn || ap;
+        btn.disabled = true;
+        await pullCollects();
+        const cid = btn.dataset.cdone || btn.dataset.capply;
+        const pend = submissions().filter((x) => x.collectId === cid && x.status === 'pending');
+        const now = new Date().toISOString();
+        const made = pend.map((x) => ({
+          id: newId(), name: x.name, category: x.category || '기타', qty: x.qty, loanable: true,
+          building: x.building, floor: x.floor, room: x.room, storage: x.storage || '', shelf: '',
+          memo: x.memo || '', asset: false, createdAt: now,
+        }));
+        const ids = new Set(pend.map((x) => x.id));
+        commit({
+          ...state,
+          items: [...state.items, ...made],
+          submissions: submissions().map((x) => (ids.has(x.id) ? { ...x, status: 'done' } : x)),
+          collects: collects().map((x) => (x.id === cid && dn ? { ...x, closed: true } : x)),
+        });
+        redraw();
+        flash(made.length
+          ? `${n(made.length)}개를 물품 목록에 반영했어요${dn ? ' · 링크를 마감했어요' : ''}`
+          : (dn ? '링크를 마감했어요. 반영할 물품은 없었어요' : '새로 반영할 물품이 없어요'));
+        return true;
+      }
+
+      const xl = e.target.closest('[data-cxls]');
+      if (xl) {
+        const c = collects().find((x) => x.id === xl.dataset.cxls);
+        exportCollect(c).catch(() => flash('내려받지 못했어요', 'warn'));
+        return true;
+      }
+
+      const dl = e.target.closest('[data-cdel]');
+      if (dl) {
+        if (!confirm('이 링크를 지울까요? 받은 기록도 함께 지워져요. 이미 등록한 물품은 남아요.')) return true;
+        commit({
+          ...state,
+          collects: collects().filter((x) => x.id !== dl.dataset.cdel),
+          submissions: submissions().filter((x) => x.collectId !== dl.dataset.cdel),
+        });
+        redraw();
+        return collects().filter(collShut).length ? true : 'gone';
+      }
+      return false;
+    }
+
+    // 받은 내용을 엑셀로
+    async function exportCollect(c) {
+      const XLSX = await xlsx();
+      const got = submissions().filter((x) => x.collectId === c.id)
+        .sort((a, b) => (a.room || '').localeCompare(b.room || '', 'ko') || a.createdAt.localeCompare(b.createdAt));
+      const LABEL = { pending: '검토 대기', done: '등록함', rejected: '뺌', none: '없음' };
+      const head = [
+        [`물품 모으기 — ${c.title}`], [],
+        ['학교', school().name, '', '기간', c.dueDate ? `${c.dueDate}까지` : '기한 없음'],
+        ['처리', c.autoApprove ? '바로 등록' : '검토 후 등록', '', '장소', placeOfCollect(c) || '학교 전체'],
+        [],
+        ['적은 분', '건물', '층', '실', '물품 이름', '수량', '보관 자리', '상태', '낸 때'],
+      ];
+      const body = got.map((x) => [
+        x.who, x.building, x.floor, x.room, x.name, x.qty, x.storage || '',
+        LABEL[x.status] || x.status, `${x.createdAt.slice(0, 10)} ${clock(x.createdAt)}`,
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([...head, ...body]);
+      ws['!cols'] = [16, 12, 10, 16, 26, 8, 16, 10, 18].map((wch) => ({ wch }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '물품 모으기');
+      XLSX.writeFile(wb, `물품 모으기_${c.title}_${ymd(new Date()).replaceAll('-', '')}.xlsx`);
     }
 
     function mountCollects(view, redraw) {
       const box = view.querySelector('#coll-body');
       if (!box) return;
 
+      box.addEventListener('change', (e) => {
+        if (e.target.id !== 'c-whole') return;
+        const pb = box.querySelector('#c-placebox');
+        pb.hidden = e.target.checked;
+        if (e.target.checked) { pb.querySelector('#c-b').value = ''; pb.querySelector('#c-f').value = ''; pb.querySelector('#c-r').value = ''; }
+      });
+
       box.addEventListener('click', async (e) => {
-        if (e.target.closest('#c-pull')) {
-          const b = e.target.closest('#c-pull');
+        if (e.target.closest('#c-refresh')) {
+          const b = e.target.closest('#c-refresh');
           b.disabled = true;
           const ok = await pullCollects();
-          redraw();
-          flash(ok ? '최신 제출을 받아 왔어요' : '받아 오지 못했어요', ok ? 'ok' : 'warn');
+          keepCollOpen = true;
+          render();
+          flash(ok ? '최신 상태로 새로 고쳤어요' : '새로 고치지 못했어요', ok ? 'ok' : 'warn');
           return;
         }
 
-        const ap = e.target.closest('[data-capply]');
-        if (ap) {
-          ap.disabled = true;
-          await pullCollects();   // 반영 직전에 최신으로
-          const cid = ap.dataset.capply;
-          const pend = submissions().filter((x) => x.collectId === cid && x.status === 'pending');
-          if (!pend.length) { redraw(); flash('새로 반영할 물품이 없어요'); return; }
-          const now = new Date().toISOString();
-          const made = pend.map((x) => ({
-            id: newId(), name: x.name, category: x.category || '기타', qty: x.qty, loanable: true,
-            building: x.building, floor: x.floor, room: x.room, storage: x.storage || '', shelf: '',
-            memo: x.memo || '', asset: false, createdAt: now,
-          }));
-          const ids = new Set(pend.map((x) => x.id));
-          commit({
-            ...state,
-            items: [...state.items, ...made],
-            submissions: submissions().map((x) => (ids.has(x.id) ? { ...x, status: 'done' } : x)),
-          });
-          redraw();
-          flash(`${n(made.length)}개를 물품 목록에 반영했어요`);
-          return;
-        }
+        if (e.target.closest('#c-arch')) { openArchive(redraw); return; }
 
         if (e.target.closest('#c-make')) {
           const title = box.querySelector('#c-title').value.trim();
           if (!title) { flash('제목을 적어 주세요', 'warn'); box.querySelector('#c-title').focus(); return; }
+          const whole = box.querySelector('#c-whole').checked;
           const c = {
             id: 'col_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
             code: newCode(), title,
             dueDate: box.querySelector('#c-due').value || null,
             autoApprove: box.querySelector('input[name="c-mode"]:checked').value === 'auto',
-            building: box.querySelector('#c-b').value.trim(),
-            floor: normalFloor(box.querySelector('#c-f').value),
-            room: box.querySelector('#c-r').value.trim(),
+            building: whole ? '' : box.querySelector('#c-b').value.trim(),
+            floor: whole ? '' : normalFloor(box.querySelector('#c-f').value),
+            room: whole ? '' : box.querySelector('#c-r').value.trim(),
             closed: false, createdAt: new Date().toISOString(),
           };
           commit({ ...state, collects: [...collects(), c] });
@@ -7178,57 +7332,35 @@
           return;
         }
 
-        const cp = e.target.closest('[data-ccopy]');
-        if (cp) {
-          const c = collects().find((x) => x.id === cp.dataset.ccopy);
-          try { await navigator.clipboard.writeText(giveLink(c)); flash('링크를 복사했어요'); }
-          catch { prompt('이 주소를 복사해 주세요', giveLink(c)); }
-          return;
-        }
-        const sh = e.target.closest('[data-cshut]');
-        if (sh) {
-          commit({ ...state, collects: collects().map((x) => (x.id === sh.dataset.cshut ? { ...x, closed: !x.closed } : x)) });
-          redraw();
-          return;
-        }
-        const dl = e.target.closest('[data-cdel]');
-        if (dl) {
-          if (!confirm('이 링크를 지울까요? 받은 기록도 함께 지워져요. 이미 등록한 물품은 남아요.')) return;
-          commit({
-            ...state,
-            collects: collects().filter((x) => x.id !== dl.dataset.cdel),
-            submissions: submissions().filter((x) => x.collectId !== dl.dataset.cdel),
-          });
-          redraw();
-          return;
-        }
-
         const ok = e.target.closest('[data-cok]');
         const all = e.target.closest('#c-okall');
         const no = e.target.closest('[data-cno]');
-        if (!ok && !all && !no) return;
-
-        const ids = new Set(all ? submissions().filter((x) => x.status === 'pending').map((x) => x.id)
-          : [(ok || no).dataset.cok || (ok || no).dataset.cno]);
-        if (no) {
-          commit({ ...state, submissions: submissions().map((x) => (ids.has(x.id) ? { ...x, status: 'rejected' } : x)) });
-          flash('뺐어요');
+        if (ok || all || no) {
+          const ids = new Set(all ? submissions().filter((x) => x.status === 'pending').map((x) => x.id)
+            : [(ok || no).dataset.cok || (ok || no).dataset.cno]);
+          if (no) {
+            commit({ ...state, submissions: submissions().map((x) => (ids.has(x.id) ? { ...x, status: 'rejected' } : x)) });
+            flash('뺐어요');
+            redraw();
+            return;
+          }
+          const now = new Date().toISOString();
+          const made = submissions().filter((x) => ids.has(x.id)).map((x) => ({
+            id: newId(), name: x.name, category: x.category || '기타', qty: x.qty, loanable: true,
+            building: x.building, floor: x.floor, room: x.room, storage: x.storage || '', shelf: '',
+            memo: x.memo || '', asset: false, createdAt: now,
+          }));
+          commit({
+            ...state,
+            items: [...state.items, ...made],
+            submissions: submissions().map((x) => (ids.has(x.id) ? { ...x, status: 'done' } : x)),
+          });
+          flash(`${n(made.length)}개를 등록했어요`);
           redraw();
           return;
         }
-        const now = new Date().toISOString();
-        const made = submissions().filter((x) => ids.has(x.id)).map((x) => ({
-          id: newId(), name: x.name, category: x.category || '기타', qty: x.qty, loanable: true,
-          building: x.building, floor: x.floor, room: x.room, storage: x.storage || '', shelf: '',
-          memo: x.memo || '', asset: false, createdAt: now,
-        }));
-        commit({
-          ...state,
-          items: [...state.items, ...made],
-          submissions: submissions().map((x) => (ids.has(x.id) ? { ...x, status: 'done' } : x)),
-        });
-        flash(`${n(made.length)}개를 등록했어요`);
-        redraw();
+
+        await collectAction(e, redraw);
       });
     }
 
@@ -7889,6 +8021,13 @@
         if (b) b.innerHTML = collectsHTML();
       };
       mountCollects(view, redrawColl);
+
+      // 새로 고침으로 다시 그렸으면 카드를 열어 둔다
+      if (keepCollOpen) {
+        keepCollOpen = false;
+        const f = view.querySelector('[data-fold="coll"]');
+        if (f) { f.setAttribute('aria-expanded', 'true'); view.querySelector('#coll-body').hidden = false; f.closest('.fold-card').classList.add('is-open'); }
+      }
 
       view.refresh = () => { update(); drawSigns(); drawTeam(); drawWipe(); drawSpots(); redrawColl(); };
       update();
