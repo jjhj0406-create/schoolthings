@@ -1761,31 +1761,39 @@
     }
 
     /* 홈: 지붕이 눌렸다 올라와요 */
-    @keyframes ic-home { 0% { transform: none; } 35% { transform: translateY(2px) scaleY(.86); } 70% { transform: translateY(-3px) scaleY(1.06); } 100% { transform: none; } }
+    @keyframes ic-home { 0% { transform: none; } 30% { transform: translateY(3px) scaleY(.78); } 60% { transform: translateY(-5px) scaleY(1.12); } 100% { transform: none; } }
     /* 찾기: 돋보기가 두리번거려요 */
-    @keyframes ic-find { 0% { transform: none; } 25% { transform: rotate(-16deg) translateX(-1px); } 60% { transform: rotate(14deg) translateX(1px); } 100% { transform: none; } }
+    @keyframes ic-find { 0% { transform: none; } 20% { transform: rotate(-24deg) translateX(-2px); } 45% { transform: rotate(20deg) translateX(2px); } 70% { transform: rotate(-10deg); } 100% { transform: none; } }
     /* 장소별 보기: 핀이 통 떨어져 꽂혀요 */
-    @keyframes ic-place { 0% { transform: none; } 30% { transform: translateY(-5px); } 60% { transform: translateY(2px) scaleY(.9); } 100% { transform: none; } }
+    @keyframes ic-place { 0% { transform: none; } 30% { transform: translateY(-8px) scale(1.08); } 62% { transform: translateY(3px) scaleY(.82); } 100% { transform: none; } }
     /* 등록: 더하기가 돌아요 */
-    @keyframes ic-add { 0% { transform: none; } 100% { transform: rotate(90deg) scale(1.08); } }
+    @keyframes ic-add { 0% { transform: none; } 100% { transform: rotate(135deg) scale(1.15); } }
     /* 대여·인수인계: 화살표가 오갔다 와요 */
-    @keyframes ic-swap { 0% { transform: none; } 30% { transform: translateX(3px); } 65% { transform: translateX(-3px); } 100% { transform: none; } }
+    @keyframes ic-swap { 0% { transform: none; } 28% { transform: translateX(5px); } 60% { transform: translateX(-5px); } 100% { transform: none; } }
     /* 비품 대장: 종이가 넘어가요 */
-    @keyframes ic-paper { 0% { transform: none; } 40% { transform: rotate(-7deg) translateY(-2px); } 75% { transform: rotate(4deg); } 100% { transform: none; } }
+    @keyframes ic-paper { 0% { transform: none; } 35% { transform: rotate(-12deg) translateY(-3px); } 70% { transform: rotate(7deg); } 100% { transform: none; } }
     /* 관리 담당: 고개를 끄덕여요 */
-    @keyframes ic-nod { 0% { transform: none; } 30% { transform: translateY(2px) rotate(-6deg); } 65% { transform: translateY(-1px) rotate(5deg); } 100% { transform: none; } }
+    @keyframes ic-nod { 0% { transform: none; } 28% { transform: translateY(3px) rotate(-11deg); } 62% { transform: translateY(-2px) rotate(9deg); } 100% { transform: none; } }
     /* 학교 공간 설정: 건물이 한 번 올라섰다 내려와요 */
-    @keyframes ic-build { 0% { transform: none; } 35% { transform: translateY(-4px) scale(1.05); } 70% { transform: translateY(1px) scale(.97); } 100% { transform: none; } }
+    @keyframes ic-build { 0% { transform: none; } 32% { transform: translateY(-7px) scale(1.1); } 66% { transform: translateY(2px) scale(.94); } 100% { transform: none; } }
 
-    .rail__item[data-key="home"]:hover .icon    { animation: ic-home 460ms ease-out; }
+    /* 마우스를 올렸을 때와, 손가락으로 눌렀을 때(is-wiggle) 모두 움직여요 */
+    .rail__item[data-key="home"]:hover .icon,
+    .rail__item[data-key="home"].is-wiggle .icon { animation: ic-home 460ms ease-out; }
     .rail__item[data-key="find"]:hover .icon    { animation: ic-find 520ms ease-out; }
-    .rail__item[data-key="place"]:hover .icon   { animation: ic-place 480ms ease-out; }
-    .rail__item[data-key="add"]:hover .icon     { animation: ic-add 260ms cubic-bezier(.2, .8, .2, 1) forwards; }
+    .rail__item[data-key="place"]:hover .icon,
+    .rail__item[data-key="place"].is-wiggle .icon { animation: ic-place 480ms ease-out; }
+    .rail__item[data-key="add"]:hover .icon,
+    .rail__item[data-key="add"].is-wiggle .icon { animation: ic-add 260ms cubic-bezier(.2, .8, .2, 1) forwards; }
     .rail__item[data-key="rent"]:hover .icon,
-    .rail__item[data-key="handover"]:hover .icon { animation: ic-swap 500ms ease-out; }
-    .rail__item[data-key="ledger"]:hover .icon  { animation: ic-paper 520ms ease-out; }
+    .rail__item[data-key="handover"]:hover .icon,
+    .rail__item[data-key="rent"].is-wiggle .icon,
+    .rail__item[data-key="handover"].is-wiggle .icon { animation: ic-swap 500ms ease-out; }
+    .rail__item[data-key="ledger"]:hover .icon,
+    .rail__item[data-key="ledger"].is-wiggle .icon { animation: ic-paper 520ms ease-out; }
     .rail__item[data-key="manager"]:hover .icon { animation: ic-nod 500ms ease-out; }
-    .rail__item[data-key="spaces"]:hover .icon  { animation: ic-build 500ms ease-out; }
+    .rail__item[data-key="spaces"]:hover .icon,
+    .rail__item[data-key="spaces"].is-wiggle .icon { animation: ic-build 500ms ease-out; }
 
     /* 글자도 아주 살짝 따라 움직여요 */
     .rail__label { transition: transform 200ms cubic-bezier(.2, .8, .2, 1); }
@@ -1794,12 +1802,14 @@
     /* 폰에서는 누를 때 톡 눌리는 느낌만 */
     .tabbar__item:active .icon { transform: scale(.86); }
     .tabbar__item[aria-current="page"] .icon { animation: ic-place 420ms ease-out; }
+    .tabbar__item.is-wiggle .icon { animation: ic-place 420ms ease-out; }
 
     /* 자주 누르는 단추도 살짝 */
     .btn .icon, .bigbtn .icon { transition: transform 200ms cubic-bezier(.2, .8, .2, 1); }
     .btn:hover .icon { transform: translateY(-1px) scale(1.06); }
 
-    /* 동작을 줄이도록 설정한 기기에서는 모두 멈춰요 */
+    /* 동작을 줄이도록 설정한 기기에서는 모두 멈춰요
+       (윈도우 설정 → 접근성 → 시각 효과 → 애니메이션 효과 를 켜면 다시 움직여요) */
     @media (prefers-reduced-motion: reduce) {
       .rail__item .icon, .tabbar__item .icon, .rail__label, .btn .icon, .bigbtn .icon { transition: none; }
       .rail__item:hover .icon, .tabbar__item[aria-current="page"] .icon { animation: none; }
@@ -8778,6 +8788,19 @@
       }
       render();
     }
+    // 손가락으로 눌러도 아이콘이 한 번 움직이도록
+    document.addEventListener('pointerdown', (e) => {
+      const it = e.target.closest?.('.rail__item[data-key], .tabbar__item');
+      if (!it) return;
+      it.classList.remove('is-wiggle');
+      void it.offsetWidth;          // 다시 재생시키기
+      it.classList.add('is-wiggle');
+      setTimeout(() => it.classList.remove('is-wiggle'), 600);
+    }, { passive: true });
+
+    // 화면 아래 학교 이름 옆에 판 번호를 적어 둔다 (새 파일이 올라갔는지 확인용)
+    console.log('학교 물품 어디 있지? · 2026-09-23 판');
+
     boot();
   </script>
 </body>
