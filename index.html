@@ -1752,6 +1752,59 @@
       .prow { flex-wrap: wrap; }
       .prow__main { flex: 1 0 100%; }
     }
+    /* ───────── 메뉴 아이콘이 잠깐 살아 움직이기 ─────────
+       마우스를 올리면 메뉴마다 다른 몸짓을 해요. 손이 닿는 곳에만 씁니다. */
+    .rail__item .icon, .tabbar__item .icon {
+      transform-origin: 50% 60%;
+      transition: transform 180ms cubic-bezier(.2, .8, .2, 1);
+      will-change: transform;
+    }
+
+    /* 홈: 지붕이 눌렸다 올라와요 */
+    @keyframes ic-home { 0% { transform: none; } 35% { transform: translateY(2px) scaleY(.86); } 70% { transform: translateY(-3px) scaleY(1.06); } 100% { transform: none; } }
+    /* 찾기: 돋보기가 두리번거려요 */
+    @keyframes ic-find { 0% { transform: none; } 25% { transform: rotate(-16deg) translateX(-1px); } 60% { transform: rotate(14deg) translateX(1px); } 100% { transform: none; } }
+    /* 장소별 보기: 핀이 통 떨어져 꽂혀요 */
+    @keyframes ic-place { 0% { transform: none; } 30% { transform: translateY(-5px); } 60% { transform: translateY(2px) scaleY(.9); } 100% { transform: none; } }
+    /* 등록: 더하기가 돌아요 */
+    @keyframes ic-add { 0% { transform: none; } 100% { transform: rotate(90deg) scale(1.08); } }
+    /* 대여·인수인계: 화살표가 오갔다 와요 */
+    @keyframes ic-swap { 0% { transform: none; } 30% { transform: translateX(3px); } 65% { transform: translateX(-3px); } 100% { transform: none; } }
+    /* 비품 대장: 종이가 넘어가요 */
+    @keyframes ic-paper { 0% { transform: none; } 40% { transform: rotate(-7deg) translateY(-2px); } 75% { transform: rotate(4deg); } 100% { transform: none; } }
+    /* 관리 담당: 고개를 끄덕여요 */
+    @keyframes ic-nod { 0% { transform: none; } 30% { transform: translateY(2px) rotate(-6deg); } 65% { transform: translateY(-1px) rotate(5deg); } 100% { transform: none; } }
+    /* 학교 공간 설정: 건물이 한 번 올라섰다 내려와요 */
+    @keyframes ic-build { 0% { transform: none; } 35% { transform: translateY(-4px) scale(1.05); } 70% { transform: translateY(1px) scale(.97); } 100% { transform: none; } }
+
+    .rail__item[data-key="home"]:hover .icon    { animation: ic-home 460ms ease-out; }
+    .rail__item[data-key="find"]:hover .icon    { animation: ic-find 520ms ease-out; }
+    .rail__item[data-key="place"]:hover .icon   { animation: ic-place 480ms ease-out; }
+    .rail__item[data-key="add"]:hover .icon     { animation: ic-add 260ms cubic-bezier(.2, .8, .2, 1) forwards; }
+    .rail__item[data-key="rent"]:hover .icon,
+    .rail__item[data-key="handover"]:hover .icon { animation: ic-swap 500ms ease-out; }
+    .rail__item[data-key="ledger"]:hover .icon  { animation: ic-paper 520ms ease-out; }
+    .rail__item[data-key="manager"]:hover .icon { animation: ic-nod 500ms ease-out; }
+    .rail__item[data-key="spaces"]:hover .icon  { animation: ic-build 500ms ease-out; }
+
+    /* 글자도 아주 살짝 따라 움직여요 */
+    .rail__label { transition: transform 200ms cubic-bezier(.2, .8, .2, 1); }
+    .rail__item:hover .rail__label { transform: translateX(2px); }
+
+    /* 폰에서는 누를 때 톡 눌리는 느낌만 */
+    .tabbar__item:active .icon { transform: scale(.86); }
+    .tabbar__item[aria-current="page"] .icon { animation: ic-place 420ms ease-out; }
+
+    /* 자주 누르는 단추도 살짝 */
+    .btn .icon, .bigbtn .icon { transition: transform 200ms cubic-bezier(.2, .8, .2, 1); }
+    .btn:hover .icon { transform: translateY(-1px) scale(1.06); }
+
+    /* 동작을 줄이도록 설정한 기기에서는 모두 멈춰요 */
+    @media (prefers-reduced-motion: reduce) {
+      .rail__item .icon, .tabbar__item .icon, .rail__label, .btn .icon, .bigbtn .icon { transition: none; }
+      .rail__item:hover .icon, .tabbar__item[aria-current="page"] .icon { animation: none; }
+    }
+
     .placebar { display: none; }
     .tabbar { display: none; }
 
@@ -2933,10 +2986,10 @@
         const current = m.key === active ? 'aria-current="page"' : '';
         if (m.admin) cls += ' rail__item--admin';
         const label = withLabelSpan ? `<span class="rail__label">${esc(m.label)}</span>` : esc(m.label);
-        if (m.action) return `<button class="${cls}" type="button" data-action="${m.action}">${icon(ICONS[m.key])}${label}</button>`;
+        if (m.action) return `<button class="${cls}" type="button" data-key="${m.key}" data-action="${m.action}">${icon(ICONS[m.key])}${label}</button>`;
         return m.href
-          ? `<a class="${cls}" href="${m.href}" ${current}>${icon(ICONS[m.key])}${label}</a>`
-          : `<button class="${cls}" type="button" data-soon>${icon(ICONS[m.key])}${label}</button>`;
+          ? `<a class="${cls}" href="${m.href}" data-key="${m.key}" ${current}>${icon(ICONS[m.key])}${label}</a>`
+          : `<button class="${cls}" type="button" data-key="${m.key}" data-soon>${icon(ICONS[m.key])}${label}</button>`;
       };
       const menu = MENU.filter((m) => (!m.admin || isAdmin()) && (!m.manage || canImport())
         && !(m.key === 'handover' && missingTables.has('handovers')));
