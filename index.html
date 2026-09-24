@@ -25,8 +25,39 @@
       --r-md: 16px;
       --shadow: 0 1px 2px rgba(23, 32, 74, .06), 0 8px 24px -12px rgba(23, 32, 74, .18);
 
-      font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR",
-                   "Noto Sans CJK KR", "Malgun Gothic", system-ui, sans-serif;
+      --font-body: "Santteut", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+      --font-title: "Poster", "Santteut", "Pretendard", "Malgun Gothic", system-ui, sans-serif;
+      --font-hand: "Boardmarker", "Santteut", "Pretendard", "Malgun Gothic", system-ui, sans-serif;
+
+      font-family: var(--font-body);
+    }
+
+    /* ───────── 글꼴 · 학교안심 (한국교육학술정보원) ─────────
+       산뜻돋움: 본문과 목록 · 포스터: 큰 제목 · 보드마카: 카드 제목과 강조
+       자주 쓰는 글자만 남겨 파일을 줄였습니다. */
+    @font-face {
+      font-family: "Santteut";
+      src: url("fonts/santteut-l.woff") format("woff");
+      font-weight: 300 500;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Santteut";
+      src: url("fonts/santteut-m.woff") format("woff");
+      font-weight: 600 900;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Poster";
+      src: url("fonts/poster-b.woff") format("woff");
+      font-weight: 400 900;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Boardmarker";
+      src: url("fonts/boardmarker.woff") format("woff");
+      font-weight: 400 900;
+      font-display: swap;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1926,6 +1957,33 @@
     @media (max-width: 760px) {
       .hsign__row, .hout__btns { grid-template-columns: 1fr; }
     }
+
+    /* ── 어디에 어떤 글꼴을 쓰는지 ──
+       큰 제목은 포스터, 카드 제목과 강조는 보드마카, 나머지는 산뜻돋움.
+       숫자와 작은 글씨는 읽기 쉽도록 산뜻돋움으로 둡니다. */
+    .top__title, .gate__title, .find__title, .hwrap__title, .signbox__title,
+    .wiz__title, .nohit strong, .empty strong, .stock__total {
+      font-family: var(--font-title);
+      letter-spacing: -0.02em;
+    }
+    .brand__name, .rail__name, .gate__name {
+      font-family: var(--font-title);
+      letter-spacing: -0.01em;
+    }
+
+    .card__title, .coll__label, .rankbox__label, .wiz__eyebrow, .hwrap__eyebrow,
+    .fold, .hstep__label, .field__label, .sheet__title, .side-title, .hmine__when {
+      font-family: var(--font-hand);
+      letter-spacing: 0;
+    }
+
+    .num, .stock__total, .hit__qty, .lrow__sub, .rankitem__times,
+    input, select, textarea, .adet__row dd, .paper {
+      font-family: var(--font-body);
+    }
+
+    /* 손글씨 글꼴은 획이 얇아 작은 글씨에서 흐려 보여 조금 굵게 잡습니다 */
+    .card__title, .fold, .field__label { font-weight: 700; }
 
     .placebar { display: none; }
     .tabbar { display: none; }
