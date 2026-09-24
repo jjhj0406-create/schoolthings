@@ -25,9 +25,9 @@
       --r-md: 16px;
       --shadow: 0 1px 2px rgba(23, 32, 74, .06), 0 8px 24px -12px rgba(23, 32, 74, .18);
 
-      --font-body: "Santteut", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+      --font-body: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+      --font-menu: "Santteut", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
       --font-title: "Poster", "Santteut", "Pretendard", "Malgun Gothic", system-ui, sans-serif;
-      --font-hand: "Boardmarker", "Santteut", "Pretendard", "Malgun Gothic", system-ui, sans-serif;
 
       font-family: var(--font-body);
     }
@@ -53,13 +53,6 @@
       font-weight: 400 900;
       font-display: swap;
     }
-    @font-face {
-      font-family: "Boardmarker";
-      src: url("fonts/boardmarker.woff") format("woff");
-      font-weight: 400 900;
-      font-display: swap;
-    }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
     body {
@@ -187,7 +180,7 @@
     .plan .route { stroke: var(--marker); stroke-width: 2.2; fill: none; stroke-dasharray: 5 7; stroke-linecap: round; }
     .plan .pin { fill: var(--marker); }
     .plan .pin-ring { fill: none; stroke: var(--marker); stroke-width: 2; opacity: .5; }
-    .find__title { position: relative; font-size: clamp(30px, 3.5vw, 46px); font-weight: 800; line-height: 1.15; letter-spacing: -0.05em; margin-bottom: 22px; white-space: nowrap; }
+    .find__title { position: relative; font-size: clamp(24px, 2.6vw, 34px); font-weight: 800; line-height: 1.15; letter-spacing: -0.05em; margin-bottom: 22px; white-space: nowrap; }
     .search {
       position: relative; display: flex; align-items: center; gap: 12px;
       height: 58px; padding: 0 8px 0 18px; max-width: 560px;
@@ -1971,19 +1964,51 @@
       letter-spacing: -0.01em;
     }
 
-    .card__title, .coll__label, .rankbox__label, .wiz__eyebrow, .hwrap__eyebrow,
-    .fold, .hstep__label, .field__label, .sheet__title, .side-title, .hmine__when {
-      font-family: var(--font-hand);
-      letter-spacing: 0;
-    }
+    /* 왼쪽 메뉴와 아래 탭은 학교안심 산뜻돋움 */
+    .rail__item, .rail__label, .tabbar__item, .rail__foot { font-family: var(--font-menu); }
 
-    .num, .stock__total, .hit__qty, .lrow__sub, .rankitem__times,
-    input, select, textarea, .adet__row dd, .paper {
-      font-family: var(--font-body);
-    }
+    /* ───────── 실 QR ───────── */
+    .setupcard__btns { display: flex; gap: 8px; flex: none; }
+    .setupcard__btns .btn--ghost { background: rgba(255, 255, 255, .16); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); }
+    .setupcard__btns .btn--ghost:hover { background: rgba(255, 255, 255, .26); }
+    .qrbox { width: min(620px, 100%); }
+    .qrone { width: min(380px, 100%); text-align: center; }
+    .qrone .signbox__desc { text-align: left; }
+    .qrone__box { display: grid; place-items: center; margin: 18px 0 10px; padding: 14px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); }
+    .qrone__where { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+    .qrone .rankbox__btn .icon { width: 17px; height: 17px; margin-right: 6px; }
+    .qrpick { display: grid; gap: 14px; margin-top: 18px; max-height: 340px; overflow: auto; }
+    .qrpick__grp { display: grid; gap: 8px; }
+    .qrpick__rooms { display: flex; flex-wrap: wrap; gap: 6px; }
+    .qrpick .pickchip small { font-size: 11px; font-weight: 600; opacity: .65; margin-left: 4px; }
 
-    /* 손글씨 글꼴은 획이 얇아 작은 글씨에서 흐려 보여 조금 굵게 잡습니다 */
-    .card__title, .fold, .field__label { font-weight: 700; }
+    .qritems { list-style: none; display: grid; gap: 5px; margin-top: 18px; }
+    .qritem { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border-radius: 13px; background: var(--field); }
+    .qritem__main { flex: 1; min-width: 0; }
+    .qritem__name { font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+    .qritem__where { font-size: 13px; color: var(--board); font-weight: 600; margin-top: 3px; overflow-wrap: anywhere; }
+    .qritem__memo { font-size: 13px; color: var(--ink-2); margin-top: 2px; overflow-wrap: anywhere; }
+    .qritem__qty { font-size: 16px; font-weight: 800; flex: none; }
+
+    /* 인쇄용 라벨 */
+    .labels { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; }
+    .label {
+      display: flex; align-items: center; gap: 5mm;
+      padding: 5mm; border: 1.2pt dashed #999; border-radius: 3mm;
+      break-inside: avoid; page-break-inside: avoid;
+    }
+    .label__qr { flex: none; }
+    .label__qr svg { display: block; width: 28mm; height: 28mm; }
+    .label__txt { min-width: 0; }
+    .label__where { font-size: 10pt; color: #555; }
+    .label__room { font-size: 20pt; font-weight: bold; letter-spacing: -0.02em; margin: 1mm 0 2mm; word-break: keep-all; }
+    .label__how { font-size: 10pt; color: #111; }
+    .label__school { font-size: 9pt; color: #777; margin-top: 3mm; }
+
+    @media (max-width: 760px) {
+      .setupcard__btns { width: 100%; }
+      .setupcard__btns .btn { flex: 1; }
+    }
 
     .placebar { display: none; }
     .tabbar { display: none; }
@@ -2919,6 +2944,7 @@
       next: 'M9 6l6 6-6 6',
       print: 'M7 9V3h10v6 M7 17H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2 M7 14h10v7H7z',
       refresh: 'M20 11a8 8 0 10-2.3 5.7 M20 5v6h-6',
+      qr: 'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h2v2h-2z M18 14h2v2h-2z M14 18h2v2h-2z M18 18h2v2h-2z',
       manager: 'M12 12.5a4 4 0 100-8 4 4 0 000 8z M4.5 20.5a7.5 7.5 0 0115 0',
       edit: 'M4 20h4L18.5 9.5l-4-4L4 16z M14 6l4 4',
       trash: 'M5 7h14 M9.5 7V4.5h5V7 M7 7l1 12.5h8L17 7 M10.5 10.5v6 M13.5 10.5v6',
@@ -3914,6 +3940,12 @@
 
     function mountPlaces(view, params) {
       const items = state.items;
+      view.addEventListener('click', (e) => {
+        const q = e.target.closest('[data-roomqr]');
+        if (!q) return;
+        const [b, f, r] = q.dataset.roomqr.split('|');
+        openRoomQr(b, f, r);
+      });
       if (!items.length && !hasSpaces()) return;
 
       const buildings = groupPlaces(items);
@@ -3969,6 +4001,7 @@
               <span>건물·층·실이 미리 채워진 채로 등록 화면이 열려요.</span>
               <div class="nohit__actions">
                 <a class="btn btn--solid" href="#/add?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f === '미정' ? '' : f)}&room=${encodeURIComponent(r)}">${icon(ICONS.add)}여기에 등록</a>
+                ${online() && hasSpaces() ? `<button class="btn btn--ghost" type="button" data-roomqr="${esc([b, f === '미정' ? '' : f, r].join('|'))}">${icon(ICONS.qr)}QR 보기</button>` : ''}
               </div>
             </div>` : `
             <div class="nohit">
@@ -3990,7 +4023,9 @@
               <h2 class="roomview__name">${esc(r)}</h2>
               <p class="roomview__sum num">물품 ${n(list.length)}가지 · 모두 ${n(count)}개</p>
             </div>
-            ${b === UNSET_B ? `<a class="btn btn--ghost" href="#/manager">${icon(ICONS.place)}자리 정하러 가기</a>` : `<a class="btn btn--ghost" href="#/add?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&room=${encodeURIComponent(r)}">${icon(ICONS.add)}여기에 등록</a>`}
+            ${b === UNSET_B ? `<a class="btn btn--ghost" href="#/manager">${icon(ICONS.place)}자리 정하러 가기</a>` : `
+              ${online() && hasSpaces() ? `<button class="btn btn--ghost" type="button" data-roomqr="${esc([b, f === '미정' ? '' : f, r].join('|'))}">${icon(ICONS.qr)}QR</button>` : ''}
+              <a class="btn btn--ghost" href="#/add?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&room=${encodeURIComponent(r)}">${icon(ICONS.add)}여기에 등록</a>`}
           </div>
           <div class="units">
             ${units.map((u) => `
@@ -6012,7 +6047,17 @@
     }
 
     function saveSpaces() {
-      commit({ ...state, school: { ...school(), spaces: { buildings: wiz.buildings, rooms: wiz.rooms } } });
+      // QR 라벨에 쓸 짧은 코드를 미리 붙여 둔다 (선생님들도 바로 QR을 볼 수 있게)
+      const seen = new Set(wiz.rooms.map((r) => r.code).filter(Boolean));
+      const rooms = wiz.rooms.map((r) => {
+        if (r.code) return r;
+        let code = newRoomCode();
+        while (seen.has(code)) code = newRoomCode();
+        seen.add(code);
+        return { ...r, code };
+      });
+      wiz.rooms = rooms;
+      commit({ ...state, school: { ...school(), spaces: { buildings: wiz.buildings, rooms } } });
     }
 
     function drawWiz() {
@@ -6741,6 +6786,495 @@
       box.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && e.target.id === 'c-body') box.querySelector('#c-go').click();
       });
+    }
+
+    /* ── QR 부호 만들기 (바이트 모드 · 오류 정정 M) ──
+       바깥 도구 없이 직접 만듭니다. 인터넷이 느려도 인쇄가 됩니다. */
+    const QR_TOTAL = [26, 44, 70, 100, 134, 172, 196, 242, 292, 346, 404, 466];
+    const QR_M = [               // [오류정정 코드 수, 1묶음 개수, 1묶음 자료 수, 2묶음 개수, 2묶음 자료 수]
+      [10, 1, 16, 0, 0], [16, 1, 28, 0, 0], [26, 1, 44, 0, 0], [18, 2, 32, 0, 0],
+      [24, 2, 43, 0, 0], [16, 4, 27, 0, 0], [18, 4, 31, 0, 0], [22, 2, 38, 2, 39],
+      [22, 3, 36, 2, 37], [26, 4, 43, 1, 44], [30, 1, 50, 4, 51], [22, 6, 36, 2, 37],
+    ];
+    const QR_ALIGN = [[], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34], [6, 22, 38],
+      [6, 24, 42], [6, 26, 46], [6, 28, 50], [6, 30, 54], [6, 32, 58]];
+    const QR_FORMAT = [0x5412, 0x5125, 0x5E7C, 0x5B4B, 0x45F9, 0x40CE, 0x4F97, 0x4AA0];
+    const QR_VERSION = [0x07C94, 0x085BC, 0x09A99, 0x0A4D3, 0x0BBF6, 0x0C762];
+
+    // GF(256) 산술
+    const GF_EXP = new Uint8Array(512);
+    const GF_LOG = new Uint8Array(256);
+    (() => {
+      let x = 1;
+      for (let i = 0; i < 255; i++) {
+        GF_EXP[i] = x; GF_LOG[x] = i;
+        x <<= 1;
+        if (x & 0x100) x ^= 0x11D;
+      }
+      for (let i = 255; i < 512; i++) GF_EXP[i] = GF_EXP[i - 255];
+    })();
+    const gfMul = (a, b) => (a === 0 || b === 0 ? 0 : GF_EXP[GF_LOG[a] + GF_LOG[b]]);
+
+    function rsPoly(n) {
+      let poly = [1];
+      for (let i = 0; i < n; i++) {
+        const next = new Array(poly.length + 1).fill(0);
+        for (let j = 0; j < poly.length; j++) {
+          next[j] ^= poly[j];                          // x 를 곱한 쪽
+          next[j + 1] ^= gfMul(poly[j], GF_EXP[i]);    // α^i 를 곱한 쪽
+        }
+        poly = next;
+      }
+      return poly;
+    }
+
+    function rsCodes(data, ecLen) {
+      const gen = rsPoly(ecLen);
+      const out = new Array(ecLen).fill(0);
+      for (const byte of data) {
+        const factor = byte ^ out[0];
+        out.shift(); out.push(0);
+        if (factor !== 0) for (let i = 0; i < gen.length - 1; i++) out[i] ^= gfMul(gen[i + 1], factor);
+      }
+      return out;
+    }
+
+    // 글자를 바이트로 (UTF-8)
+    function qrEncode(text) {
+      const bytes = new TextEncoder().encode(text);
+      let version = -1;
+      for (let v = 1; v <= 12; v++) {
+        const [ec, b1, d1, b2, d2] = QR_M[v - 1];
+        const cap = b1 * d1 + b2 * d2;
+        const lenBits = v < 10 ? 8 : 16;
+        if (bytes.length + 2 + Math.ceil(lenBits / 8) <= cap) { version = v; break; }
+      }
+      if (version < 0) throw new Error('너무 긴 내용이에요');
+
+      const [ecLen, b1, d1, b2, d2] = QR_M[version - 1];
+      const dataCount = b1 * d1 + b2 * d2;
+      const lenBits = version < 10 ? 8 : 16;
+
+      // 비트 만들기
+      const bits = [];
+      const push = (val, n) => { for (let i = n - 1; i >= 0; i--) bits.push((val >> i) & 1); };
+      push(0b0100, 4);
+      push(bytes.length, lenBits);
+      for (const b of bytes) push(b, 8);
+      const total = dataCount * 8;
+      push(0, Math.min(4, total - bits.length));
+      while (bits.length % 8) bits.push(0);
+      const codes = [];
+      for (let i = 0; i < bits.length; i += 8) {
+        let v = 0;
+        for (let j = 0; j < 8; j++) v = (v << 1) | bits[i + j];
+        codes.push(v);
+      }
+      const pad = [0xEC, 0x11];
+      let k = 0;
+      while (codes.length < dataCount) codes.push(pad[k++ % 2]);
+
+      // 묶음 나누고 오류 정정
+      const blocks = [];
+      let at = 0;
+      for (let i = 0; i < b1; i++) { blocks.push(codes.slice(at, at + d1)); at += d1; }
+      for (let i = 0; i < b2; i++) { blocks.push(codes.slice(at, at + d2)); at += d2; }
+      const ecBlocks = blocks.map((b) => rsCodes(b, ecLen));
+
+      const out = [];
+      const maxData = Math.max(d1, d2);
+      for (let i = 0; i < maxData; i++) for (const b of blocks) if (i < b.length) out.push(b[i]);
+      for (let i = 0; i < ecLen; i++) for (const b of ecBlocks) out.push(b[i]);
+
+      return { version, codes: out };
+    }
+
+    function qrMatrix(text) {
+      const { version, codes } = qrEncode(text);
+      const size = version * 4 + 17;
+      const grid = Array.from({ length: size }, () => new Array(size).fill(null));
+      const used = Array.from({ length: size }, () => new Array(size).fill(false));
+
+      const setFixed = (r, c, v) => { if (r >= 0 && r < size && c >= 0 && c < size) { grid[r][c] = v; used[r][c] = true; } };
+
+      // 찾기 무늬와 구분선
+      for (const [br, bc] of [[0, 0], [0, size - 7], [size - 7, 0]]) {
+        for (let r = -1; r <= 7; r++) for (let c = -1; c <= 7; c++) {
+          const on = (r >= 0 && r <= 6 && (c === 0 || c === 6)) || (c >= 0 && c <= 6 && (r === 0 || r === 6))
+            || (r >= 2 && r <= 4 && c >= 2 && c <= 4);
+          setFixed(br + r, bc + c, on ? 1 : 0);
+        }
+      }
+      // 맞춤 무늬
+      const aligns = QR_ALIGN[version - 1];
+      for (const r of aligns) for (const c of aligns) {
+        if ((r <= 8 && c <= 8) || (r <= 8 && c >= size - 9) || (r >= size - 9 && c <= 8)) continue;
+        for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) {
+          const on = Math.max(Math.abs(dr), Math.abs(dc)) !== 1;
+          setFixed(r + dr, c + dc, on ? 1 : 0);
+        }
+      }
+      // 시간 무늬
+      for (let i = 8; i < size - 8; i++) {
+        setFixed(6, i, i % 2 === 0 ? 1 : 0);
+        setFixed(i, 6, i % 2 === 0 ? 1 : 0);
+      }
+      setFixed(size - 8, 8, 1);   // 항상 검정
+
+      // 형식 정보 자리 비워 두기
+      for (let i = 0; i < 9; i++) { if (!used[8][i]) { used[8][i] = true; grid[8][i] = 0; } if (!used[i][8]) { used[i][8] = true; grid[i][8] = 0; } }
+      for (let i = 0; i < 8; i++) { if (!used[8][size - 1 - i]) { used[8][size - 1 - i] = true; grid[8][size - 1 - i] = 0; } if (!used[size - 1 - i][8]) { used[size - 1 - i][8] = true; grid[size - 1 - i][8] = 0; } }
+      // 판 정보 자리 (7판 이상)
+      if (version >= 7) {
+        for (let i = 0; i < 18; i++) {
+          const r = Math.floor(i / 3), c = i % 3;
+          used[size - 11 + c][r] = true; grid[size - 11 + c][r] = 0;
+          used[r][size - 11 + c] = true; grid[r][size - 11 + c] = 0;
+        }
+      }
+
+      // 자료 채우기 (지그재그)
+      let bitAt = 0;
+      const nextBit = () => {
+        const byte = codes[bitAt >> 3];
+        const bit = byte === undefined ? 0 : (byte >> (7 - (bitAt & 7))) & 1;
+        bitAt++;
+        return bit;
+      };
+      let up = true;
+      for (let col = size - 1; col > 0; col -= 2) {
+        if (col === 6) col--;
+        for (let i = 0; i < size; i++) {
+          const row = up ? size - 1 - i : i;
+          for (const c of [col, col - 1]) {
+            if (used[row][c]) continue;
+            grid[row][c] = nextBit();
+          }
+        }
+        up = !up;
+      }
+
+      // 마스크 고르기
+      const maskFns = [
+        (r, c) => (r + c) % 2 === 0,
+        (r) => r % 2 === 0,
+        (r, c) => c % 3 === 0,
+        (r, c) => (r + c) % 3 === 0,
+        (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0,
+        (r, c) => ((r * c) % 2) + ((r * c) % 3) === 0,
+        (r, c) => (((r * c) % 2) + ((r * c) % 3)) % 2 === 0,
+        (r, c) => (((r + c) % 2) + ((r * c) % 3)) % 2 === 0,
+      ];
+
+      const penalty = (m) => {
+        let score = 0;
+        // 같은 색 연속
+        for (let i = 0; i < size; i++) {
+          for (const line of [m[i], m.map((row) => row[i])]) {
+            let run = 1;
+            for (let j = 1; j < size; j++) {
+              if (line[j] === line[j - 1]) run++;
+              else { if (run >= 5) score += 3 + (run - 5); run = 1; }
+            }
+            if (run >= 5) score += 3 + (run - 5);
+          }
+        }
+        // 2×2 덩어리
+        for (let r = 0; r < size - 1; r++) for (let c = 0; c < size - 1; c++) {
+          const v = m[r][c];
+          if (v === m[r][c + 1] && v === m[r + 1][c] && v === m[r + 1][c + 1]) score += 3;
+        }
+        // 1:1:3:1:1 무늬
+        const pat = [1, 0, 1, 1, 1, 0, 1];
+        const check = (line, at) => pat.every((v, i) => line[at + i] === v);
+        for (let i = 0; i < size; i++) {
+          const rows = m[i], cols = m.map((row) => row[i]);
+          for (let j = 0; j + 7 <= size; j++) {
+            for (const line of [rows, cols]) {
+              if (check(line, j)) {
+                const before = line.slice(Math.max(0, j - 4), j);
+                const after = line.slice(j + 7, j + 11);
+                if (before.length === 4 && before.every((v) => v === 0)) score += 40;
+                if (after.length === 4 && after.every((v) => v === 0)) score += 40;
+              }
+            }
+          }
+        }
+        // 검정 비율
+        let dark = 0;
+        for (const row of m) for (const v of row) dark += v;
+        score += Math.floor(Math.abs((dark * 100) / (size * size) - 50) / 5) * 10;
+        return score;
+      };
+
+      let best = null, bestMask = 0, bestScore = Infinity;
+      for (let mask = 0; mask < 8; mask++) {
+        const m = grid.map((row) => row.slice());
+        for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
+          if (!used[r][c] && maskFns[mask](r, c)) m[r][c] ^= 1;
+        }
+        // 형식 정보 넣기
+        const fmt = QR_FORMAT[mask];
+        for (let i = 0; i < 15; i++) {
+          const bit = (fmt >> i) & 1;
+          // 왼쪽 위 한 벌
+          if (i < 6) m[i][8] = bit;
+          else if (i === 6) m[7][8] = bit;
+          else if (i === 7) m[8][8] = bit;
+          else if (i === 8) m[8][7] = bit;
+          else m[8][14 - i] = bit;
+          // 오른쪽 아래 한 벌
+          if (i < 8) m[8][size - 1 - i] = bit;
+          else m[size - 15 + i][8] = bit;
+        }
+        m[size - 8][8] = 1;
+        if (version >= 7) {
+          const vi = QR_VERSION[version - 7];
+          for (let i = 0; i < 18; i++) {
+            const bit = (vi >> i) & 1;
+            const r = Math.floor(i / 3), c = i % 3;
+            m[size - 11 + c][r] = bit;
+            m[r][size - 11 + c] = bit;
+          }
+        }
+        const score = penalty(m);
+        if (score < bestScore) { bestScore = score; best = m; bestMask = mask; }
+      }
+      return best;
+    }
+
+    // QR을 SVG 글자로
+    function qrSvg(text, px = 120) {
+      const m = qrMatrix(text);
+      const size = m.length;
+      const quiet = 4;
+      const total = size + quiet * 2;
+      let path = '';
+      for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
+        if (m[r][c]) path += `M${c + quiet} ${r + quiet}h1v1h-1z`;
+      }
+      return `<svg class="qrimg" width="${px}" height="${px}" viewBox="0 0 ${total} ${total}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" role="img" aria-label="QR 부호">`
+        + `<rect width="${total}" height="${total}" fill="#fff"/><path d="${path}" fill="#111"/></svg>`;
+    }
+
+    /* ════════ 실 QR 코드 (→ src/pages/qr.js) ════════ */
+    const roomKeyOf = (r) => [r.building, r.floor || '', r.name].join('|');
+    const newRoomCode = () => Array.from(crypto.getRandomValues(new Uint8Array(5)))
+      .map((b) => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join('');
+
+    // 실마다 짧은 코드를 하나씩 붙여 둔다 (없으면 만들어 저장)
+    function ensureRoomCodes() {
+      const sp = spaces();
+      if (!sp.rooms.length) return sp;
+      const seen = new Set(sp.rooms.map((r) => r.code).filter(Boolean));
+      let changed = false;
+      const rooms = sp.rooms.map((r) => {
+        if (r.code) return r;
+        let code = newRoomCode();
+        while (seen.has(code)) code = newRoomCode();
+        seen.add(code); changed = true;
+        return { ...r, code };
+      });
+      if (changed) commit({ ...state, school: { ...school(), spaces: { ...sp, rooms } } });
+      return { ...sp, rooms };
+    }
+
+    const joinCode = () => me?.school?.join_code || '';
+    const roomLink = (code) => `${location.origin}${location.pathname}#/r?c=${encodeURIComponent(joinCode())}&k=${code}`;
+
+    /* ── 라벨 인쇄 화면 ── */
+    function openQrLabels() {
+      const sp = ensureRoomCodes();
+      const rooms = sp.rooms.slice();
+      if (!rooms.length) { flash('학교 공간 설정에서 실을 먼저 담아 주세요', 'warn'); return; }
+      if (!joinCode()) { flash('학교 코드가 없어요. 로그인 방식에서만 쓸 수 있어요', 'warn'); return; }
+
+      const picked = new Set(rooms.map((r) => roomKeyOf(r)));
+
+      const back = document.createElement('div');
+      back.className = 'signback';
+      back.innerHTML = '<div class="signbox qrbox" role="dialog" aria-modal="true" aria-labelledby="qr-title"></div>';
+      document.body.append(back);
+      const box = back.querySelector('.qrbox');
+      const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      back.addEventListener('click', (e) => { if (e.target === back) close(); });
+
+      const byBuilding = () => {
+        const map = new Map();
+        for (const r of rooms) {
+          const g = map.get(r.building) || [];
+          g.push(r); map.set(r.building, g);
+        }
+        return [...map.entries()];
+      };
+
+      const draw = () => {
+        box.innerHTML = `
+          <p class="signbox__title" id="qr-title">실 QR 라벨 만들기</p>
+          <p class="signbox__desc">고른 실만큼 라벨이 나와요. 인쇄해서 잘라 문이나 수납장에 붙이면, 폰 카메라로 찍는 것만으로 그 실의 물품 목록이 열려요.</p>
+
+          <div class="qrpick">
+            ${byBuilding().map(([b, list]) => `
+              <div class="qrpick__grp">
+                <button class="mini mini--quiet" type="button" data-qrb="${esc(b)}">${esc(b)} 모두</button>
+                <div class="qrpick__rooms">
+                  ${list.map((r) => {
+                    const key = roomKeyOf(r);
+                    return `<button class="pickchip ${picked.has(key) ? 'is-on' : ''}" type="button" data-qrr="${esc(key)}">${esc(r.name)}${r.floor ? `<small>${esc(r.floor)}</small>` : ''}</button>`;
+                  }).join('')}
+                </div>
+              </div>`).join('')}
+          </div>
+
+          <div class="rankbox__acts">
+            <button class="rankbox__btn rankbox__btn--quiet" type="button" id="qr-close">닫기</button>
+            <button class="rankbox__btn rankbox__btn--go" type="button" id="qr-print">${n(picked.size)}장 인쇄하기</button>
+          </div>`;
+      };
+      draw();
+
+      box.addEventListener('click', (e) => {
+        if (e.target.closest('#qr-close')) { close(); return; }
+        const rb = e.target.closest('[data-qrb]');
+        if (rb) {
+          const list = rooms.filter((r) => r.building === rb.dataset.qrb).map(roomKeyOf);
+          const allOn = list.every((k) => picked.has(k));
+          list.forEach((k) => (allOn ? picked.delete(k) : picked.add(k)));
+          draw();
+          return;
+        }
+        const rr = e.target.closest('[data-qrr]');
+        if (rr) {
+          const k = rr.dataset.qrr;
+          picked.has(k) ? picked.delete(k) : picked.add(k);
+          draw();
+          return;
+        }
+        if (!e.target.closest('#qr-print')) return;
+        const list = rooms.filter((r) => picked.has(roomKeyOf(r)));
+        if (!list.length) { flash('라벨로 만들 실을 골라 주세요', 'warn'); return; }
+        printLabels(list);
+        close();
+      });
+    }
+
+    function printLabels(rooms) {
+      let area = document.getElementById('printarea');
+      if (!area) {
+        area = document.createElement('div');
+        area.id = 'printarea';
+        document.body.append(area);
+      }
+      area.innerHTML = `
+        <div class="labels">
+          ${rooms.map((r) => `
+            <div class="label">
+              <div class="label__qr">${qrSvg(roomLink(r.code), 150)}</div>
+              <div class="label__txt">
+                <p class="label__where">${esc([r.building, r.floor].filter(Boolean).join(' · '))}</p>
+                <p class="label__room">${esc(r.name)}</p>
+                <p class="label__how">여기에 있는 물품 보기</p>
+                <p class="label__school">${esc(school().name)}</p>
+              </div>
+            </div>`).join('')}
+        </div>`;
+      document.body.classList.add('is-printing');
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        window.print();
+        document.body.classList.remove('is-printing');
+      }));
+    }
+
+    /* ── 실 하나의 QR 보기 ── */
+    function openRoomQr(building, floor, roomName) {
+      const sp = spaces();
+      let entry = sp.rooms.find((r) => r.building === building && r.name === roomName && (!floor || !r.floor || r.floor === floor));
+      if (!entry) { flash('학교 공간 설정에 없는 실이에요', 'warn'); return; }
+
+      // 코드가 없으면 관리자가 한 번 만들어 주어야 한다
+      if (!entry.code) {
+        if (!isAdmin()) { flash('관리 담당 선생님이 QR을 한 번 만들어야 해요', 'warn'); return; }
+        entry = ensureRoomCodes().rooms.find((r) => r.building === building && r.name === roomName);
+        if (!entry?.code) return;
+      }
+      if (!joinCode()) { flash('로그인 방식에서만 쓸 수 있어요', 'warn'); return; }
+
+      const link = roomLink(entry.code);
+      const back = document.createElement('div');
+      back.className = 'signback';
+      back.innerHTML = `
+        <div class="signbox qrone" role="dialog" aria-modal="true" aria-labelledby="qr1-title">
+          <p class="signbox__title" id="qr1-title">${esc(roomName)} QR</p>
+          <p class="signbox__desc">문이나 수납장에 붙여 두면, 폰 카메라로 찍는 것만으로 이 곳의 물품 목록이 열려요.</p>
+          <div class="qrone__box">${qrSvg(link, 220)}</div>
+          <p class="qrone__where">${esc([building, floor].filter(Boolean).join(' · '))}</p>
+          <div class="rankbox__acts">
+            <button class="rankbox__btn rankbox__btn--quiet" type="button" id="qr1-close">닫기</button>
+            <button class="rankbox__btn rankbox__btn--go" type="button" id="qr1-print">${icon(ICONS.print)}라벨 인쇄</button>
+          </div>
+          <button class="wiz__skip" type="button" id="qr1-copy">링크 복사하기</button>
+        </div>`;
+      document.body.append(back);
+      const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      back.addEventListener('click', (e) => { if (e.target === back) close(); });
+      back.querySelector('#qr1-close').addEventListener('click', close);
+      back.querySelector('#qr1-print').addEventListener('click', () => { printLabels([entry]); close(); });
+      back.querySelector('#qr1-copy').addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(link); flash('링크를 복사했어요'); }
+        catch { prompt('이 주소를 복사해 주세요', link); }
+      });
+    }
+
+    /* ── 찍어서 들어온 사람이 보는 화면 (로그인 없이) ── */
+    async function mountRoom(root, code, key) {
+      const shell = (inner) => `
+        <div class="give">
+          <div class="give__brand">
+            <span class="gate__mark">${icon(ICONS.place)}</span>
+            <span class="gate__name">학교 물품 어디 있지?</span>
+          </div>
+          <div class="give__card">${inner}</div>
+        </div>`;
+
+      if (!sb || !code || !key) {
+        root.innerHTML = shell('<h1 class="gate__title">열 수 없는 라벨이에요</h1><p class="gate__desc">QR을 다시 찍어 주세요.</p>');
+        return;
+      }
+      root.innerHTML = shell('<p class="gate__desc">불러오는 중이에요…</p>');
+
+      const { data, error } = await sb.rpc('room_info', { school_code: code, room_code: key });
+      if (error || !data || !data.found) {
+        root.innerHTML = shell('<h1 class="gate__title">찾을 수 없는 라벨이에요</h1><p class="gate__desc">학교 공간 설정이 바뀌었을 수 있어요. 담당 선생님께 새 라벨을 부탁해 주세요.</p>');
+        return;
+      }
+
+      const items = data.items || [];
+      const total = items.reduce((a, i) => a + (Number(i.qty) || 0), 0);
+      root.innerHTML = shell(`
+        <p class="give__school">${esc(data.school || '')}</p>
+        <h1 class="gate__title">${esc(data.room || '')}</h1>
+        <p class="gate__desc">${esc([data.building, data.floor].filter(Boolean).join(' · '))}${items.length ? ` · 물품 ${n(items.length)}가지 · 모두 ${n(total)}개` : ''}</p>
+
+        ${items.length ? `
+          <ul class="qritems">
+            ${items.map((i) => `
+              <li class="qritem">
+                <div class="qritem__main">
+                  <p class="qritem__name">${esc(i.name)}</p>
+                  ${[i.storage, i.shelf].filter(Boolean).length ? `<p class="qritem__where">${esc([i.storage, i.shelf].filter(Boolean).join(' › '))}</p>` : ''}
+                  ${i.memo ? `<p class="qritem__memo">${esc(i.memo)}</p>` : ''}
+                </div>
+                <span class="qritem__qty num">${n(i.qty)}개</span>
+              </li>`).join('')}
+          </ul>`
+        : '<p class="side-empty">아직 이 곳에 등록된 물품이 없어요.</p>'}
+
+        <p class="wiz__hint">물품을 빌리거나 고치려면 로그인해 주세요.</p>
+        <div class="gate__acts"><a class="bigbtn bigbtn--ghost" href="#/">앱 열기</a></div>`);
     }
 
     /* ════════ 물품 모으기 — 링크로 받기 (→ src/pages/give.js) ════════ */
@@ -7978,7 +8512,10 @@
               ? `건물 ${n(spaces().buildings.length)}곳 · 실 ${n(spaces().rooms.length)}곳이 설정돼 있어요`
               : '건물과 층, 실을 미리 정해 두면 등록할 때 고르기만 하면 돼요'}</p>
           </div>
-          <button class="btn btn--solid" type="button" data-action="spaces">${icon(ICONS.spaces)}${hasSpaces() ? '다시 설정' : '설정 시작'}</button>
+          <div class="setupcard__btns">
+            ${hasSpaces() && online() ? `<button class="btn btn--ghost" type="button" id="qr-labels">${icon(ICONS.qr)}실 QR 라벨</button>` : ''}
+            <button class="btn btn--solid" type="button" data-action="spaces">${icon(ICONS.spaces)}${hasSpaces() ? '다시 설정' : '설정 시작'}</button>
+          </div>
         </section>
 
         <section class="card mgrsum" aria-label="한눈에 보기">
@@ -8523,6 +9060,7 @@
       };
       mountCollects(view, redrawColl);
       mountHoAll(view);
+      view.querySelector('#qr-labels')?.addEventListener('click', openQrLabels);
 
       // 새로 고침으로 다시 그렸으면 카드를 열어 둔다
       if (keepCollOpen) {
@@ -9046,6 +9584,23 @@
     function render(focus = false) {
       const app = document.getElementById('app');
       const gateRoot = document.getElementById('gate');
+
+      // 실 QR로 들어오면 로그인 없이 그 실의 물품만 보여 준다
+      if (location.hash.startsWith('#/r?') || location.hash === '#/r') {
+        app.hidden = true;
+        gateRoot.hidden = false;
+        gateRoot.className = 'gate';
+        const q = new URLSearchParams(location.hash.split('?')[1] || '');
+        const mark = `${q.get('c') || ''}|${q.get('k') || ''}`;
+        document.title = '물품 보기 · 학교 물품 어디 있지?';
+        if (gateRoot.dataset.room !== mark) {
+          gateRoot.dataset.room = mark;
+          const fresh = gateRoot.cloneNode(false);
+          gateRoot.replaceWith(fresh);
+          mountRoom(fresh, q.get('c'), q.get('k'));
+        }
+        return;
+      }
 
       // 물품 모으기 링크는 로그인 없이 연다
       if (location.hash.startsWith('#/give')) {
