@@ -1825,12 +1825,21 @@
     }
 
     /* ───────── 인수인계서 단계 ───────── */
-    .hwrap { grid-column: 1 / -1; max-width: 760px; }
-    .hwrap__eyebrow { font-size: 13px; font-weight: 800; color: var(--board); margin-top: 20px; }
-    .hwrap__title { font-size: 26px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.3; margin-top: 6px; }
-    .hwrap__desc { font-size: 15px; color: var(--ink-2); line-height: 1.6; margin: 8px 0 20px; }
-    .hwrap__acts { display: flex; gap: 10px; margin-top: 24px; }
-    .hwrap__acts .bigbtn { flex: 1; height: 56px; font-size: 17px; }
+    .hwrap { grid-column: span 7; min-width: 0; }
+    .hmine { grid-column: span 5; align-self: start; min-width: 0; }
+    .hwrap__eyebrow { font-size: 12px; font-weight: 800; color: var(--board); margin-top: 16px; }
+    .hwrap__title { font-size: 23px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.3; margin-top: 4px; }
+    .hwrap__desc { font-size: 14px; color: var(--ink-2); line-height: 1.55; margin: 6px 0 14px; }
+    .hwrap__acts { display: flex; gap: 10px; margin-top: 18px; }
+    .hwrap__acts .bigbtn { flex: 1; height: 52px; font-size: 16px; }
+    .hwrap .row { margin-bottom: 0; }
+    .hwrap .field { margin-top: 10px; }
+
+    .hmine__list { list-style: none; display: grid; gap: 5px; }
+    .hmine__row { display: flex; align-items: center; gap: 6px; padding: 11px 13px; border-radius: 12px; background: var(--field); }
+    .hmine__main { flex: 1; min-width: 0; }
+    .hmine__when { font-size: 14px; font-weight: 700; }
+    .hmine__who { font-size: 13px; color: var(--ink-2); margin-top: 2px; overflow-wrap: anywhere; }
 
     .hsteps { list-style: none; display: flex; gap: 6px; }
     .hstep { flex: 1; }
@@ -1851,13 +1860,16 @@
     .hstep.is-now .hstep__no { background: var(--marker); color: var(--navy); }
 
     .hsum { display: grid; gap: 1px; background: var(--line); border-radius: 14px; overflow: hidden; }
-    .hsum__row { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; padding: 13px 16px; background: #fff; }
+    .hsum__row { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; padding: 11px 15px; background: #fff; }
     .hsum__row dt { font-size: 14px; font-weight: 600; color: var(--ink-3); }
     .hsum__row dd { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
 
     .hoyears { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
     .hoyears .dept__chip { display: inline-flex; align-items: center; gap: 6px; }
 
+    @media (max-width: 1100px) {
+      .hwrap, .hmine { grid-column: 1 / -1; }
+    }
     @media (max-width: 760px) {
       .hstep__label { display: none; }
       .hstep button { padding: 11px 4px; }
@@ -1872,7 +1884,7 @@
     .hpick__only { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; font-size: 14px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
     .hpick__only input { width: 18px; height: 18px; accent-color: var(--navy); }
     .hpick__only b { color: var(--ink); }
-    .hpick__list { display: grid; gap: 3px; margin-top: 10px; max-height: 480px; overflow: auto; }
+    .hpick__list { display: grid; gap: 3px; margin-top: 10px; max-height: 320px; overflow: auto; }
     .hpick .lrow { display: flex; align-items: center; gap: 12px; }
     .hpick .lrow__box { width: 22px; height: 22px; border-radius: 7px; flex: none; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px #c9cfdd; background: #fff; }
     .hpick .lrow__box.is-on { background: var(--navy); box-shadow: none; color: #fff; }
@@ -1880,12 +1892,12 @@
     .hpick .lrow.is-picked { background: #eef3ff; }
 
     .hsign__row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
-    .hsign__box { display: grid; gap: 8px; justify-items: start; padding: 14px 16px; border-radius: 14px; background: var(--field); }
+    .hsign__box { display: grid; gap: 6px; justify-items: start; padding: 12px 14px; border-radius: 14px; background: var(--field); }
     .hsign__who { font-size: 14px; font-weight: 700; color: var(--ink-2); }
     .hsign__box img { height: 46px; max-width: 100%; object-fit: contain; object-position: left; }
     .hsign__empty { font-size: 13px; color: var(--ink-3); height: 46px; display: flex; align-items: center; }
     .hout__btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-    .hout__btns .bigbtn { height: 56px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    .hout__btns .bigbtn { height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 
     /* 인쇄용 종이 */
     #printarea { display: none; }
@@ -6986,7 +6998,7 @@
 
           <label class="coll__whole">
             <input type="checkbox" id="c-whole" ${wholeDefault ? 'checked' : ''}>
-            <span><b>학교 전체에서 받기</b><small>받는 분이 자기 실을 목록에서 골라요${wholeDefault ? '' : ' (학교 공간 설정이 필요해요)'}</small></span>
+            <span><b>학교 전체 조사</b><small>학교 공간 설정하기를 먼저 하면 작성하는 분이 쉽게 입력할 수 있어요</small></span>
           </label>
 
           <div class="field" id="c-placebox" ${wholeDefault ? 'hidden' : ''}>
@@ -7262,13 +7274,42 @@
 
     let hoStep = 1;   // 1 문서 정보 · 2 비품 고르기 · 3 서명 · 4 만들기
 
-    const HO_STEPS = ['문서 정보', '비품 고르기', '서명', '만들기'];
+    const HO_STEPS = ['문서 정보', '비품 고르기', '서명', '인쇄 및 저장'];
 
     function hoStepDone(n2) {
       if (n2 === 1) return Boolean(doc.fromName.trim() && doc.toName.trim());
       if (n2 === 2) return doc.picked.size > 0;
       if (n2 === 3) return Boolean(doc.signFrom && doc.signTo);
       return false;
+    }
+
+    // 내가 인계했거나 인수한 문서만
+    function myDocs() {
+      const me2 = [writerName(), school().teacher].filter(Boolean).map((v) => v.trim());
+      return handovers().filter((h) => h.doneAt && me2.some((v) => v === h.fromName || v === h.toName))
+        .sort((a, b) => (b.docDate || b.doneAt).localeCompare(a.docDate || a.doneAt));
+    }
+
+    function myDocsHTML() {
+      const list = myDocs();
+      return `
+        <section class="card hmine" aria-labelledby="hmine-title">
+          <div class="card__head">
+            <h2 class="card__title" id="hmine-title">내 인수인계서</h2>
+            <span class="card__meta">${list.length ? `${n(list.length)}건` : ''}</span>
+          </div>
+          ${list.length ? `<ul class="hmine__list">${list.map((h) => `
+            <li class="hmine__row">
+              <div class="hmine__main">
+                <p class="hmine__when">${esc(dateShort((h.docDate || h.doneAt).slice(0, 10)))}${h.reason ? ` · ${esc(h.reason)}` : ''}</p>
+                <p class="hmine__who">${esc(h.fromName)} → ${esc(h.toName)} · 비품 ${n((h.snapshot || []).length)}가지</p>
+              </div>
+              <button class="mini mini--go" type="button" data-hprint="${esc(h.id)}">인쇄</button>
+              <button class="mini mini--quiet" type="button" data-hword="${esc(h.id)}">워드</button>
+            </li>`).join('')}</ul>`
+          : `<p class="side-empty">아직 없어요. 위에서 인수인계서를 만들면 여기에 모여요.</p>`}
+          <p class="wiz__hint">내가 넘겼거나 넘겨받은 문서만 보여요. 학교 전체 기록은 관리 담당 선생님 화면에 있어요.</p>
+        </section>`;
     }
 
     function handoverView() {
@@ -7357,7 +7398,8 @@
             <div class="hwrap__acts">
               <button class="bigbtn bigbtn--navy" type="button" id="h-next">다음</button>
             </div>
-          </section>`;
+          </section>
+          ${myDocsHTML()}`;
       }
 
       /* 2. 비품 고르기 */
@@ -7413,7 +7455,8 @@
               <button class="bigbtn bigbtn--ghost" type="button" id="h-prev">이전</button>
               <button class="bigbtn bigbtn--navy" type="button" id="h-next">다음</button>
             </div>
-          </section>`;
+          </section>
+          ${myDocsHTML()}`;
       }
 
       /* 3. 서명 */
@@ -7441,12 +7484,13 @@
             <p class="field__error" id="h-err"></p>
             <div class="hwrap__acts">
               <button class="bigbtn bigbtn--ghost" type="button" id="h-prev">이전</button>
-              <button class="bigbtn bigbtn--navy" type="button" id="h-next">다음</button>
+              <button class="bigbtn bigbtn--navy" type="button" id="h-next">완료</button>
             </div>
-          </section>`;
+          </section>
+          ${myDocsHTML()}`;
       }
 
-      /* 4. 만들기 */
+      /* 4. 인쇄 및 저장 */
       const rows = state.items.filter((it) => doc.picked.has(it.id)).map(docRow);
       const total = rows.reduce((a, r) => a + r.qty, 0);
       return `${header}
@@ -7472,7 +7516,8 @@
           <div class="hwrap__acts">
             <button class="bigbtn bigbtn--ghost" type="button" id="h-prev">이전</button>
           </div>
-        </section>`;
+        </section>
+        ${myDocsHTML()}`;
     }
 
     /* ── Word 파일(.docx) 만들기 ── */
@@ -7892,6 +7937,11 @@ ${h.signTo ? '<Relationship Id="rId11" Type="http://schemas.openxmlformats.org/o
           });
           return;
         }
+
+        const mp = e.target.closest('[data-hprint]');
+        if (mp) { printDoc(handovers().find((x) => x.id === mp.dataset.hprint)); return; }
+        const mw = e.target.closest('[data-hword]');
+        if (mw) { downloadDocx(handovers().find((x) => x.id === mw.dataset.hword)); return; }
 
         const pr = e.target.closest('#h-print');
         const fl = e.target.closest('#h-word');
