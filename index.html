@@ -1824,6 +1824,47 @@
       .rail__item:hover .rail__label { transform: none; }
     }
 
+    /* ───────── 인수인계서 단계 ───────── */
+    .hwrap { grid-column: 1 / -1; max-width: 760px; }
+    .hwrap__eyebrow { font-size: 13px; font-weight: 800; color: var(--board); margin-top: 20px; }
+    .hwrap__title { font-size: 26px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.3; margin-top: 6px; }
+    .hwrap__desc { font-size: 15px; color: var(--ink-2); line-height: 1.6; margin: 8px 0 20px; }
+    .hwrap__acts { display: flex; gap: 10px; margin-top: 24px; }
+    .hwrap__acts .bigbtn { flex: 1; height: 56px; font-size: 17px; }
+
+    .hsteps { list-style: none; display: flex; gap: 6px; }
+    .hstep { flex: 1; }
+    .hstep button {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 10px 6px; border-radius: 11px; background: var(--field);
+      font-size: 13px; font-weight: 700; color: var(--ink-3);
+    }
+    .hstep button[disabled] { opacity: .5; cursor: default; }
+    .hstep__no {
+      width: 20px; height: 20px; border-radius: 50%; flex: none;
+      display: grid; place-items: center; background: #d9dee9; color: #fff; font-size: 12px; font-weight: 800;
+    }
+    .hstep__no .icon { width: 12px; height: 12px; stroke-width: 3.2; }
+    .hstep.is-done button { background: #e8f2ed; color: var(--board); }
+    .hstep.is-done .hstep__no { background: var(--board); }
+    .hstep.is-now button { background: var(--navy); color: #fff; }
+    .hstep.is-now .hstep__no { background: var(--marker); color: var(--navy); }
+
+    .hsum { display: grid; gap: 1px; background: var(--line); border-radius: 14px; overflow: hidden; }
+    .hsum__row { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; padding: 13px 16px; background: #fff; }
+    .hsum__row dt { font-size: 14px; font-weight: 600; color: var(--ink-3); }
+    .hsum__row dd { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+
+    .hoyears { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
+    .hoyears .dept__chip { display: inline-flex; align-items: center; gap: 6px; }
+
+    @media (max-width: 760px) {
+      .hstep__label { display: none; }
+      .hstep button { padding: 11px 4px; }
+      .hwrap__acts { flex-direction: column-reverse; }
+      .hsum__row { grid-template-columns: 90px minmax(0, 1fr); }
+    }
+
     /* ───────── 인수인계서 ───────── */
     .hdoc, .hpick, .hsign, .hout, .hpast { grid-column: 1 / -1; }
     .hdoc { max-width: 760px; }
@@ -5913,17 +5954,24 @@
       const page = pages[wizAt];
       const pct = Math.round(((wizAt + 1) / pages.length) * 100);
 
-      root.innerHTML = `
-        <div class="wizback">
-          <div class="wizbox" role="dialog" aria-modal="true" aria-labelledby="wiz-title">
-            <div class="wizbar">
-              <span class="wizbar__step num">${wizAt + 1} / ${pages.length}</span>
-              <div class="wizbar__track"><span class="wizbar__fill" style="width:${pct}%"></span></div>
-              <button class="wizbar__x" type="button" id="wiz-close" aria-label="닫기">${icon(ICONS.close)}</button>
+      // 창 틀은 한 번만 만들고, 다음 단계부터는 안쪽만 바꾼다.
+      // 매번 다시 만들면 등장 효과가 계속 재생돼 깜빡여 보인다.
+      if (!root.querySelector('.wizback')) {
+        root.innerHTML = `
+          <div class="wizback">
+            <div class="wizbox" role="dialog" aria-modal="true" aria-labelledby="wiz-title">
+              <div class="wizbar">
+                <span class="wizbar__step num"></span>
+                <div class="wizbar__track"><span class="wizbar__fill"></span></div>
+                <button class="wizbar__x" type="button" id="wiz-close" aria-label="닫기">${icon(ICONS.close)}</button>
+              </div>
+              <div class="wizbody" id="wiz-body"></div>
             </div>
-            <div class="wizbody" id="wiz-body">${wizPageHTML(page)}</div>
-          </div>
-        </div>`;
+          </div>`;
+      }
+      root.querySelector('.wizbar__step').textContent = `${wizAt + 1} / ${pages.length}`;
+      root.querySelector('.wizbar__fill').style.width = `${pct}%`;
+      root.querySelector('#wiz-body').innerHTML = wizPageHTML(page);
       mountWiz(page, pages);
     }
 
@@ -6110,8 +6158,11 @@
         drawWiz();
       };
 
-      root.querySelector('#wiz-close').addEventListener('click', () => closeSpaces());
-      back.addEventListener('click', (e) => { if (e.target === back) closeSpaces(); });
+      if (!back.dataset.bound) {
+        back.dataset.bound = '1';
+        root.querySelector('#wiz-close').addEventListener('click', () => closeSpaces());
+        back.addEventListener('click', (e) => { if (e.target === back) closeSpaces(); });
+      }
       root.querySelector('#wiz-prev')?.addEventListener('click', () => go(wizAt - 1));
       root.querySelector('#wiz-next')?.addEventListener('click', () => go(wizAt + 1));
       root.querySelector('#wiz-skip')?.addEventListener('click', () => go(pages.length - 1));
@@ -6144,11 +6195,13 @@
       });
 
       /* 실 더하기 */
+      const nowPage = () => wizPages()[Math.min(wizAt, wizPages().length - 1)] || page;
       const addR = (name, alt = [], floor) => {
         const nm = name.trim();
         if (!nm) return;
-        const b = page.building || wiz.buildings[0]?.name || '';
-        const f = floor === undefined ? (page.floor || '') : floor;
+        const cur = nowPage();
+        const b = cur.building || wiz.buildings[0]?.name || '';
+        const f = floor === undefined ? (cur.floor || '') : floor;
         if (wiz.rooms.some((r) => r.building === b && r.name === nm && r.floor === f)) return;
         wiz.rooms = wiz.rooms.filter((r) => !(r.building === b && r.name === nm));
         wiz.rooms.push({ building: b, floor: f, name: nm, aliases: alt });
@@ -6236,7 +6289,9 @@
         });
       }
 
-      /* 칩 누르기 */
+      /* 칩 누르기 (한 번만 건다) */
+      if (!back.dataset.chips) {
+      back.dataset.chips = '1';
       back.addEventListener('click', (e) => {
         const b = e.target.closest('[data-bld]');
         if (b) {
@@ -6284,10 +6339,12 @@
         if (mv) { addR(mv.dataset.rmmove); return; }
         const del = e.target.closest('[data-rmdel]');
         if (del) {
-          wiz.rooms = wiz.rooms.filter((r) => !(r.building === page.building && r.floor === page.floor && r.name === del.dataset.rmdel));
+          const cur = nowPage();
+          wiz.rooms = wiz.rooms.filter((r) => !(r.building === cur.building && r.floor === cur.floor && r.name === del.dataset.rmdel));
           drawWiz();
         }
       });
+      }
     }
 
     let aiWhy = '';   // 서버가 알려 준 실패 이유
@@ -7203,165 +7260,451 @@
       };
     }
 
+    let hoStep = 1;   // 1 문서 정보 · 2 비품 고르기 · 3 서명 · 4 만들기
+
+    const HO_STEPS = ['문서 정보', '비품 고르기', '서명', '만들기'];
+
+    function hoStepDone(n2) {
+      if (n2 === 1) return Boolean(doc.fromName.trim() && doc.toName.trim());
+      if (n2 === 2) return doc.picked.size > 0;
+      if (n2 === 3) return Boolean(doc.signFrom && doc.signTo);
+      return false;
+    }
+
     function handoverView() {
       if (!doc) doc = blankDoc();
       const all = assetsOf(state.items);
-      const done = handovers().filter((h) => h.doneAt).sort((a, b) => b.doneAt.localeCompare(a.doneAt));
 
-      const q = doc.q.trim().toLowerCase();
-      const list = all.filter((it) => {
-        if (doc.onlyMine && (it.assetInfo?.manager || '') !== doc.fromName) return false;
-        if (!q) return true;
-        const a = it.assetInfo || {};
-        return [assetName(it), a.no, a.manager, a.dept, pathOf(it).join(' ')].filter(Boolean)
-          .some((v) => String(v).toLowerCase().includes(q));
-      }).sort((a, b) => assetName(a).localeCompare(assetName(b), 'ko'));
+      const bar = `
+        <ol class="hsteps">
+          ${HO_STEPS.map((label, i) => {
+            const n2 = i + 1;
+            const state2 = n2 === hoStep ? 'is-now' : (n2 < hoStep || hoStepDone(n2) ? 'is-done' : '');
+            return `<li class="hstep ${state2}">
+              <button type="button" data-step="${n2}" ${n2 > hoStep && !hoStepDone(n2 - 1) ? 'disabled' : ''}>
+                <span class="hstep__no">${n2 < hoStep || (n2 !== hoStep && hoStepDone(n2)) ? icon(ICONS.check) : n2}</span>
+                <span class="hstep__label">${esc(label)}</span>
+              </button>
+            </li>`;
+          }).join('')}
+        </ol>`;
 
-      const mine = all.filter((it) => (it.assetInfo?.manager || '') === doc.fromName).length;
-
-      return `
+      const header = `
         <header class="top">
           <div>
             <a class="back" href="#/">${icon(ICONS.back)}홈</a>
-            <h1 class="top__title" tabindex="-1">인수인계</h1>
+            <h1 class="top__title" tabindex="-1">인수인계서 쓰기</h1>
           </div>
           <div class="top__actions">
             <button class="btn btn--ghost" type="button" id="h-clear">새로 쓰기</button>
           </div>
-        </header>
+        </header>`;
 
-        <section class="card hdoc" aria-labelledby="h1-title">
-          <div class="card__head"><h2 class="card__title" id="h1-title">1. 문서 정보</h2></div>
-          <div class="row">
-            <div class="field">
-              <label class="field__label" for="h-from">인계자<span class="req" aria-hidden="true">*</span></label>
-              <input class="input" id="h-from" value="${esc(doc.fromName)}" placeholder="예: 김하늘" maxlength="20">
-            </div>
-            <div class="field">
-              <label class="field__label" for="h-frompos">직위</label>
-              <div class="selectbox">
-                <select class="input" id="h-frompos">${POSITIONS.map((v) => `<option ${v === doc.fromPosition ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>
-                ${icon(ICONS.caret, 'icon selectbox__caret')}
+      /* 1. 문서 정보 */
+      if (hoStep === 1) {
+        return `${header}
+          <section class="card hwrap">
+            ${bar}
+            <p class="hwrap__eyebrow">1 / 4</p>
+            <h2 class="hwrap__title">누가 누구에게 넘기나요?</h2>
+            <p class="hwrap__desc">인수인계서 맨 위에 그대로 들어가요.</p>
+
+            <div class="row">
+              <div class="field">
+                <label class="field__label" for="h-from">인계자<span class="req" aria-hidden="true">*</span></label>
+                <input class="input" id="h-from" value="${esc(doc.fromName)}" placeholder="예: 김하늘" maxlength="20">
+              </div>
+              <div class="field">
+                <label class="field__label" for="h-frompos">직위</label>
+                <div class="selectbox">
+                  <select class="input" id="h-frompos">${POSITIONS.map((v) => `<option ${v === doc.fromPosition ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>
+                  ${icon(ICONS.caret, 'icon selectbox__caret')}
+                </div>
               </div>
             </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <label class="field__label" for="h-to">인수자<span class="req" aria-hidden="true">*</span></label>
-              <input class="input" id="h-to" value="${esc(doc.toName)}" placeholder="예: 박서연" maxlength="20">
-            </div>
-            <div class="field">
-              <label class="field__label" for="h-topos">직위</label>
-              <div class="selectbox">
-                <select class="input" id="h-topos">${POSITIONS.map((v) => `<option ${v === doc.toPosition ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>
-                ${icon(ICONS.caret, 'icon selectbox__caret')}
+            <div class="row">
+              <div class="field">
+                <label class="field__label" for="h-to">인수자<span class="req" aria-hidden="true">*</span></label>
+                <input class="input" id="h-to" value="${esc(doc.toName)}" placeholder="예: 박서연" maxlength="20">
+              </div>
+              <div class="field">
+                <label class="field__label" for="h-topos">직위</label>
+                <div class="selectbox">
+                  <select class="input" id="h-topos">${POSITIONS.map((v) => `<option ${v === doc.toPosition ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>
+                  ${icon(ICONS.caret, 'icon selectbox__caret')}
+                </div>
               </div>
             </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <label class="field__label" for="h-date">인수인계 일자</label>
-              <input class="input" id="h-date" type="date" value="${esc(doc.date)}">
-            </div>
-            <div class="field">
-              <label class="field__label" for="h-reason">사유</label>
-              <div class="selectbox">
-                <select class="input" id="h-reason">${REASONS.map((v) => `<option ${v === doc.reason ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>
-                ${icon(ICONS.caret, 'icon selectbox__caret')}
+            <div class="row">
+              <div class="field">
+                <label class="field__label" for="h-date">인수인계 일자</label>
+                <input class="input" id="h-date" type="date" value="${esc(doc.date)}">
+              </div>
+              <div class="field">
+                <label class="field__label" for="h-reason">사유</label>
+                <div class="selectbox">
+                  <select class="input" id="h-reason">${REASONS.map((v) => `<option ${v === doc.reason ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>
+                  ${icon(ICONS.caret, 'icon selectbox__caret')}
+                </div>
               </div>
             </div>
-          </div>
-          <div class="field">
-            <label class="field__label" for="h-witness">입회자 <small>선택 · 보통 관리 담당 선생님이나 행정실장</small></label>
-            <input class="input" id="h-witness" value="${esc(doc.witness)}" placeholder="예: 이정우 행정실장" maxlength="30">
-          </div>
-        </section>
-
-        <section class="card hpick" aria-labelledby="h2-title">
-          <div class="card__head">
-            <h2 class="card__title" id="h2-title">2. 넘길 비품 고르기</h2>
-            <span class="card__meta num">${n(doc.picked.size)}가지 고름</span>
-          </div>
-
-          <div class="lfind">
-            ${icon(ICONS.find, 'icon lfind__mark')}
-            <input id="h-q" type="search" placeholder="비품명, 고유번호, 담당자로 찾기" value="${esc(doc.q)}" autocomplete="off">
-          </div>
-          <div class="hpick__tools">
-            <label class="hpick__only">
-              <input type="checkbox" id="h-mine" ${doc.onlyMine ? 'checked' : ''}>
-              <span>${esc(doc.fromName || '인계자')} 담당만 보기 <b class="num">${n(mine)}</b></span>
-            </label>
-            <button class="mini mini--quiet" type="button" id="h-all">보이는 ${n(list.length)}가지 모두</button>
-            <button class="mini mini--quiet" type="button" id="h-none" ${doc.picked.size ? '' : 'disabled'}>고른 것 풀기</button>
-          </div>
-
-          <div class="hpick__list">
-            ${list.length ? list.slice(0, 200).map((it) => {
-              const on = doc.picked.has(it.id);
-              return `
-                <button class="lrow ${on ? 'is-picked' : ''}" type="button" data-pick="${it.id}">
-                  <span class="lrow__box ${on ? 'is-on' : ''}" aria-hidden="true">${on ? icon(ICONS.check) : ''}</span>
-                  <span class="lrow__main">
-                    <span class="lrow__name">${esc(assetName(it))}${it.qty > 1 ? ` <span class="num">${n(it.qty)}개</span>` : ''}</span>
-                    <span class="lrow__sub">${esc([it.assetInfo?.no, pathOf(it).join(' › ')].filter(Boolean).join(' · ') || '고유번호 없음')}</span>
-                  </span>
-                  <span class="lrow__mgr ${it.assetInfo?.manager ? '' : 'is-none'}">${esc(it.assetInfo?.manager || '담당 없음')}</span>
-                </button>`;
-            }).join('') : '<div class="nohit"><strong>찾는 비품이 없어요</strong><span>비품 대장에 먼저 올려 주세요.</span></div>'}
-            ${list.length > 200 ? `<p class="imp__more num">그 밖에 ${n(list.length - 200)}가지 · 찾기로 좁혀 주세요</p>` : ''}
-          </div>
-        </section>
-
-        <section class="card hsign" aria-labelledby="h3-title">
-          <div class="card__head"><h2 class="card__title" id="h3-title">3. 서명</h2></div>
-          <div class="hsign__row">
-            <div class="hsign__box">
-              <p class="hsign__who">인계자 ${esc(doc.fromName || '')}</p>
-              ${doc.signFrom ? `<img src="${esc(doc.signFrom)}" alt="인계자 서명">` : '<span class="hsign__empty">아직 서명 전이에요</span>'}
-              <button class="mini mini--quiet" type="button" id="h-signfrom">${doc.signFrom ? '다시 서명' : '서명하기'}</button>
+            <div class="field">
+              <label class="field__label" for="h-witness">입회자 <small>선택 · 보통 관리 담당 선생님이나 행정실장</small></label>
+              <input class="input" id="h-witness" value="${esc(doc.witness)}" placeholder="예: 이정우 행정실장" maxlength="30">
             </div>
-            <div class="hsign__box">
-              <p class="hsign__who">인수자 ${esc(doc.toName || '')}</p>
-              ${doc.signTo ? `<img src="${esc(doc.signTo)}" alt="인수자 서명">` : '<span class="hsign__empty">아직 서명 전이에요</span>'}
-              <button class="mini mini--quiet" type="button" id="h-signto">${doc.signTo ? '다시 서명' : '서명하기'}</button>
-            </div>
-          </div>
-        </section>
 
-        <section class="card hout" aria-labelledby="h4-title">
-          <div class="card__head"><h2 class="card__title" id="h4-title">4. 인수인계서 만들기</h2></div>
-          <p class="sheet__desc">고른 비품과 서명이 담긴 문서를 만들어요. 만들면 기록으로도 남아요.</p>
+            <p class="field__error" id="h-err"></p>
+            <div class="hwrap__acts">
+              <button class="bigbtn bigbtn--navy" type="button" id="h-next">다음</button>
+            </div>
+          </section>`;
+      }
+
+      /* 2. 비품 고르기 */
+      if (hoStep === 2) {
+        const q = doc.q.trim().toLowerCase();
+        const list = all.filter((it) => {
+          if (doc.onlyMine && (it.assetInfo?.manager || '') !== doc.fromName) return false;
+          if (!q) return true;
+          const a = it.assetInfo || {};
+          return [assetName(it), a.no, a.manager, a.dept, pathOf(it).join(' ')].filter(Boolean)
+            .some((v) => String(v).toLowerCase().includes(q));
+        }).sort((a, b) => assetName(a).localeCompare(assetName(b), 'ko'));
+        const mine = all.filter((it) => (it.assetInfo?.manager || '') === doc.fromName).length;
+
+        return `${header}
+          <section class="card hwrap">
+            ${bar}
+            <p class="hwrap__eyebrow">2 / 4</p>
+            <h2 class="hwrap__title">어떤 비품을 넘기나요?</h2>
+            <p class="hwrap__desc">고른 비품만 문서에 들어가요. <b class="num">${n(doc.picked.size)}가지</b> 골랐어요.</p>
+
+            <div class="lfind">
+              ${icon(ICONS.find, 'icon lfind__mark')}
+              <input id="h-q" type="search" placeholder="비품명, 고유번호, 담당자로 찾기" value="${esc(doc.q)}" autocomplete="off">
+            </div>
+            <div class="hpick__tools">
+              <label class="hpick__only">
+                <input type="checkbox" id="h-mine" ${doc.onlyMine ? 'checked' : ''}>
+                <span>${esc(doc.fromName || '인계자')} 담당만 보기 <b class="num">${n(mine)}</b></span>
+              </label>
+              <button class="mini mini--quiet" type="button" id="h-all">보이는 ${n(list.length)}가지 모두</button>
+              <button class="mini mini--quiet" type="button" id="h-none" ${doc.picked.size ? '' : 'disabled'}>고른 것 풀기</button>
+            </div>
+
+            <div class="hpick__list">
+              ${list.length ? list.slice(0, 200).map((it) => {
+                const on = doc.picked.has(it.id);
+                return `
+                  <button class="lrow ${on ? 'is-picked' : ''}" type="button" data-pick="${it.id}">
+                    <span class="lrow__box ${on ? 'is-on' : ''}" aria-hidden="true">${on ? icon(ICONS.check) : ''}</span>
+                    <span class="lrow__main">
+                      <span class="lrow__name">${esc(assetName(it))}${it.qty > 1 ? ` <span class="num">${n(it.qty)}개</span>` : ''}</span>
+                      <span class="lrow__sub">${esc([it.assetInfo?.no, pathOf(it).join(' › ')].filter(Boolean).join(' · ') || '고유번호 없음')}</span>
+                    </span>
+                    <span class="lrow__mgr ${it.assetInfo?.manager ? '' : 'is-none'}">${esc(it.assetInfo?.manager || '담당 없음')}</span>
+                  </button>`;
+              }).join('') : '<div class="nohit"><strong>찾는 비품이 없어요</strong><span>비품 대장에 먼저 올려 주세요.</span></div>'}
+              ${list.length > 200 ? `<p class="imp__more num">그 밖에 ${n(list.length - 200)}가지 · 찾기로 좁혀 주세요</p>` : ''}
+            </div>
+
+            <p class="field__error" id="h-err"></p>
+            <div class="hwrap__acts">
+              <button class="bigbtn bigbtn--ghost" type="button" id="h-prev">이전</button>
+              <button class="bigbtn bigbtn--navy" type="button" id="h-next">다음</button>
+            </div>
+          </section>`;
+      }
+
+      /* 3. 서명 */
+      if (hoStep === 3) {
+        return `${header}
+          <section class="card hwrap">
+            ${bar}
+            <p class="hwrap__eyebrow">3 / 4</p>
+            <h2 class="hwrap__title">두 분이 서명해 주세요</h2>
+            <p class="hwrap__desc">비품 ${n(doc.picked.size)}가지를 ${esc(doc.fromName)} 님이 ${esc(doc.toName)} 님께 넘겨요.</p>
+
+            <div class="hsign__row">
+              <div class="hsign__box">
+                <p class="hsign__who">인계자 ${esc(doc.fromName)}</p>
+                ${doc.signFrom ? `<img src="${esc(doc.signFrom)}" alt="인계자 서명">` : '<span class="hsign__empty">아직 서명 전이에요</span>'}
+                <button class="mini ${doc.signFrom ? 'mini--quiet' : 'mini--go'}" type="button" id="h-signfrom">${doc.signFrom ? '다시 서명' : '서명하기'}</button>
+              </div>
+              <div class="hsign__box">
+                <p class="hsign__who">인수자 ${esc(doc.toName)}</p>
+                ${doc.signTo ? `<img src="${esc(doc.signTo)}" alt="인수자 서명">` : '<span class="hsign__empty">아직 서명 전이에요</span>'}
+                <button class="mini ${doc.signTo ? 'mini--quiet' : 'mini--go'}" type="button" id="h-signto">${doc.signTo ? '다시 서명' : '서명하기'}</button>
+              </div>
+            </div>
+
+            <p class="field__error" id="h-err"></p>
+            <div class="hwrap__acts">
+              <button class="bigbtn bigbtn--ghost" type="button" id="h-prev">이전</button>
+              <button class="bigbtn bigbtn--navy" type="button" id="h-next">다음</button>
+            </div>
+          </section>`;
+      }
+
+      /* 4. 만들기 */
+      const rows = state.items.filter((it) => doc.picked.has(it.id)).map(docRow);
+      const total = rows.reduce((a, r) => a + r.qty, 0);
+      return `${header}
+        <section class="card hwrap">
+          ${bar}
+          <p class="hwrap__eyebrow">4 / 4</p>
+          <h2 class="hwrap__title">확인하고 만들면 끝이에요</h2>
+          <p class="hwrap__desc">만들면 고른 비품의 담당이 ${esc(doc.toName)} 님으로 바뀌고, 관리 담당 화면에 기록으로 남아요.</p>
+
+          <dl class="hsum">
+            <div class="hsum__row"><dt>인계자</dt><dd>${esc(doc.fromName)} (${esc(doc.fromPosition)})</dd></div>
+            <div class="hsum__row"><dt>인수자</dt><dd>${esc(doc.toName)} (${esc(doc.toPosition)})</dd></div>
+            <div class="hsum__row"><dt>일자 · 사유</dt><dd>${esc(dateShort(doc.date))} · ${esc(doc.reason)}</dd></div>
+            ${doc.witness ? `<div class="hsum__row"><dt>입회자</dt><dd>${esc(doc.witness)}</dd></div>` : ''}
+            <div class="hsum__row"><dt>비품</dt><dd>${n(rows.length)}가지 · 모두 ${n(total)}개</dd></div>
+          </dl>
+
           <p class="field__error" id="h-err"></p>
           <div class="hout__btns">
             <button class="bigbtn bigbtn--navy" type="button" id="h-print">${icon(ICONS.print)}인쇄 · PDF로 저장</button>
-            <button class="bigbtn bigbtn--ghost" type="button" id="h-file">${icon(ICONS.download)}한글에서 열기</button>
+            <button class="bigbtn bigbtn--ghost" type="button" id="h-word">${icon(ICONS.download)}워드로 내려받기</button>
           </div>
-          <p class="wiz__hint">한글에서 열기를 누르면 파일이 받아져요. 한글에서 <b>파일 → 불러오기</b>로 연 뒤 hwp로 저장하시면 됩니다.</p>
-        </section>
+          <div class="hwrap__acts">
+            <button class="bigbtn bigbtn--ghost" type="button" id="h-prev">이전</button>
+          </div>
+        </section>`;
+    }
 
-        <section class="card hpast" aria-labelledby="h5-title">
-          <div class="card__head">
-            <h2 class="card__title" id="h5-title">지난 인수인계서</h2>
-            <span class="card__meta">${done.length ? `${n(done.length)}건` : ''}</span>
-          </div>
-          ${done.length ? `<ul class="hopast">${done.map((h) => `
+    /* ── Word 파일(.docx) 만들기 ── */
+    // 바깥 도구 없이 zip을 직접 묶는다. 압축은 하지 않고 그대로 담는다(STORE).
+    const CRC_TABLE = (() => {
+      const t = new Uint32Array(256);
+      for (let i = 0; i < 256; i++) {
+        let c = i;
+        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        t[i] = c >>> 0;
+      }
+      return t;
+    })();
+    function crc32(bytes) {
+      let c = 0xFFFFFFFF;
+      for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+      return (c ^ 0xFFFFFFFF) >>> 0;
+    }
+    const utf8 = (s) => new TextEncoder().encode(s);
+
+    function zipFile(files) {
+      const parts = [];
+      const dir = [];
+      let at = 0;
+      for (const f of files) {
+        const name = utf8(f.name);
+        const data = f.data;
+        const sum = crc32(data);
+        const head = new DataView(new ArrayBuffer(30));
+        head.setUint32(0, 0x04034b50, true); head.setUint16(4, 20, true); head.setUint16(6, 0x0800, true);
+        head.setUint16(8, 0, true); head.setUint16(10, 0, true); head.setUint16(12, 0, true);
+        head.setUint32(14, sum, true); head.setUint32(18, data.length, true); head.setUint32(22, data.length, true);
+        head.setUint16(26, name.length, true); head.setUint16(28, 0, true);
+        parts.push(new Uint8Array(head.buffer), name, data);
+
+        const cd = new DataView(new ArrayBuffer(46));
+        cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true);
+        cd.setUint16(8, 0x0800, true); cd.setUint16(10, 0, true);
+        cd.setUint32(16, sum, true); cd.setUint32(20, data.length, true); cd.setUint32(24, data.length, true);
+        cd.setUint16(28, name.length, true); cd.setUint32(42, at, true);
+        dir.push(new Uint8Array(cd.buffer), name);
+        at += 30 + name.length + data.length;
+      }
+      let dirSize = 0;
+      for (const d of dir) dirSize += d.length;
+      const end = new DataView(new ArrayBuffer(22));
+      end.setUint32(0, 0x06054b50, true);
+      end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+      end.setUint32(12, dirSize, true); end.setUint32(16, at, true);
+      const all = [...parts, ...dir, new Uint8Array(end.buffer)];
+      let total = 0;
+      for (const a of all) total += a.length;
+      const out = new Uint8Array(total);
+      let off = 0;
+      for (const a of all) { out.set(a, off); off += a.length; }
+      return out;
+    }
+
+    const b64ToBytes = (dataUrl) => {
+      const raw = atob(String(dataUrl || '').split(',')[1] || '');
+      const out = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+      return out;
+    };
+    const xml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
+
+    function docxFile(h) {
+      const rows = h.snapshot || [];
+      const total = rows.reduce((a, r) => a + (Number(r.qty) || 0), 0);
+      const d = (h.docDate || h.doneAt || today()).slice(0, 10);
+      const dateText = `${d.slice(0, 4)}년 ${Number(d.slice(5, 7))}월 ${Number(d.slice(8, 10))}일`;
+
+      const P = (text, opt = {}) => `<w:p><w:pPr>${opt.align ? `<w:jc w:val="${opt.align}"/>` : ''}${opt.after !== undefined ? `<w:spacing w:after="${opt.after}"/>` : ''}</w:pPr>`
+        + `<w:r><w:rPr>${opt.bold ? '<w:b/>' : ''}${opt.size ? `<w:sz w:val="${opt.size}"/><w:szCs w:val="${opt.size}"/>` : ''}${opt.spacing ? `<w:spacing w:val="${opt.spacing}"/>` : ''}</w:rPr>`
+        + `<w:t xml:space="preserve">${xml(text)}</w:t></w:r></w:p>`;
+
+      const TC = (text, opt = {}) => `<w:tc><w:tcPr><w:tcW w:w="${opt.w || 0}" w:type="dxa"/>`
+        + `${opt.shade ? '<w:shd w:val="clear" w:fill="F2F2F2"/>' : ''}`
+        + `<w:vAlign w:val="center"/>${opt.span ? `<w:gridSpan w:val="${opt.span}"/>` : ''}</w:tcPr>`
+        + `${opt.image || P(text, { bold: opt.bold, align: opt.align, size: 18 })}</w:tc>`;
+
+      const imgRun = (rid, w, hgt) => `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">`
+        + `<wp:extent cx="${w}" cy="${hgt}"/><wp:docPr id="${rid === 'rId10' ? 1 : 2}" name="sign"/>`
+        + `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">`
+        + `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name="sign"/><pic:cNvPicPr/></pic:nvPicPr>`
+        + `<pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>`
+        + `<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${w}" cy="${hgt}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>`
+        + `</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+
+      const TR = (cells) => `<w:tr>${cells}</w:tr>`;
+      const BORDERS = '<w:tblBorders><w:top w:val="single" w:sz="6" w:color="000000"/><w:left w:val="single" w:sz="6" w:color="000000"/>'
+        + '<w:bottom w:val="single" w:sz="6" w:color="000000"/><w:right w:val="single" w:sz="6" w:color="000000"/>'
+        + '<w:insideH w:val="single" w:sz="6" w:color="000000"/><w:insideV w:val="single" w:sz="6" w:color="000000"/></w:tblBorders>';
+      const TBL = (inner) => `<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/>${BORDERS}</w:tblPr>${inner}</w:tbl>`;
+
+      const info = TBL([
+        TR(TC('학교명', { shade: true, bold: true, align: 'center' }) + TC(school().name) + TC('인수인계 일자', { shade: true, bold: true, align: 'center' }) + TC(dateText)),
+        TR(TC('사유', { shade: true, bold: true, align: 'center' }) + TC(h.reason || '') + TC('인계 품목', { shade: true, bold: true, align: 'center' }) + TC(`${rows.length}가지 · 모두 ${total}개`)),
+        TR(TC('인계자', { shade: true, bold: true, align: 'center' }) + TC(`${h.fromName} (${h.fromPosition})`) + TC('인수자', { shade: true, bold: true, align: 'center' }) + TC(`${h.toName} (${h.toPosition})`)),
+      ].join(''));
+
+      const head = TR(['연번', '품명', '규격', '수량', '물품 고유번호', '보관 장소', '비고']
+        .map((t) => TC(t, { shade: true, bold: true, align: 'center' })).join(''));
+      const body = rows.map((r, i) => TR(
+        TC(String(i + 1), { align: 'center' }) + TC(r.name) + TC(r.spec || '') + TC(String(r.qty), { align: 'center' })
+        + TC(r.no || '') + TC(r.place || '') + TC(r.note || ''))).join('');
+      const sum = TR(TC('합계', { span: 3, align: 'center', bold: true }) + TC(String(total), { align: 'center', bold: true })
+        + TC('', { span: 3 }));
+      const list = TBL(head + body + sum);
+
+      const signRows = [
+        TR(TC('인계자', { shade: true, bold: true, align: 'center' }) + TC(`${h.fromPosition} ${h.fromName}`)
+          + TC('(서명)', { align: 'center', image: h.signFrom ? imgRun('rId10', 1200000, 400000) : null })),
+        TR(TC('인수자', { shade: true, bold: true, align: 'center' }) + TC(`${h.toPosition} ${h.toName}`)
+          + TC('(서명)', { align: 'center', image: h.signTo ? imgRun('rId11', 1200000, 400000) : null })),
+        h.witness ? TR(TC('입회자', { shade: true, bold: true, align: 'center' }) + TC(h.witness) + TC('(서명)', { align: 'center' })) : '',
+      ].join('');
+
+      const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+ xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+ xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>
+${P('비품 인수인계서', { align: 'center', bold: true, size: 44, spacing: 120, after: 320 })}
+${info}
+${P('', { after: 120 })}
+${P('위 비품을 아래와 같이 인계하고 인수하였음을 확인합니다.', { size: 22, after: 160 })}
+${list}
+${P('', { after: 200 })}
+${P('1. 인계자는 위 비품의 현황과 보관 장소를 사실대로 인계하였습니다.', { size: 20 })}
+${P('2. 인수자는 위 비품을 확인하고 인수하였으며, 이후 관리 책임을 집니다.', { size: 20 })}
+${P('3. 문서에 적히지 않은 비품은 이 인수인계의 대상이 아닙니다.', { size: 20, after: 400 })}
+${P(dateText, { align: 'center', size: 24, after: 320 })}
+${TBL(signRows)}
+${P('', { after: 240 })}
+${P(school().name, { align: 'center', bold: true, size: 30, spacing: 80 })}
+<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr>
+</w:body></w:document>`;
+
+      const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+${h.signFrom ? '<Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/sign1.png"/>' : ''}
+${h.signTo ? '<Relationship Id="rId11" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/sign2.png"/>' : ''}
+</Relationships>`;
+
+      const files = [
+        { name: '[Content_Types].xml', data: utf8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Default Extension="png" ContentType="image/png"/>
+<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`) },
+        { name: '_rels/.rels', data: utf8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`) },
+        { name: 'word/document.xml', data: utf8(doc) },
+        { name: 'word/_rels/document.xml.rels', data: utf8(rels) },
+      ];
+      if (h.signFrom) files.push({ name: 'word/media/sign1.png', data: b64ToBytes(h.signFrom) });
+      if (h.signTo) files.push({ name: 'word/media/sign2.png', data: b64ToBytes(h.signTo) });
+
+      return zipFile(files);
+    }
+
+    function downloadDocx(h) {
+      const bytes = docxFile(h);
+      const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `비품 인수인계서_${h.toName || ''}_${(h.docDate || today()).replaceAll('-', '')}.docx`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    /* ── 관리 담당 화면의 인수인계서 모음 (연도별) ── */
+    let hoYear = '';
+
+    function hoAllHTML() {
+      const done = handovers().filter((h) => h.doneAt);
+      if (!done.length) return '<p class="side-empty">아직 만든 인수인계서가 없어요. 인수인계 화면에서 만들면 여기에 모여요.</p>';
+
+      const yearOf = (h) => (h.docDate || h.doneAt || '').slice(0, 4);
+      const years = [...new Set(done.map(yearOf))].filter(Boolean).sort().reverse();
+      if (!years.includes(hoYear)) hoYear = years[0];
+      const list = done.filter((h) => yearOf(h) === hoYear)
+        .sort((a, b) => (b.docDate || b.doneAt).localeCompare(a.docDate || a.doneAt));
+
+      return `
+        <p class="sheet__desc">인수인계서는 개인 정보가 담겨 있어 관리 담당 선생님만 볼 수 있어요.</p>
+        <div class="hoyears">
+          ${years.map((y) => `<button class="dept__chip" type="button" data-hoyear="${esc(y)}" aria-pressed="${y === hoYear}">${esc(y)}년<b class="num">${n(done.filter((h) => yearOf(h) === y).length)}</b></button>`).join('')}
+        </div>
+        <ul class="hopast">
+          ${list.map((h) => `
             <li class="hopast__row">
               <div class="hopast__main">
-                <p class="hopast__when">${esc(dateShort((h.docDate || h.doneAt).slice(0, 10)))} · ${esc(h.reason || '')}</p>
+                <p class="hopast__when">${esc(dateShort((h.docDate || h.doneAt).slice(0, 10)))}${h.reason ? ` · ${esc(h.reason)}` : ''}</p>
                 <p class="hopast__who">${esc(h.fromName)} ${esc(h.fromPosition)} → ${esc(h.toName)} ${esc(h.toPosition)} · 비품 ${n((h.snapshot || []).length)}가지</p>
+                ${h.witness ? `<p class="hopast__sum">입회자 ${esc(h.witness)}</p>` : ''}
                 <div class="hopast__signs">
                   ${h.signFrom ? `<img src="${esc(h.signFrom)}" alt="인계자 서명">` : ''}
                   ${h.signTo ? `<img src="${esc(h.signTo)}" alt="인수자 서명">` : ''}
                 </div>
               </div>
-              <button class="mini mini--go" type="button" data-hprint="${esc(h.id)}">다시 인쇄</button>
-              <button class="mini mini--quiet" type="button" data-hfile="${esc(h.id)}">한글</button>
-              <button class="act act--del" type="button" data-hdel="${esc(h.id)}" aria-label="지우기">${icon(ICONS.trash)}</button>
-            </li>`).join('')}</ul>` : '<p class="side-empty">아직 만든 인수인계서가 없어요.</p>'}
-        </section>
+              <div class="crow__acts">
+                <button class="mini mini--go" type="button" data-hprint="${esc(h.id)}">인쇄</button>
+                <button class="mini mini--quiet" type="button" data-hword="${esc(h.id)}">워드</button>
+                <button class="act act--del" type="button" data-hdel="${esc(h.id)}" aria-label="지우기">${icon(ICONS.trash)}</button>
+              </div>
+            </li>`).join('')}
+        </ul>`;
+    }
 
-`;
+    function mountHoAll(view) {
+      const box = view.querySelector('#hoall-body');
+      if (!box) return;
+      box.addEventListener('click', (e) => {
+        const y = e.target.closest('[data-hoyear]');
+        if (y) { hoYear = y.dataset.hoyear; box.innerHTML = hoAllHTML(); return; }
+        const pr = e.target.closest('[data-hprint]');
+        if (pr) { printDoc(handovers().find((x) => x.id === pr.dataset.hprint)); return; }
+        const wd = e.target.closest('[data-hword]');
+        if (wd) { downloadDocx(handovers().find((x) => x.id === wd.dataset.hword)); return; }
+        const dl = e.target.closest('[data-hdel]');
+        if (dl) {
+          if (!confirm('이 인수인계서를 지울까요? 되돌릴 수 없어요.')) return;
+          commit({ ...state, handovers: handovers().filter((x) => x.id !== dl.dataset.hdel) });
+          box.innerHTML = hoAllHTML();
+        }
+      });
     }
 
     /* ── 인수인계서 문서 만들기 ── */
@@ -7460,21 +7803,6 @@
       }));
     }
 
-    // 한글에서 열 수 있는 문서 파일로 내려받기
-    function downloadDoc(h) {
-      const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8">
-<title>비품 인수인계서</title>
-<style>@page { size: A4; margin: 20mm; } body { margin: 0; }${PAPER_CSS}</style>
-</head><body>${docHTML(h)}</body></html>`;
-      const blob = new Blob(['\ufeff' + html], { type: 'text/html;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `비품 인수인계서_${h.toName || ''}_${(h.docDate || today()).replaceAll('-', '')}.html`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-    }
-
     function mountHandover(view) {
       const err = view.querySelector('#h-err');
       const redraw = () => { render(); };
@@ -7507,6 +7835,18 @@
       });
 
       view.addEventListener('click', async (e) => {
+        const jump = e.target.closest('[data-step]');
+        if (jump) { hoStep = Number(jump.dataset.step); render(); return; }
+        if (e.target.closest('#h-prev')) { hoStep = Math.max(1, hoStep - 1); render(); return; }
+        if (e.target.closest('#h-next')) {
+          if (hoStep === 1 && !hoStepDone(1)) { err.textContent = '인계자와 인수자 이름을 적어 주세요.'; return; }
+          if (hoStep === 2 && !hoStepDone(2)) { err.textContent = '넘길 비품을 한 가지 이상 골라 주세요.'; return; }
+          if (hoStep === 3 && !hoStepDone(3)) { err.textContent = '두 분 모두 서명해 주세요.'; return; }
+          hoStep = Math.min(4, hoStep + 1);
+          render();
+          return;
+        }
+
         const pick = e.target.closest('[data-pick]');
         if (pick) {
           const id = pick.dataset.pick;
@@ -7515,8 +7855,8 @@
           const box = pick.querySelector('.lrow__box');
           box.classList.toggle('is-on');
           box.innerHTML = doc.picked.has(id) ? icon(ICONS.check) : '';
-          const meta = view.querySelector('.hpick .card__meta');
-          if (meta) meta.textContent = `${n(doc.picked.size)}가지 고름`;
+          const desc = view.querySelector('.hwrap__desc .num');
+          if (desc) desc.textContent = `${n(doc.picked.size)}가지`;
           return;
         }
         if (e.target.closest('#h-all')) {
@@ -7535,6 +7875,7 @@
         if (e.target.closest('#h-clear')) {
           if (!confirm('지금 쓰던 내용을 지우고 새로 쓸까요?')) return;
           doc = blankDoc();
+          hoStep = 1;
           render();
           return;
         }
@@ -7544,7 +7885,7 @@
         if (sf || st2) {
           const who = sf ? doc.fromName : doc.toName;
           if (!who) { err.textContent = sf ? '인계자 이름을 먼저 적어 주세요.' : '인수자 이름을 먼저 적어 주세요.'; return; }
-          askSign(`${who} 님, 여기에 서명해 주세요`, `비품 ${n(doc.picked.size)}가지 인수인계서`, (sign) => {
+          askSign(`${who} 님, 여기에 서명해 주세요`, `비품 ${n(doc.picked.size)}가지를 넘기는 인수인계서`, (sign) => {
             if (sf) doc.signFrom = sign; else doc.signTo = sign;
             render();
             return null;
@@ -7552,20 +7893,8 @@
           return;
         }
 
-        const rp = e.target.closest('[data-hprint]');
-        if (rp) { printDoc(handovers().find((x) => x.id === rp.dataset.hprint)); return; }
-        const rf = e.target.closest('[data-hfile]');
-        if (rf) { downloadDoc(handovers().find((x) => x.id === rf.dataset.hfile)); return; }
-        const rd = e.target.closest('[data-hdel]');
-        if (rd) {
-          if (!confirm('이 인수인계서를 지울까요?')) return;
-          commit({ ...state, handovers: handovers().filter((x) => x.id !== rd.dataset.hdel) });
-          render();
-          return;
-        }
-
         const pr = e.target.closest('#h-print');
-        const fl = e.target.closest('#h-file');
+        const fl = e.target.closest('#h-word');
         if (!pr && !fl) return;
 
         if (!doc.fromName.trim() || !doc.toName.trim()) { err.textContent = '인계자와 인수자 이름을 적어 주세요.'; return; }
@@ -7594,9 +7923,9 @@
             : it)),
         });
 
-        if (pr) printDoc(made); else downloadDoc(made);
+        if (pr) printDoc(made); else downloadDocx(made);
         flash(`인수인계서를 만들었어요 · 비품 ${n(rows.length)}가지의 담당이 ${made.toName} 님으로 바뀌었어요`);
-        setTimeout(() => { doc = blankDoc(); render(); }, 400);
+        setTimeout(() => { doc = blankDoc(); hoStep = 1; render(); }, 500);
       });
     }
 
@@ -7784,6 +8113,15 @@
           </section>` : ''}
 
           <section class="card fold-card">
+            <button class="fold" type="button" data-fold="hoall" aria-expanded="false" aria-controls="hoall-body">
+              ${icon(ICONS.caret, 'icon fold__caret')}
+              <span>인수인계서 모음</span>
+              <span class="fold__count num">${handovers().filter((h) => h.doneAt).length ? `${n(handovers().filter((h) => h.doneAt).length)}건` : '없어요'}</span>
+            </button>
+            <div class="fold-body" id="hoall-body" hidden></div>
+          </section>
+
+          <section class="card fold-card">
             <button class="fold" type="button" data-fold="signs" aria-expanded="false" aria-controls="signs-body">
               ${icon(ICONS.caret, 'icon fold__caret')}
               <span>대여 서명</span>
@@ -7961,6 +8299,7 @@
         f.setAttribute('aria-expanded', String(open));
         f.closest('.fold-card').classList.toggle('is-open', open);
         if (open && f.dataset.fold === 'spot') drawSpots();
+        if (open && f.dataset.fold === 'hoall') view.querySelector('#hoall-body').innerHTML = hoAllHTML();
         if (open && f.dataset.fold === 'coll') {
           pullCollects().then(() => {
             const b = view.querySelector('#coll-body');
@@ -8257,6 +8596,7 @@
         if (b) b.innerHTML = collectsHTML();
       };
       mountCollects(view, redrawColl);
+      mountHoAll(view);
 
       // 새로 고침으로 다시 그렸으면 카드를 열어 둔다
       if (keepCollOpen) {
