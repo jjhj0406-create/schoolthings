@@ -1897,6 +1897,7 @@
     .hsign__box img { height: 46px; max-width: 100%; object-fit: contain; object-position: left; }
     .hsign__empty { font-size: 13px; color: var(--ink-3); height: 46px; display: flex; align-items: center; }
     .hout__btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .hout__btns--one { grid-template-columns: 1fr; }
     .hout__btns .bigbtn { height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 
     /* 인쇄용 종이 */
@@ -7283,10 +7284,10 @@
       return false;
     }
 
-    // 내가 인계했거나 인수한 문서만
+    // 내가 넘긴 문서만. 받은 것은 이름이 같은 분이 있을 수 있어 넣지 않는다.
     function myDocs() {
       const me2 = [writerName(), school().teacher].filter(Boolean).map((v) => v.trim());
-      return handovers().filter((h) => h.doneAt && me2.some((v) => v === h.fromName || v === h.toName))
+      return handovers().filter((h) => h.doneAt && me2.some((v) => v === h.fromName))
         .sort((a, b) => (b.docDate || b.doneAt).localeCompare(a.docDate || a.doneAt));
     }
 
@@ -7304,11 +7305,10 @@
                 <p class="hmine__when">${esc(dateShort((h.docDate || h.doneAt).slice(0, 10)))}${h.reason ? ` · ${esc(h.reason)}` : ''}</p>
                 <p class="hmine__who">${esc(h.fromName)} → ${esc(h.toName)} · 비품 ${n((h.snapshot || []).length)}가지</p>
               </div>
-              <button class="mini mini--go" type="button" data-hprint="${esc(h.id)}">인쇄</button>
-              <button class="mini mini--quiet" type="button" data-hword="${esc(h.id)}">워드</button>
+              <button class="mini mini--go" type="button" data-hprint="${esc(h.id)}">인쇄 · PDF</button>
             </li>`).join('')}</ul>`
           : `<p class="side-empty">아직 없어요. 위에서 인수인계서를 만들면 여기에 모여요.</p>`}
-          <p class="wiz__hint">내가 넘겼거나 넘겨받은 문서만 보여요. 학교 전체 기록은 관리 담당 선생님 화면에 있어요.</p>
+          <p class="wiz__hint">내가 넘긴 문서만 보여요. 학교 전체 기록은 관리 담당 선생님 화면에 있어요.</p>
         </section>`;
     }
 
@@ -7497,7 +7497,7 @@
         <section class="card hwrap">
           ${bar}
           <p class="hwrap__eyebrow">4 / 4</p>
-          <h2 class="hwrap__title">확인하고 만들면 끝이에요</h2>
+          <h2 class="hwrap__title">확인 후 인쇄 및 저장이 가능합니다.</h2>
           <p class="hwrap__desc">만들면 고른 비품의 담당이 ${esc(doc.toName)} 님으로 바뀌고, 관리 담당 화면에 기록으로 남아요.</p>
 
           <dl class="hsum">
@@ -7509,189 +7509,15 @@
           </dl>
 
           <p class="field__error" id="h-err"></p>
-          <div class="hout__btns">
+          <div class="hout__btns hout__btns--one">
             <button class="bigbtn bigbtn--navy" type="button" id="h-print">${icon(ICONS.print)}인쇄 · PDF로 저장</button>
-            <button class="bigbtn bigbtn--ghost" type="button" id="h-word">${icon(ICONS.download)}워드로 내려받기</button>
           </div>
+          <p class="wiz__hint">인쇄 창에서 <b>대상</b>을 “PDF로 저장”으로 고르면 파일로 남길 수 있어요.</p>
           <div class="hwrap__acts">
             <button class="bigbtn bigbtn--ghost" type="button" id="h-prev">이전</button>
           </div>
         </section>
         ${myDocsHTML()}`;
-    }
-
-    /* ── Word 파일(.docx) 만들기 ── */
-    // 바깥 도구 없이 zip을 직접 묶는다. 압축은 하지 않고 그대로 담는다(STORE).
-    const CRC_TABLE = (() => {
-      const t = new Uint32Array(256);
-      for (let i = 0; i < 256; i++) {
-        let c = i;
-        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-        t[i] = c >>> 0;
-      }
-      return t;
-    })();
-    function crc32(bytes) {
-      let c = 0xFFFFFFFF;
-      for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
-      return (c ^ 0xFFFFFFFF) >>> 0;
-    }
-    const utf8 = (s) => new TextEncoder().encode(s);
-
-    function zipFile(files) {
-      const parts = [];
-      const dir = [];
-      let at = 0;
-      for (const f of files) {
-        const name = utf8(f.name);
-        const data = f.data;
-        const sum = crc32(data);
-        const head = new DataView(new ArrayBuffer(30));
-        head.setUint32(0, 0x04034b50, true); head.setUint16(4, 20, true); head.setUint16(6, 0x0800, true);
-        head.setUint16(8, 0, true); head.setUint16(10, 0, true); head.setUint16(12, 0, true);
-        head.setUint32(14, sum, true); head.setUint32(18, data.length, true); head.setUint32(22, data.length, true);
-        head.setUint16(26, name.length, true); head.setUint16(28, 0, true);
-        parts.push(new Uint8Array(head.buffer), name, data);
-
-        const cd = new DataView(new ArrayBuffer(46));
-        cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true);
-        cd.setUint16(8, 0x0800, true); cd.setUint16(10, 0, true);
-        cd.setUint32(16, sum, true); cd.setUint32(20, data.length, true); cd.setUint32(24, data.length, true);
-        cd.setUint16(28, name.length, true); cd.setUint32(42, at, true);
-        dir.push(new Uint8Array(cd.buffer), name);
-        at += 30 + name.length + data.length;
-      }
-      let dirSize = 0;
-      for (const d of dir) dirSize += d.length;
-      const end = new DataView(new ArrayBuffer(22));
-      end.setUint32(0, 0x06054b50, true);
-      end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
-      end.setUint32(12, dirSize, true); end.setUint32(16, at, true);
-      const all = [...parts, ...dir, new Uint8Array(end.buffer)];
-      let total = 0;
-      for (const a of all) total += a.length;
-      const out = new Uint8Array(total);
-      let off = 0;
-      for (const a of all) { out.set(a, off); off += a.length; }
-      return out;
-    }
-
-    const b64ToBytes = (dataUrl) => {
-      const raw = atob(String(dataUrl || '').split(',')[1] || '');
-      const out = new Uint8Array(raw.length);
-      for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
-      return out;
-    };
-    const xml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
-
-    function docxFile(h) {
-      const rows = h.snapshot || [];
-      const total = rows.reduce((a, r) => a + (Number(r.qty) || 0), 0);
-      const d = (h.docDate || h.doneAt || today()).slice(0, 10);
-      const dateText = `${d.slice(0, 4)}년 ${Number(d.slice(5, 7))}월 ${Number(d.slice(8, 10))}일`;
-
-      const P = (text, opt = {}) => `<w:p><w:pPr>${opt.align ? `<w:jc w:val="${opt.align}"/>` : ''}${opt.after !== undefined ? `<w:spacing w:after="${opt.after}"/>` : ''}</w:pPr>`
-        + `<w:r><w:rPr>${opt.bold ? '<w:b/>' : ''}${opt.size ? `<w:sz w:val="${opt.size}"/><w:szCs w:val="${opt.size}"/>` : ''}${opt.spacing ? `<w:spacing w:val="${opt.spacing}"/>` : ''}</w:rPr>`
-        + `<w:t xml:space="preserve">${xml(text)}</w:t></w:r></w:p>`;
-
-      const TC = (text, opt = {}) => `<w:tc><w:tcPr><w:tcW w:w="${opt.w || 0}" w:type="dxa"/>`
-        + `${opt.shade ? '<w:shd w:val="clear" w:fill="F2F2F2"/>' : ''}`
-        + `<w:vAlign w:val="center"/>${opt.span ? `<w:gridSpan w:val="${opt.span}"/>` : ''}</w:tcPr>`
-        + `${opt.image || P(text, { bold: opt.bold, align: opt.align, size: 18 })}</w:tc>`;
-
-      const imgRun = (rid, w, hgt) => `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">`
-        + `<wp:extent cx="${w}" cy="${hgt}"/><wp:docPr id="${rid === 'rId10' ? 1 : 2}" name="sign"/>`
-        + `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">`
-        + `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name="sign"/><pic:cNvPicPr/></pic:nvPicPr>`
-        + `<pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>`
-        + `<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${w}" cy="${hgt}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>`
-        + `</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
-
-      const TR = (cells) => `<w:tr>${cells}</w:tr>`;
-      const BORDERS = '<w:tblBorders><w:top w:val="single" w:sz="6" w:color="000000"/><w:left w:val="single" w:sz="6" w:color="000000"/>'
-        + '<w:bottom w:val="single" w:sz="6" w:color="000000"/><w:right w:val="single" w:sz="6" w:color="000000"/>'
-        + '<w:insideH w:val="single" w:sz="6" w:color="000000"/><w:insideV w:val="single" w:sz="6" w:color="000000"/></w:tblBorders>';
-      const TBL = (inner) => `<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/>${BORDERS}</w:tblPr>${inner}</w:tbl>`;
-
-      const info = TBL([
-        TR(TC('학교명', { shade: true, bold: true, align: 'center' }) + TC(school().name) + TC('인수인계 일자', { shade: true, bold: true, align: 'center' }) + TC(dateText)),
-        TR(TC('사유', { shade: true, bold: true, align: 'center' }) + TC(h.reason || '') + TC('인계 품목', { shade: true, bold: true, align: 'center' }) + TC(`${rows.length}가지 · 모두 ${total}개`)),
-        TR(TC('인계자', { shade: true, bold: true, align: 'center' }) + TC(`${h.fromName} (${h.fromPosition})`) + TC('인수자', { shade: true, bold: true, align: 'center' }) + TC(`${h.toName} (${h.toPosition})`)),
-      ].join(''));
-
-      const head = TR(['연번', '품명', '규격', '수량', '물품 고유번호', '보관 장소', '비고']
-        .map((t) => TC(t, { shade: true, bold: true, align: 'center' })).join(''));
-      const body = rows.map((r, i) => TR(
-        TC(String(i + 1), { align: 'center' }) + TC(r.name) + TC(r.spec || '') + TC(String(r.qty), { align: 'center' })
-        + TC(r.no || '') + TC(r.place || '') + TC(r.note || ''))).join('');
-      const sum = TR(TC('합계', { span: 3, align: 'center', bold: true }) + TC(String(total), { align: 'center', bold: true })
-        + TC('', { span: 3 }));
-      const list = TBL(head + body + sum);
-
-      const signRows = [
-        TR(TC('인계자', { shade: true, bold: true, align: 'center' }) + TC(`${h.fromPosition} ${h.fromName}`)
-          + TC('(서명)', { align: 'center', image: h.signFrom ? imgRun('rId10', 1200000, 400000) : null })),
-        TR(TC('인수자', { shade: true, bold: true, align: 'center' }) + TC(`${h.toPosition} ${h.toName}`)
-          + TC('(서명)', { align: 'center', image: h.signTo ? imgRun('rId11', 1200000, 400000) : null })),
-        h.witness ? TR(TC('입회자', { shade: true, bold: true, align: 'center' }) + TC(h.witness) + TC('(서명)', { align: 'center' })) : '',
-      ].join('');
-
-      const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
- xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
- xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>
-${P('비품 인수인계서', { align: 'center', bold: true, size: 44, spacing: 120, after: 320 })}
-${info}
-${P('', { after: 120 })}
-${P('위 비품을 아래와 같이 인계하고 인수하였음을 확인합니다.', { size: 22, after: 160 })}
-${list}
-${P('', { after: 200 })}
-${P('1. 인계자는 위 비품의 현황과 보관 장소를 사실대로 인계하였습니다.', { size: 20 })}
-${P('2. 인수자는 위 비품을 확인하고 인수하였으며, 이후 관리 책임을 집니다.', { size: 20 })}
-${P('3. 문서에 적히지 않은 비품은 이 인수인계의 대상이 아닙니다.', { size: 20, after: 400 })}
-${P(dateText, { align: 'center', size: 24, after: 320 })}
-${TBL(signRows)}
-${P('', { after: 240 })}
-${P(school().name, { align: 'center', bold: true, size: 30, spacing: 80 })}
-<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr>
-</w:body></w:document>`;
-
-      const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-${h.signFrom ? '<Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/sign1.png"/>' : ''}
-${h.signTo ? '<Relationship Id="rId11" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/sign2.png"/>' : ''}
-</Relationships>`;
-
-      const files = [
-        { name: '[Content_Types].xml', data: utf8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-<Default Extension="xml" ContentType="application/xml"/>
-<Default Extension="png" ContentType="image/png"/>
-<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
-</Types>`) },
-        { name: '_rels/.rels', data: utf8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
-</Relationships>`) },
-        { name: 'word/document.xml', data: utf8(doc) },
-        { name: 'word/_rels/document.xml.rels', data: utf8(rels) },
-      ];
-      if (h.signFrom) files.push({ name: 'word/media/sign1.png', data: b64ToBytes(h.signFrom) });
-      if (h.signTo) files.push({ name: 'word/media/sign2.png', data: b64ToBytes(h.signTo) });
-
-      return zipFile(files);
-    }
-
-    function downloadDocx(h) {
-      const bytes = docxFile(h);
-      const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `비품 인수인계서_${h.toName || ''}_${(h.docDate || today()).replaceAll('-', '')}.docx`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
     }
 
     /* ── 관리 담당 화면의 인수인계서 모음 (연도별) ── */
@@ -7725,8 +7551,7 @@ ${h.signTo ? '<Relationship Id="rId11" Type="http://schemas.openxmlformats.org/o
                 </div>
               </div>
               <div class="crow__acts">
-                <button class="mini mini--go" type="button" data-hprint="${esc(h.id)}">인쇄</button>
-                <button class="mini mini--quiet" type="button" data-hword="${esc(h.id)}">워드</button>
+                <button class="mini mini--go" type="button" data-hprint="${esc(h.id)}">인쇄 · PDF</button>
                 <button class="act act--del" type="button" data-hdel="${esc(h.id)}" aria-label="지우기">${icon(ICONS.trash)}</button>
               </div>
             </li>`).join('')}
@@ -7741,8 +7566,6 @@ ${h.signTo ? '<Relationship Id="rId11" Type="http://schemas.openxmlformats.org/o
         if (y) { hoYear = y.dataset.hoyear; box.innerHTML = hoAllHTML(); return; }
         const pr = e.target.closest('[data-hprint]');
         if (pr) { printDoc(handovers().find((x) => x.id === pr.dataset.hprint)); return; }
-        const wd = e.target.closest('[data-hword]');
-        if (wd) { downloadDocx(handovers().find((x) => x.id === wd.dataset.hword)); return; }
         const dl = e.target.closest('[data-hdel]');
         if (dl) {
           if (!confirm('이 인수인계서를 지울까요? 되돌릴 수 없어요.')) return;
@@ -7940,12 +7763,7 @@ ${h.signTo ? '<Relationship Id="rId11" Type="http://schemas.openxmlformats.org/o
 
         const mp = e.target.closest('[data-hprint]');
         if (mp) { printDoc(handovers().find((x) => x.id === mp.dataset.hprint)); return; }
-        const mw = e.target.closest('[data-hword]');
-        if (mw) { downloadDocx(handovers().find((x) => x.id === mw.dataset.hword)); return; }
-
-        const pr = e.target.closest('#h-print');
-        const fl = e.target.closest('#h-word');
-        if (!pr && !fl) return;
+        if (!e.target.closest('#h-print')) return;
 
         if (!doc.fromName.trim() || !doc.toName.trim()) { err.textContent = '인계자와 인수자 이름을 적어 주세요.'; return; }
         if (!doc.picked.size) { err.textContent = '넘길 비품을 한 가지 이상 골라 주세요.'; return; }
@@ -7973,7 +7791,7 @@ ${h.signTo ? '<Relationship Id="rId11" Type="http://schemas.openxmlformats.org/o
             : it)),
         });
 
-        if (pr) printDoc(made); else downloadDocx(made);
+        printDoc(made);
         flash(`인수인계서를 만들었어요 · 비품 ${n(rows.length)}가지의 담당이 ${made.toName} 님으로 바뀌었어요`);
         setTimeout(() => { doc = blankDoc(); hoStep = 1; render(); }, 500);
       });
