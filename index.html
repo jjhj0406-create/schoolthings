@@ -170,9 +170,9 @@
       grid-column: span 8; position: relative; overflow: hidden;
       border-radius: var(--r-lg);
       background: linear-gradient(135deg, var(--board) 0%, var(--board-2) 100%);
-      color: #fff; padding: 28px 36px 26px;
+      color: #fff; padding: 34px 36px 30px;
       box-shadow: 0 18px 40px -22px rgba(31, 90, 69, .8);
-      display: flex; flex-direction: column; justify-content: flex-end;
+      display: flex; flex-direction: column; justify-content: center;
       min-height: 264px;
     }
     .plan { position: absolute; right: -10px; top: -14px; width: clamp(240px, 26vw, 330px); height: auto; opacity: .45; pointer-events: none; }
@@ -180,7 +180,7 @@
     .plan .route { stroke: var(--marker); stroke-width: 2.2; fill: none; stroke-dasharray: 5 7; stroke-linecap: round; }
     .plan .pin { fill: var(--marker); }
     .plan .pin-ring { fill: none; stroke: var(--marker); stroke-width: 2; opacity: .5; }
-    .find__title { position: relative; font-size: clamp(24px, 2.6vw, 34px); font-weight: 800; line-height: 1.15; letter-spacing: -0.05em; margin-bottom: 22px; white-space: nowrap; }
+    .find__title { position: relative; font-size: clamp(24px, 2.6vw, 34px); font-weight: 800; line-height: 1.15; letter-spacing: -0.05em; margin-bottom: 26px; white-space: nowrap; }
     .search {
       position: relative; display: flex; align-items: center; gap: 12px;
       height: 58px; padding: 0 8px 0 18px; max-width: 560px;
@@ -2010,6 +2010,46 @@
       .setupcard__btns .btn { flex: 1; }
     }
 
+    /* ───────── 설정 ───────── */
+    .main.is-settings { grid-template-rows: none; grid-auto-rows: max-content; align-content: start; }
+    .toggle {
+      width: 52px; height: 30px; border-radius: 15px; background: #cfd4e2;
+      position: relative; flex: none; transition: background-color 160ms;
+    }
+    .toggle__dot {
+      position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+      background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: transform 160ms;
+    }
+    .toggle.is-on { background: var(--board); }
+    .toggle.is-on .toggle__dot { transform: translateX(22px); }
+
+    .setrow { grid-column: 1 / -1; max-width: 760px; }
+    .setline {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 0; border-top: 1px solid var(--line);
+    }
+    .setline:first-of-type { border-top: 0; padding-top: 6px; }
+    .setline__main { flex: 1; min-width: 0; }
+    .setline__name { font-size: 16px; font-weight: 700; }
+    .setline__sub { font-size: 14px; color: var(--ink-2); line-height: 1.5; margin-top: 3px; word-break: keep-all; }
+    .setline .btn { flex: none; height: 44px; }
+    .setline--danger .setline__name { color: var(--late); }
+    .btn--danger { background: var(--late); color: #fff; }
+    .btn--danger:hover { background: #d13c41; }
+    .setrow .hsum { margin-top: 12px; }
+
+    /* 글씨 크게 보기 */
+    body.is-big { font-size: 17px; }
+    body.is-big .hit__name, body.is-big .lrow__name, body.is-big .qritem__name { font-size: 18px; }
+    body.is-big .hit__path, body.is-big .lrow__sub, body.is-big .setline__sub { font-size: 15px; }
+    body.is-big .card__title { font-size: 17px; }
+    body.is-big .unit__name, body.is-big .rankitem__name, body.is-big .postrow__title { font-size: 17px; }
+
+    @media (max-width: 760px) {
+      .setline { flex-wrap: wrap; }
+      .setline .btn { width: 100%; }
+    }
+
     .placebar { display: none; }
     .tabbar { display: none; }
 
@@ -2362,6 +2402,9 @@
     let sb = null;        // Supabase 연결. 설정이 없으면 null
     let session = null;   // 로그인한 사람
     let me = null;        // { schoolId, role, status, school }
+    let bigType = false;  // 글씨 크게 보기
+    try { bigType = Boolean(localStorage.getItem('school-items:big')); } catch {}
+
     let members = [];     // 우리 학교 구성원 (관리자만 읽어 옴)
     const missingTables = new Set();   // 아직 만들지 않은 표
 
@@ -2944,7 +2987,8 @@
       next: 'M9 6l6 6-6 6',
       print: 'M7 9V3h10v6 M7 17H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2 M7 14h10v7H7z',
       refresh: 'M20 11a8 8 0 10-2.3 5.7 M20 5v6h-6',
-      qr: 'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h2v2h-2z M18 14h2v2h-2z M14 18h2v2h-2z M18 18h2v2h-2z',
+      settings: 'M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z',
+            qr: 'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h2v2h-2z M18 14h2v2h-2z M14 18h2v2h-2z M18 18h2v2h-2z',
       manager: 'M12 12.5a4 4 0 100-8 4 4 0 000 8z M4.5 20.5a7.5 7.5 0 0115 0',
       edit: 'M4 20h4L18.5 9.5l-4-4L4 16z M14 6l4 4',
       trash: 'M5 7h14 M9.5 7V4.5h5V7 M7 7l1 12.5h8L17 7 M10.5 10.5v6 M13.5 10.5v6',
@@ -2960,6 +3004,7 @@
       { key: 'rent',  label: '대여', href: '#/rent' },
       { key: 'ledger', label: '비품 대장', href: '#/ledger', tab: false },
       { key: 'handover', label: '인수인계', href: '#/handover', tab: false, manage: true },
+      { key: 'settings', label: '설정', href: '#/settings', tab: false },
     ];
 
     /* ════════ 한글 검색 (→ src/lib/search.js) ════════ */
@@ -6047,15 +6092,8 @@
     }
 
     function saveSpaces() {
-      // QR 라벨에 쓸 짧은 코드를 미리 붙여 둔다 (선생님들도 바로 QR을 볼 수 있게)
-      const seen = new Set(wiz.rooms.map((r) => r.code).filter(Boolean));
-      const rooms = wiz.rooms.map((r) => {
-        if (r.code) return r;
-        let code = newRoomCode();
-        while (seen.has(code)) code = newRoomCode();
-        seen.add(code);
-        return { ...r, code };
-      });
+      // QR 라벨에 쓸 코드를 붙여 둔다 (이름에서 계산하므로 늘 같은 값)
+      const rooms = withRoomCodes(wiz.rooms);
       wiz.rooms = rooms;
       commit({ ...state, school: { ...school(), spaces: { buildings: wiz.buildings, rooms } } });
     }
@@ -6283,7 +6321,7 @@
       root.querySelector('#wiz-next')?.addEventListener('click', () => go(wizAt + 1));
       root.querySelector('#wiz-skip')?.addEventListener('click', () => go(pages.length - 1));
       root.querySelector('#wiz-reset')?.addEventListener('click', () => {
-        if (!confirm('설정한 건물과 층, 실을 모두 지우고 처음부터 할까요?\n등록한 물품은 그대로 남아요.')) return;
+        if (!confirm('설정한 건물과 층, 실을 모두 지우고 처음부터 할까요?\n\n등록한 물품은 그대로 남아요.\n실 이름을 그대로 다시 담으면 QR 라벨도 그대로 쓸 수 있지만,\n이름이 달라진 실은 라벨을 다시 뽑아 붙여야 해요.')) return;
         wiz = { buildings: [], rooms: [] };
         wizAt = 0; wizPick = null; wizMsg = ''; probeMsg = ''; aiWhy = '';
         saveSpaces();
@@ -7059,35 +7097,55 @@
 
     /* ════════ 실 QR 코드 (→ src/pages/qr.js) ════════ */
     const roomKeyOf = (r) => [r.building, r.floor || '', r.name].join('|');
-    const newRoomCode = () => Array.from(crypto.getRandomValues(new Uint8Array(5)))
-      .map((b) => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join('');
 
-    // 실마다 짧은 코드를 하나씩 붙여 둔다 (없으면 만들어 저장)
+    // 실 이름에서 코드를 계산합니다. 같은 실이면 언제 계산해도 같은 코드가 나와,
+    // 공간 설정을 다시 해도 이미 붙여 둔 QR 라벨이 그대로 살아 있습니다.
+    const CODE_CHARS = 'abcdefghjkmnpqrstuvwxyz23456789';
+    function roomCodeOf(r, salt = 0) {
+      const text = roomKeyOf(r) + (salt ? `#${salt}` : '');
+      let h1 = 0x811c9dc5, h2 = 0x01000193;
+      for (let i = 0; i < text.length; i++) {
+        const c = text.charCodeAt(i);
+        h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
+        h2 = Math.imul(h2 + c, 2654435761) >>> 0;
+      }
+      let n = (h1 >>> 0) * 31 + (h2 % 31);
+      let out = '';
+      for (let i = 0; i < 6; i++) { out += CODE_CHARS[n % 31]; n = Math.floor(n / 31) + (h2 >>> (i * 3)); }
+      return out;
+    }
+
+    // 실마다 코드를 붙여 둔다. 계산으로 정해지므로 늘 같은 값이 나온다.
+    function withRoomCodes(rooms) {
+      const seen = new Set();
+      return rooms.map((r) => {
+        let code = roomCodeOf(r);
+        let salt = 0;
+        while (seen.has(code)) code = roomCodeOf(r, ++salt);   // 아주 드문 겹침만 피한다
+        seen.add(code);
+        return r.code === code ? r : { ...r, code };
+      });
+    }
+
     function ensureRoomCodes() {
       const sp = spaces();
       if (!sp.rooms.length) return sp;
-      const seen = new Set(sp.rooms.map((r) => r.code).filter(Boolean));
-      let changed = false;
-      const rooms = sp.rooms.map((r) => {
-        if (r.code) return r;
-        let code = newRoomCode();
-        while (seen.has(code)) code = newRoomCode();
-        seen.add(code); changed = true;
-        return { ...r, code };
-      });
+      const rooms = withRoomCodes(sp.rooms);
+      const changed = rooms.some((r, i) => r !== sp.rooms[i]);
       if (changed) commit({ ...state, school: { ...school(), spaces: { ...sp, rooms } } });
       return { ...sp, rooms };
     }
 
-    const joinCode = () => me?.school?.join_code || '';
-    const roomLink = (code) => `${location.origin}${location.pathname}#/r?c=${encodeURIComponent(joinCode())}&k=${code}`;
+    // 라벨에는 참여 코드를 넣지 않는다. 문에 붙는 종이라서.
+    const schoolId = () => me?.schoolId || '';
+    const roomLink = (code) => `${location.origin}${location.pathname}#/r?s=${schoolId()}&k=${code}`;
 
     /* ── 라벨 인쇄 화면 ── */
     function openQrLabels() {
       const sp = ensureRoomCodes();
       const rooms = sp.rooms.slice();
       if (!rooms.length) { flash('학교 공간 설정에서 실을 먼저 담아 주세요', 'warn'); return; }
-      if (!joinCode()) { flash('학교 코드가 없어요. 로그인 방식에서만 쓸 수 있어요', 'warn'); return; }
+      if (!schoolId()) { flash('로그인한 뒤에 쓸 수 있어요', 'warn'); return; }
 
       const picked = new Set(rooms.map((r) => roomKeyOf(r)));
 
@@ -7199,7 +7257,7 @@
         entry = ensureRoomCodes().rooms.find((r) => r.building === building && r.name === roomName);
         if (!entry?.code) return;
       }
-      if (!joinCode()) { flash('로그인 방식에서만 쓸 수 있어요', 'warn'); return; }
+      if (!schoolId()) { flash('로그인한 뒤에 쓸 수 있어요', 'warn'); return; }
 
       const link = roomLink(entry.code);
       const back = document.createElement('div');
@@ -7246,9 +7304,20 @@
       }
       root.innerHTML = shell('<p class="gate__desc">불러오는 중이에요…</p>');
 
-      const { data, error } = await sb.rpc('room_info', { school_code: code, room_code: key });
-      if (error || !data || !data.found) {
-        root.innerHTML = shell('<h1 class="gate__title">찾을 수 없는 라벨이에요</h1><p class="gate__desc">학교 공간 설정이 바뀌었을 수 있어요. 담당 선생님께 새 라벨을 부탁해 주세요.</p>');
+      const { data, error } = await sb.rpc('room_info', { school: code, room_code: key });
+
+      // 왜 안 되는지 나눠서 알려 준다
+      if (error) {
+        const why = String(error.message || '');
+        const tip = /function|schema cache|404|Not Found/i.test(why)
+          ? '서버 준비가 덜 됐어요. 담당 선생님께 supabase-update.sql 실행을 부탁해 주세요.'
+          : '잠시 뒤에 다시 찍어 봐 주세요.';
+        root.innerHTML = shell(`<h1 class="gate__title">지금은 열 수 없어요</h1><p class="gate__desc">${esc(tip)}</p>`);
+        console.warn('room_info 실패:', why);
+        return;
+      }
+      if (!data || !data.found) {
+        root.innerHTML = shell('<h1 class="gate__title">없는 실이에요</h1><p class="gate__desc">학교 공간 설정에서 이 실이 지워졌거나 이름이 바뀌었어요.<br>담당 선생님께 새 라벨을 부탁해 주세요.</p>');
         return;
       }
 
@@ -8389,6 +8458,126 @@
       });
     }
 
+    /* ════════ 설정 (→ src/pages/settings.js) ════════ */
+    function settingsView() {
+      const mail = session?.user?.email || '';
+      const roleText = !online() ? '이 기기에만 저장돼요'
+        : (isAdmin() ? '관리 담당 선생님' : (canImport() ? '비품 담당 선생님' : '선생님'));
+
+      return `
+        <header class="top">
+          <div>
+            <a class="back" href="#/">${icon(ICONS.back)}홈</a>
+            <h1 class="top__title" tabindex="-1">설정</h1>
+          </div>
+        </header>
+
+        <section class="card setrow" aria-labelledby="s1-title">
+          <div class="card__head"><h2 class="card__title" id="s1-title">내 정보</h2></div>
+          <dl class="hsum">
+            <div class="hsum__row"><dt>학교</dt><dd>${esc(school().name || '아직 없어요')}</dd></div>
+            <div class="hsum__row"><dt>이름</dt><dd>${esc(writerName() || '아직 없어요')}</dd></div>
+            <div class="hsum__row"><dt>맡은 일</dt><dd>${esc(roleText)}</dd></div>
+            ${mail ? `<div class="hsum__row"><dt>로그인</dt><dd>${esc(mail)}</dd></div>` : ''}
+          </dl>
+          ${online() ? `<p class="wiz__hint">이름과 직위는 관리 담당 선생님이 바꿀 수 있어요.</p>` : ''}
+        </section>
+
+        <section class="card setrow" aria-labelledby="s2-title">
+          <div class="card__head"><h2 class="card__title" id="s2-title">화면</h2></div>
+          <div class="setline">
+            <div class="setline__main">
+              <p class="setline__name">글씨 크게 보기</p>
+              <p class="setline__sub">목록과 본문 글씨가 한 단계 커져요.</p>
+            </div>
+            <button class="toggle ${bigType ? 'is-on' : ''}" type="button" id="s-big" role="switch" aria-checked="${bigType}" aria-label="글씨 크게 보기">
+              <span class="toggle__dot"></span>
+            </button>
+          </div>
+        </section>
+
+        ${online() ? `
+          <section class="card setrow" aria-labelledby="s3-title">
+            <div class="card__head"><h2 class="card__title" id="s3-title">계정</h2></div>
+            <div class="setline">
+              <div class="setline__main">
+                <p class="setline__name">로그아웃</p>
+                <p class="setline__sub">이 기기에서 나가요. 자료는 그대로 남아요.</p>
+              </div>
+              <button class="btn btn--ghost" type="button" id="s-out">로그아웃</button>
+            </div>
+
+            <div class="setline setline--danger">
+              <div class="setline__main">
+                <p class="setline__name">회원 탈퇴</p>
+                <p class="setline__sub">${isAdmin()
+                  ? '관리 담당이라서 학교와 모든 자료가 함께 사라져요. 다른 선생님들도 쓸 수 없게 돼요.'
+                  : '이 학교에서 나가요. 학교 자료는 남고, 다시 들어오려면 코드로 가입 신청을 해야 해요.'}</p>
+              </div>
+              <button class="btn btn--danger" type="button" id="s-quit">탈퇴하기</button>
+            </div>
+            <p class="field__error" id="s-err"></p>
+          </section>` : `
+          <section class="card setrow">
+            <div class="card__head"><h2 class="card__title">계정</h2></div>
+            <p class="side-empty">지금은 이 기기에만 저장하는 방식이라 계정이 없어요.</p>
+          </section>`}
+
+        <section class="card setrow">
+          <div class="card__head"><h2 class="card__title">이 앱은</h2></div>
+          <p class="sheet__desc">학교 물품이 어디 있는지 바로 찾는 앱이에요. 건물 → 층 → 실 → 보관함 → 칸 순서로 알려 드려요.</p>
+          <p class="wiz__hint">글꼴: 학교안심 (한국교육학술정보원)</p>
+        </section>`;
+    }
+
+    function mountSettings(view) {
+      const err = view.querySelector('#s-err');
+
+      view.querySelector('#s-big')?.addEventListener('click', () => {
+        bigType = !bigType;
+        try { localStorage.setItem('school-items:big', bigType ? '1' : ''); } catch {}
+        document.body.classList.toggle('is-big', bigType);
+        render();
+      });
+
+      view.querySelector('#s-out')?.addEventListener('click', async () => {
+        if (!confirm('로그아웃할까요?')) return;
+        await sb.auth.signOut();
+        me = null; session = null; state = blank();
+        location.hash = '#/';
+        render();
+      });
+
+      view.querySelector('#s-quit')?.addEventListener('click', () => {
+        const word = me?.school?.join_code || '';
+        const ask = isAdmin()
+          ? `정말 탈퇴할까요?\n\n학교와 모든 자료가 사라지고 되돌릴 수 없어요.\n계속하려면 다음 창에 학교 코드 ${word} 를 적어 주세요.`
+          : '정말 이 학교에서 나갈까요?\n\n다시 들어오려면 코드로 가입 신청을 해야 해요.';
+        if (!confirm(ask)) return;
+        if (isAdmin()) {
+          const typed = prompt(`학교 코드 ${word} 를 적어 주세요`, '');
+          if (typed?.trim() !== word) { err.textContent = '코드가 달라요. 탈퇴하지 않았어요.'; return; }
+        }
+        err.textContent = '';
+        const btn = view.querySelector('#s-quit');
+        btn.disabled = true;
+        sb.rpc('delete_account').then(async ({ error }) => {
+          if (error) {
+            console.error(error);
+            err.textContent = '탈퇴하지 못했어요. 잠시 뒤에 다시 해 주세요.';
+            btn.disabled = false;
+            return;
+          }
+          try { localStorage.removeItem(STORE_KEY); } catch {}
+          await sb.auth.signOut();
+          me = null; session = null; state = blank();
+          location.hash = '#/';
+          render();
+          flash(isAdmin() ? '학교를 지우고 탈퇴했어요' : '학교에서 나왔어요');
+        });
+      });
+    }
+
     /* ════════ 관리 담당 선생님 (→ src/pages/manager.js) ════════ */
     const ASSET_NEED = [
       { key: 'no', label: '고유번호' }, { key: 'code', label: '분류번호' },
@@ -8812,9 +9001,14 @@
           title: '학교 정보 삭제',
           count: () => state.items.length + (state.loans || []).length,
           unit: '건',
-          desc: () => '물품, 대여 기록, 서명, 공간 설정, 담당 정보를 모두 지우고 처음 상태로 되돌려요.',
-          warn: '삭제하면 다시 복구할 수 없습니다. 복구를 하려면 엑셀로 내려받아 주세요. 학교와 선생님 계정은 남아서 로그인은 그대로 됩니다.',
-          run: () => commit({ ...state, items: [], loans: [], recent: [], school: { ...DEFAULT_SCHOOL, name: school().name } }),
+          desc: () => '물품, 대여 기록, 인수인계서, 문의 글, 물품 모으기, 공간 설정, 담당 정보를 모두 지워요. 우리 학교 선생님 목록도 비워져요.',
+          warn: '삭제하면 다시 복구할 수 없습니다. 복구를 하려면 엑셀로 내려받아 주세요. 다른 선생님들은 다시 코드로 가입 신청을 해야 합니다.',
+          run: () => commit({
+            ...state,
+            items: [], loans: [], recent: [], handovers: [], posts: [], comments: [],
+            collects: [], submissions: [],
+            school: { ...DEFAULT_SCHOOL, name: school().name },
+          }),
           done: () => '학교 정보를 모두 지웠어요',
         },
         loans: {
@@ -8898,6 +9092,26 @@
         const spec = WIPES[wipeKind];
         const wasAll = wipeKind === 'all';
         const count = spec.count();
+
+        // 학교 전체 비우기는 서버에서 한 번에 (다른 선생님 기록까지)
+        if (wipeKind === 'all' && online()) {
+          view.querySelector('#wipe-go').disabled = true;
+          sb.rpc('reset_school').then(async ({ error }) => {
+            if (error) {
+              console.error(error);
+              view.querySelector('#wipe-err').textContent = '지우지 못했어요. supabase-update.sql을 실행했는지 확인해 주세요.';
+              view.querySelector('#wipe-go').disabled = false;
+              return;
+            }
+            try { localStorage.removeItem(STORE_KEY); } catch {}
+            state = { ...blank(), school: { ...DEFAULT_SCHOOL, name: school().name } };
+            members = [];
+            wipeKind = ''; wipeStep = 1;
+            render();
+            flash('학교 정보를 모두 지웠어요');
+          });
+          return;
+        }
 
         // 계정 삭제는 서버에 맡기고 로그아웃까지 한다
         if (wipeKind === 'account') {
@@ -9563,6 +9777,7 @@
       '#/lend':   { key: 'rent', view: lendView,  mount: mountLend, title: '빌리기 · 학교 물품 어디 있지?' },
       '#/ledger': { key: 'ledger', view: ledgerView, mount: mountLedger, title: '비품 대장 · 학교 물품 어디 있지?' },
       '#/handover': { key: 'handover', view: handoverView, mount: mountHandover, title: '인수인계 · 학교 물품 어디 있지?' },
+      '#/settings': { key: 'settings', view: settingsView, mount: mountSettings, title: '설정 · 학교 물품 어디 있지?' },
       '#/manager': { key: 'manager', view: managerView, mount: mountManager, title: '관리 담당 선생님 · 학교 물품 어디 있지?' },
       '#/add':    { key: 'add',  view: addView,    mount: mountAdd,    title: '물품 등록 · 학교 물품 어디 있지?' },
     };
@@ -9591,13 +9806,13 @@
         gateRoot.hidden = false;
         gateRoot.className = 'gate';
         const q = new URLSearchParams(location.hash.split('?')[1] || '');
-        const mark = `${q.get('c') || ''}|${q.get('k') || ''}`;
+        const mark = `${q.get('s') || ''}|${q.get('k') || ''}`;
         document.title = '물품 보기 · 학교 물품 어디 있지?';
         if (gateRoot.dataset.room !== mark) {
           gateRoot.dataset.room = mark;
           const fresh = gateRoot.cloneNode(false);
           gateRoot.replaceWith(fresh);
-          mountRoom(fresh, q.get('c'), q.get('k'));
+          mountRoom(fresh, q.get('s'), q.get('k'));
         }
         return;
       }
@@ -9794,6 +10009,8 @@
 
     // 화면 아래 학교 이름 옆에 판 번호를 적어 둔다 (새 파일이 올라갔는지 확인용)
     console.log('학교 물품 어디 있지? · 2026-09-23 판');
+
+    if (bigType) document.body.classList.add('is-big');
 
     boot();
   </script>
