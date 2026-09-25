@@ -4046,7 +4046,7 @@
               <span>건물·층·실이 미리 채워진 채로 등록 화면이 열려요.</span>
               <div class="nohit__actions">
                 <a class="btn btn--solid" href="#/add?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f === '미정' ? '' : f)}&room=${encodeURIComponent(r)}">${icon(ICONS.add)}여기에 등록</a>
-                ${online() && hasSpaces() ? `<button class="btn btn--ghost" type="button" data-roomqr="${esc([b, f === '미정' ? '' : f, r].join('|'))}">${icon(ICONS.qr)}QR 보기</button>` : ''}
+                ${online() ? `<button class="btn btn--ghost" type="button" data-roomqr="${esc([b, f === '미정' ? '' : f, r].join('|'))}">${icon(ICONS.qr)}QR 보기</button>` : ''}
               </div>
             </div>` : `
             <div class="nohit">
@@ -4069,7 +4069,7 @@
               <p class="roomview__sum num">물품 ${n(list.length)}가지 · 모두 ${n(count)}개</p>
             </div>
             ${b === UNSET_B ? `<a class="btn btn--ghost" href="#/manager">${icon(ICONS.place)}자리 정하러 가기</a>` : `
-              ${online() && hasSpaces() ? `<button class="btn btn--ghost" type="button" data-roomqr="${esc([b, f === '미정' ? '' : f, r].join('|'))}">${icon(ICONS.qr)}QR</button>` : ''}
+              ${online() ? `<button class="btn btn--ghost" type="button" data-roomqr="${esc([b, f === '미정' ? '' : f, r].join('|'))}">${icon(ICONS.qr)}QR</button>` : ''}
               <a class="btn btn--ghost" href="#/add?building=${encodeURIComponent(b)}&floor=${encodeURIComponent(f)}&room=${encodeURIComponent(r)}">${icon(ICONS.add)}여기에 등록</a>`}
           </div>
           <div class="units">
@@ -6331,6 +6331,7 @@
 
       root.querySelector('#wiz-save')?.addEventListener('click', () => {
         saveSpaces();
+        registerRooms(wiz.rooms.map((r) => ({ building: r.building, floor: r.floor || '', name: r.name })));
         closeSpaces(true);
         flash('학교 공간을 저장했어요');
         render();
@@ -7115,6 +7116,21 @@
       return out;
     }
 
+    // 이 실의 코드를 서버에 등록해 둔다. 공간 설정과 상관없이 어떤 실이든 된다.
+    async function registerRooms(list) {
+      if (!sb || !schoolId() || !list.length) return false;
+      const rows = list.map((r) => ({
+        school_id: schoolId(),
+        code: roomCodeOf(r),
+        building: r.building || '',
+        floor: r.floor || '',
+        room: r.name || '',
+      }));
+      const { error } = await sb.from('room_codes').upsert(rows, { onConflict: 'school_id,code' });
+      if (error) { console.error('room_codes', error); return false; }
+      return true;
+    }
+
     // 실마다 코드를 붙여 둔다. 계산으로 정해지므로 늘 같은 값이 나온다.
     function withRoomCodes(rooms) {
       const seen = new Set();
@@ -7141,10 +7157,23 @@
     const roomLink = (code) => `${location.origin}${location.pathname}#/r?s=${schoolId()}&k=${code}`;
 
     /* ── 라벨 인쇄 화면 ── */
+    // 공간 설정에 담긴 실 + 물품이 등록된 실을 모두 모은다
+    function allRooms() {
+      const map = new Map();
+      for (const r of spaces().rooms) {
+        map.set(roomKeyOf(r), { building: r.building, floor: r.floor || '', name: r.name });
+      }
+      for (const it of state.items) {
+        if (!it.building || !it.room) continue;
+        const r = { building: it.building, floor: it.floor || '', name: it.room };
+        map.set(roomKeyOf(r), r);
+      }
+      return [...map.values()].sort((a, b) => a.building.localeCompare(b.building, 'ko') || a.name.localeCompare(b.name, 'ko'));
+    }
+
     function openQrLabels() {
-      const sp = ensureRoomCodes();
-      const rooms = sp.rooms.slice();
-      if (!rooms.length) { flash('학교 공간 설정에서 실을 먼저 담아 주세요', 'warn'); return; }
+      const rooms = allRooms();
+      if (!rooms.length) { flash('실이 아직 없어요. 공간을 설정하거나 물품을 등록해 주세요', 'warn'); return; }
       if (!schoolId()) { flash('로그인한 뒤에 쓸 수 있어요', 'warn'); return; }
 
       const picked = new Set(rooms.map((r) => roomKeyOf(r)));
@@ -7193,7 +7222,7 @@
       };
       draw();
 
-      box.addEventListener('click', (e) => {
+      box.addEventListener('click', async (e) => {
         if (e.target.closest('#qr-close')) { close(); return; }
         const rb = e.target.closest('[data-qrb]');
         if (rb) {
@@ -7213,7 +7242,11 @@
         if (!e.target.closest('#qr-print')) return;
         const list = rooms.filter((r) => picked.has(roomKeyOf(r)));
         if (!list.length) { flash('라벨로 만들 실을 골라 주세요', 'warn'); return; }
-        printLabels(list);
+        const btn = e.target.closest('#qr-print');
+        btn.disabled = true;
+        const ok = await registerRooms(list.map((r) => ({ ...r, code: roomCodeOf(r) })));
+        if (!ok) { btn.disabled = false; flash('QR을 만들지 못했어요. 잠시 뒤 다시 해 주세요', 'warn'); return; }
+        printLabels(list.map((r) => ({ ...r, code: roomCodeOf(r) })));
         close();
       });
     }
@@ -7246,18 +7279,13 @@
     }
 
     /* ── 실 하나의 QR 보기 ── */
-    function openRoomQr(building, floor, roomName) {
-      const sp = spaces();
-      let entry = sp.rooms.find((r) => r.building === building && r.name === roomName && (!floor || !r.floor || r.floor === floor));
-      if (!entry) { flash('학교 공간 설정에 없는 실이에요', 'warn'); return; }
-
-      // 코드가 없으면 관리자가 한 번 만들어 주어야 한다
-      if (!entry.code) {
-        if (!isAdmin()) { flash('관리 담당 선생님이 QR을 한 번 만들어야 해요', 'warn'); return; }
-        entry = ensureRoomCodes().rooms.find((r) => r.building === building && r.name === roomName);
-        if (!entry?.code) return;
-      }
+    async function openRoomQr(building, floor, roomName) {
       if (!schoolId()) { flash('로그인한 뒤에 쓸 수 있어요', 'warn'); return; }
+      const entry = { building, floor: floor === '미정' ? '' : (floor || ''), name: roomName, code: roomCodeOf({ building, floor: floor === '미정' ? '' : (floor || ''), name: roomName }) };
+
+      // 찍었을 때 열리도록 코드를 서버에 등록해 둔다
+      const ok = await registerRooms([entry]);
+      if (!ok) { flash('QR을 만들지 못했어요. 잠시 뒤 다시 해 주세요', 'warn'); return; }
 
       const link = roomLink(entry.code);
       const back = document.createElement('div');
@@ -7317,7 +7345,7 @@
         return;
       }
       if (!data || !data.found) {
-        root.innerHTML = shell('<h1 class="gate__title">없는 실이에요</h1><p class="gate__desc">학교 공간 설정에서 이 실이 지워졌거나 이름이 바뀌었어요.<br>담당 선생님께 새 라벨을 부탁해 주세요.</p>');
+        root.innerHTML = shell('<h1 class="gate__title">아직 준비되지 않은 QR이에요</h1><p class="gate__desc">실 이름이 바뀌었거나, QR을 만들기 전에 인쇄한 라벨일 수 있어요.<br>담당 선생님께 QR 코드를 확인해 달라고 해 주세요.</p>');
         return;
       }
 
@@ -8702,7 +8730,7 @@
               : '건물과 층, 실을 미리 정해 두면 등록할 때 고르기만 하면 돼요'}</p>
           </div>
           <div class="setupcard__btns">
-            ${hasSpaces() && online() ? `<button class="btn btn--ghost" type="button" id="qr-labels">${icon(ICONS.qr)}실 QR 라벨</button>` : ''}
+            ${online() ? `<button class="btn btn--ghost" type="button" id="qr-labels">${icon(ICONS.qr)}실 QR 라벨</button>` : ''}
             <button class="btn btn--solid" type="button" data-action="spaces">${icon(ICONS.spaces)}${hasSpaces() ? '다시 설정' : '설정 시작'}</button>
           </div>
         </section>
