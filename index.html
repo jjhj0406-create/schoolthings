@@ -2038,12 +2038,18 @@
     .btn--danger:hover { background: #d13c41; }
     .setrow .hsum { margin-top: 12px; }
 
-    /* 글씨 크게 보기 */
-    body.is-big { font-size: 17px; }
-    body.is-big .hit__name, body.is-big .lrow__name, body.is-big .qritem__name { font-size: 18px; }
-    body.is-big .hit__path, body.is-big .lrow__sub, body.is-big .setline__sub { font-size: 15px; }
-    body.is-big .card__title { font-size: 17px; }
-    body.is-big .unit__name, body.is-big .rankitem__name, body.is-big .postrow__title { font-size: 17px; }
+    /* 글씨 크게 보기 — 화면 전체를 한 단계 크게 (50대 선생님도 편하게) */
+    body.is-big { zoom: 1.2; }
+    body.is-big .seek { min-width: 0; }
+    body.is-big .seek .search { min-width: 0; width: 100%; }
+    body.is-big .kbd { display: none; }
+    body.is-big .find__title { white-space: normal; }
+    body.is-big .search input { font-size: 16px; }
+    @supports not (zoom: 1.2) {
+      body.is-big .app, body.is-big .gate, body.is-big .signback, body.is-big #wizroot {
+        transform: scale(1.2); transform-origin: 0 0; width: 83.34%; height: 83.34%;
+      }
+    }
 
     @media (max-width: 760px) {
       .setline { flex-wrap: wrap; }
