@@ -2145,6 +2145,50 @@
       .lend-rest.is-wait { display: none; }
     }
 
+    /* ───────── 시작하기 체크리스트 ───────── */
+    .startcard { grid-column: 1 / -1; }
+    .startcard__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .startcard__eyebrow { font-size: 12px; font-weight: 800; color: var(--board); }
+    .startcard__title { font-family: var(--font-title); font-size: 20px; letter-spacing: -0.03em; margin-top: 3px; }
+    .startcard__count { font-size: 14px; font-weight: 800; color: var(--ink-3); flex: none; }
+    .startcard__bar { height: 6px; border-radius: 3px; background: var(--field); margin-top: 12px; overflow: hidden; }
+    .startcard__bar span { display: block; height: 100%; border-radius: 3px; background: var(--board); transition: width 240ms ease-out; }
+    .startlist { list-style: none; display: grid; gap: 4px; margin-top: 14px; }
+    .startrow { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 12px; }
+    .startrow__mark {
+      width: 22px; height: 22px; border-radius: 50%; flex: none; display: grid; place-items: center;
+      box-shadow: inset 0 0 0 1.5px #c9cfdd; color: #fff;
+    }
+    .startrow__mark .icon { width: 13px; height: 13px; stroke-width: 3; }
+    .startrow.is-done .startrow__mark { background: var(--board); box-shadow: none; }
+    .startrow.is-done .startrow__name { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--line); }
+    .startrow.is-next { background: var(--field); }
+    .startrow__main { flex: 1; min-width: 0; }
+    .startrow__name { display: block; font-size: 15px; font-weight: 700; }
+    .startrow__desc { display: block; font-size: 13px; color: var(--ink-2); margin-top: 2px; line-height: 1.5; word-break: keep-all; }
+    .startrow .btn { flex: none; height: 40px; }
+
+    @media (max-width: 760px) {
+      .startrow { flex-wrap: wrap; }
+      .startrow.is-next .btn { width: 100%; margin-left: 34px; }
+    }
+
+    .empty__go { margin-top: 14px; }
+
+    /* ───────── 자주 묻는 질문 ───────── */
+    .faq { grid-column: 1 / -1; max-width: 760px; }
+    .faqlist { list-style: none; display: grid; gap: 4px; margin-top: 6px; }
+    .faqrow summary {
+      display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none;
+      padding: 14px 12px; border-radius: 12px; font-size: 16px; font-weight: 700;
+    }
+    .faqrow summary::-webkit-details-marker { display: none; }
+    .faqrow summary:hover { background: var(--field); }
+    .faqrow__caret { width: 18px; height: 18px; color: var(--ink-3); margin-left: auto; flex: none; transition: transform 160ms; }
+    .faqrow[open] .faqrow__caret { transform: rotate(180deg); }
+    .faqrow__a { padding: 0 12px 16px; font-size: 15px; line-height: 1.75; color: var(--ink-2); word-break: keep-all; }
+    .faqrow__a b { color: var(--ink); }
+
     .pick__count { font-size: 13px; font-weight: 600; color: var(--ink-3); margin: 10px 0 6px; }
     .pick__count .num { color: var(--ink); }
     .pick__more {
@@ -2364,14 +2408,15 @@
 
       .tabbar {
         position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-        display: grid; grid-template-columns: repeat(4, 1fr);
-        padding: 8px 8px calc(env(safe-area-inset-bottom) + 8px);
+        display: grid; grid-template-columns: repeat(5, 1fr);
+        padding: 8px 4px calc(env(safe-area-inset-bottom) + 8px);
         background: rgba(255, 255, 255, .92);
         backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
         border-top: 1px solid var(--line);
       }
       body.is-add .tabbar { display: none; }
-      .tabbar__item { height: 52px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12px; font-weight: 600; color: var(--ink-3); }
+      .tabbar__item { height: 52px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11.5px; font-weight: 600; color: var(--ink-3); white-space: nowrap; }
+      .tabbar__item .icon { width: 21px; height: 21px; }
       .tabbar__item[aria-current="page"] { color: var(--navy); }
       .tabbar__item:active { background: #f1f3f8; }
     }
@@ -3139,6 +3184,7 @@
       print: 'M7 9V3h10v6 M7 17H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2 M7 14h10v7H7z',
       refresh: 'M20 11a8 8 0 10-2.3 5.7 M20 5v6h-6',
       more: 'M4 6h16 M4 12h16 M4 18h16',
+      help: 'M12 17h.01 M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3 M12 21a9 9 0 100-18 9 9 0 000 18z',
             settings: 'M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z',
             qr: 'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h2v2h-2z M18 14h2v2h-2z M14 18h2v2h-2z M18 18h2v2h-2z',
       manager: 'M12 12.5a4 4 0 100-8 4 4 0 000 8z M4.5 20.5a7.5 7.5 0 0115 0',
@@ -3156,6 +3202,7 @@
       { key: 'rent',  label: '대여', href: '#/rent' },
       { key: 'ledger', label: '비품 대장', href: '#/ledger', tab: false },
       { key: 'handover', label: '인수인계', href: '#/handover', tab: false, manage: true },
+      { key: 'help', label: '자주 묻는 질문', href: '#/help', tab: false, rail: false },
       { key: 'settings', label: '설정', href: '#/settings', tab: false },
       { key: 'more', label: '더보기', action: 'more', rail: false },
     ];
@@ -3474,6 +3521,62 @@
     const goSearch = (q = '') => { if (q) addRecent(q); location.hash = '#/search' + (q ? '?q=' + encodeURIComponent(q) : ''); };
 
     /* ════════ 홈 (→ src/pages/home.js) ════════ */
+    /* 처음 오신 담당 선생님께 순서를 알려 주는 카드.
+       네 가지를 모두 마치면 저절로 사라집니다. */
+    function startSteps() {
+      const assets = state.items.filter((i) => i.asset).length;
+      return [
+        { key: 'school', done: Boolean(school().name && school().name !== '우리 학교'),
+          title: '학교 이름 적기', desc: '화면 곳곳에 우리 학교 이름으로 보여요.',
+          href: '#/manager', btn: '적으러 가기' },
+        { key: 'who', done: Boolean(school().teacher),
+          title: '담당 정보 적기', desc: '누가 물품을 맡고 있는지 알려 주세요.',
+          href: '#/manager', btn: '적으러 가기' },
+        { key: 'spaces', done: hasSpaces(),
+          title: '학교 공간 설정하기', desc: '건물과 층, 실을 미리 정해 두면 등록이 훨씬 쉬워져요.',
+          action: 'spaces', btn: '설정하기' },
+        { key: 'items', done: state.items.length > 0,
+          title: '물품 올리기', desc: '엑셀로 한꺼번에 올리거나, 하나씩 등록할 수 있어요.',
+          href: '#/add', btn: '올리러 가기' },
+      ];
+    }
+
+    function startCardHTML() {
+      if (!isAdmin()) return '';
+      const steps = startSteps();
+      const done = steps.filter((x) => x.done).length;
+      if (done === steps.length) return '';          // 다 끝나면 사라져요
+      const next = steps.find((x) => !x.done);
+
+      return `
+        <section class="card startcard" aria-labelledby="start-title">
+          <div class="startcard__head">
+            <div>
+              <p class="startcard__eyebrow">처음이신가요</p>
+              <h2 class="startcard__title" id="start-title">이 순서로 하면 쉬워요</h2>
+            </div>
+            <span class="startcard__count num">${n(done)} / ${n(steps.length)}</span>
+          </div>
+          <div class="startcard__bar" aria-hidden="true"><span style="width:${(done / steps.length) * 100}%"></span></div>
+
+          <ol class="startlist">
+            ${steps.map((x) => `
+              <li class="startrow ${x.done ? 'is-done' : ''} ${x === next ? 'is-next' : ''}">
+                <span class="startrow__mark" aria-hidden="true">${x.done ? icon(ICONS.check) : ''}</span>
+                <span class="startrow__main">
+                  <span class="startrow__name">${esc(x.title)}</span>
+                  ${x === next ? `<span class="startrow__desc">${esc(x.desc)}</span>` : ''}
+                </span>
+                ${x === next
+                  ? (x.action
+                      ? `<button class="btn btn--solid" type="button" data-action="${esc(x.action)}">${esc(x.btn)}</button>`
+                      : `<a class="btn btn--solid" href="${esc(x.href)}">${esc(x.btn)}</a>`)
+                  : ''}
+              </li>`).join('')}
+          </ol>
+        </section>`;
+    }
+
     function homeView() {
       const items = state.items;
       const loans = state.loans || [];
@@ -3546,6 +3649,8 @@
           </div>
         </header>
 
+        ${startCardHTML()}
+
         <section class="find" aria-labelledby="find-title">
           ${PLAN_SVG}
           <h2 class="find__title" id="find-title">학교 물품 어디 있지?</h2>
@@ -3579,7 +3684,11 @@
                 <span class="rankitem__times num">${n(r.times)}번</span>
               </button>
             </li>`).join('')}</ol>`
-          : `<div class="empty"><strong>아직 대여 기록이 없어요</strong><span>물품을 빌리면 자주 빌리는 순서로 모여요</span></div>`}
+          : `<div class="empty">
+               <strong>아직 대여 기록이 없어요</strong>
+               <span>물품을 빌리면 자주 빌리는 순서로 모여요</span>
+               <a class="btn btn--ghost empty__go" href="#/lend">${icon(ICONS.rent)}지금 빌려 보기</a>
+             </div>`}
         </section>
 
         <section class="card board" aria-labelledby="board-title">
@@ -3599,7 +3708,11 @@
               </button>
             </li>`;
           }).join('')}</ul>`
-          : `<div class="empty"><strong>물어볼 게 있으신가요?</strong><span>“이동식 마이크는 어디 있을까요?”처럼<br>적어 두면 아는 분이 알려 줘요</span></div>`}
+          : `<div class="empty">
+               <strong>물어볼 게 있으신가요?</strong>
+               <span>“이동식 마이크는 어디 있을까요?”처럼<br>적어 두면 아는 분이 알려 줘요</span>
+               <button class="btn btn--ghost empty__go" type="button" id="board-write2">${icon(ICONS.add)}첫 글 쓰기</button>
+             </div>`}
         </section>        </section>`;
     }
 
@@ -3609,7 +3722,9 @@
         if (r) { openRankDetail(r.dataset.rank); return; }
         const pRow = e.target.closest('[data-post]');
         if (pRow) { openPost(pRow.dataset.post, () => render()); return; }
-        if (e.target.closest('#board-write')) openWrite(() => { render(); flash('문의 글을 올렸어요'); });
+        if (e.target.closest('#board-write') || e.target.closest('#board-write2')) {
+          openWrite(() => { render(); flash('문의 글을 올렸어요'); });
+        }
       });
 
       const foot = view.querySelector('#find-foot');
@@ -8935,6 +9050,100 @@
       });
     }
 
+    /* ════════ 자주 묻는 질문 (→ src/pages/help.js) ════════ */
+    const FAQ = [
+      {
+        q: '학교 코드는 어디서 받나요?',
+        a: '우리 학교의 관리 담당 선생님께 여쭤보세요. 관리 담당 선생님은 <b>관리 담당 선생님</b> 화면에서 6자리 코드를 확인하고 알려 줄 수 있어요. 코드를 넣고 신청하면 담당 선생님이 승인한 뒤에 쓸 수 있어요.',
+      },
+      {
+        q: '물품을 한꺼번에 올리고 싶어요',
+        a: '<b>등록</b> 화면 오른쪽 위의 <b>엑셀로 한꺼번에</b>를 누르세요. 양식을 내려받아 채운 뒤 올리면 한 번에 들어가요. 학교에서 내려받은 <b>물품목록정보</b> 파일이 있다면 <b>비품 대장</b> 화면에서 그대로 올려도 돼요.',
+      },
+      {
+        q: '학교 공간 설정은 꼭 해야 하나요?',
+        a: '꼭은 아니지만 먼저 하시는 걸 권해요. 건물과 층, 실을 정해 두면 물품을 등록할 때 <b>타자 대신 눌러서</b> 고를 수 있고, 장소별 보기와 QR 라벨도 그 설정을 바탕으로 움직여요. 배치도 PDF나 사진을 올리면 AI가 실 이름을 읽어서 채워 줘요.',
+      },
+      {
+        q: '실 QR 라벨은 어떻게 쓰나요?',
+        a: '<b>장소별 보기</b>에서 실을 고르고 <b>QR</b>을 누르면 그 실의 QR이 나와요. 인쇄해서 문이나 수납장에 붙이면, 폰 카메라로 찍는 것만으로 그 곳의 물품 목록이 열려요. 로그인하지 않아도 볼 수 있고, 여러 장을 한꺼번에 뽑으려면 관리 담당 화면의 <b>실 QR 라벨</b>을 쓰세요.',
+      },
+      {
+        q: '선생님들께 물품을 한 번에 걷고 싶어요',
+        a: '관리 담당 화면의 <b>물품 모으기</b>에서 링크를 만들어 메신저에 올리세요. 받는 분은 로그인 없이 자기 실을 고르고 물품만 적으면 돼요. 낼 물품이 없으면 <b>제출할 물품 없음</b>을 고르면 되고요. 실별로 누가 냈는지 한눈에 볼 수 있어요.',
+      },
+      {
+        q: '빌린 물품은 어떻게 돌려받나요?',
+        a: '<b>대여</b> 화면에서 그 기록의 <b>반납하기</b>를 누르면 돼요. 반납일이 지나면 빨갛게 보이고, 관리 담당 화면의 <b>챙길 일</b>에도 모여요.',
+      },
+      {
+        q: '담당자가 바뀌어요. 인수인계는 어떻게 하나요?',
+        a: '비품 하나만 넘길 때는 <b>비품 대장</b>에서 그 줄의 <b>인수인계</b>를 누르세요. 여러 가지를 한 번에 넘기려면 <b>여러 개 고르기</b>로 고른 뒤 인수인계하면 서명 두 번으로 끝나요. 문서가 필요하면 <b>인수인계</b> 화면에서 인수인계서를 만들어 인쇄하면 됩니다.',
+      },
+      {
+        q: '잘못 지웠어요. 되살릴 수 있나요?',
+        a: '지운 자료는 되살릴 수 없어요. 그래서 <b>비품 대장 → 엑셀로 내려받기</b>로 가끔 백업해 두시길 권해요. 파일만 있으면 언제든 다시 올릴 수 있어요.',
+      },
+      {
+        q: '프로그램이 바뀌면 우리 자료도 사라지나요?',
+        a: '아니에요. 물품·대여·비품·인수인계 자료는 모두 서버에 저장돼요. 화면이 바뀌어도, 다른 컴퓨터에서 열어도 그대로 있어요.',
+      },
+      {
+        q: '학생도 쓸 수 있나요?',
+        a: '아니요. 이 프로그램은 교직원만 이용합니다. 학생이 쓸 물품도 담당 선생님 이름으로 빌려 주세요. 개인정보 보호를 위해 학생 정보는 아예 받지 않아요.',
+      },
+    ];
+
+    function helpView() {
+      return `
+        <header class="top">
+          <div>
+            <a class="back" href="#/settings">${icon(ICONS.back)}설정</a>
+            <h1 class="top__title" tabindex="-1">자주 묻는 질문</h1>
+          </div>
+        </header>
+
+        <section class="card faq" aria-labelledby="faq-title">
+          <div class="card__head"><h2 class="card__title" id="faq-title">무엇이 궁금하세요?</h2></div>
+          <ul class="faqlist">
+            ${FAQ.map((f, i) => `
+              <li>
+                <details class="faqrow" ${i === 0 ? 'open' : ''}>
+                  <summary>${esc(f.q)}${icon(ICONS.caret, 'icon faqrow__caret')}</summary>
+                  <p class="faqrow__a">${f.a}</p>
+                </details>
+              </li>`).join('')}
+          </ul>
+        </section>
+
+        <section class="card faq" aria-labelledby="faq-ask">
+          <div class="card__head"><h2 class="card__title" id="faq-ask">답이 없으신가요?</h2></div>
+          <p class="sheet__desc">여기에 없는 내용은 직접 물어봐 주세요.</p>
+          <div class="setline">
+            <div class="setline__main">
+              <p class="setline__name">카카오톡 오픈채팅</p>
+              <p class="setline__sub">가장 빠르게 답을 받을 수 있어요.</p>
+            </div>
+            <a class="btn btn--solid" href="${esc(CONTACT.kakao)}" target="_blank" rel="noopener">${icon(ICONS.chat)}문의하기</a>
+          </div>
+          ${CONTACT.mail ? `
+            <div class="setline">
+              <div class="setline__main">
+                <p class="setline__name">이메일</p>
+                <p class="setline__sub">${esc(CONTACT.mail)}</p>
+              </div>
+              <a class="btn btn--ghost" href="mailto:${esc(CONTACT.mail)}">메일 쓰기</a>
+            </div>` : ''}
+          <div class="setline">
+            <div class="setline__main">
+              <p class="setline__name">우리 학교 선생님께 묻기</p>
+              <p class="setline__sub">물품이 어디 있는지 궁금하면 홈의 물품 문의에 남겨 보세요.</p>
+            </div>
+            <a class="btn btn--ghost" href="#/">홈으로</a>
+          </div>
+        </section>`;
+    }
+
     /* ════════ 설정 (→ src/pages/settings.js) ════════ */
     function settingsView() {
       const mail = session?.user?.email || '';
@@ -9002,7 +9211,14 @@
 
         <section class="card setrow" aria-labelledby="s5-title">
           <div class="card__head"><h2 class="card__title" id="s5-title">도움이 필요하세요?</h2></div>
-          <p class="sheet__desc">쓰다가 막히거나 고쳤으면 하는 점이 있으면 알려 주세요.</p>
+          <div class="setline">
+            <div class="setline__main">
+              <p class="setline__name">자주 묻는 질문</p>
+              <p class="setline__sub">코드 받기, 엑셀 올리기, QR 붙이기 같은 것들을 모아 두었어요.</p>
+            </div>
+            <a class="btn btn--ghost" href="#/help">보기</a>
+          </div>
+          <p class="sheet__desc" style="margin-top:14px">여기에 없는 내용은 직접 물어봐 주세요.</p>
           <div class="setline">
             <div class="setline__main">
               <p class="setline__name">카카오톡 오픈채팅</p>
@@ -10288,6 +10504,7 @@
       '#/ledger': { key: 'ledger', view: ledgerView, mount: mountLedger, title: '비품 대장 · 학교 물품 어디 있지?' },
       '#/handover': { key: 'handover', view: handoverView, mount: mountHandover, title: '인수인계 · 학교 물품 어디 있지?' },
       '#/settings': { key: 'settings', view: settingsView, mount: mountSettings, title: '설정 · 학교 물품 어디 있지?' },
+      '#/help': { key: 'help', view: helpView, title: '자주 묻는 질문 · 학교 물품 어디 있지?' },
       '#/manager': { key: 'manager', view: managerView, mount: mountManager, title: '관리 담당 선생님 · 학교 물품 어디 있지?' },
       '#/add':    { key: 'add',  view: addView,    mount: mountAdd,    title: '물품 등록 · 학교 물품 어디 있지?' },
     };
@@ -10379,7 +10596,7 @@
       document.body.classList.toggle('is-add', route.key === 'add' || path === '#/lend');
       document.body.classList.toggle('is-room', route.key === 'place' && state.items.length > 0);
       view.innerHTML = route.view(params);
-      route.mount(view, params);
+      route.mount?.(view, params);   // 화면에 따라 mount가 없을 수 있다
       // 수정 중에는 왼쪽 메뉴의 '등록'을 켜 두지 않는다
       renderNav(route.key === 'add' && editing ? '' : route.key);
       document.title = route.title;
