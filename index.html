@@ -8908,6 +8908,19 @@
             <p class="side-empty">지금은 이 기기에만 저장하는 방식이라 계정이 없어요.</p>
           </section>`}
 
+        ${online() && isAdmin() ? `
+          <section class="card setrow" aria-labelledby="s4-title">
+            <div class="card__head"><h2 class="card__title" id="s4-title">배치도 AI</h2></div>
+            <div class="setline">
+              <div class="setline__main">
+                <p class="setline__name">연결 확인</p>
+                <p class="setline__sub">배치도를 읽는 기능이 제대로 붙어 있는지 확인해요.</p>
+              </div>
+              <button class="btn btn--ghost" type="button" id="s-probe">확인하기</button>
+            </div>
+            <pre class="wizdrop__probe" id="s-probeout" hidden></pre>
+          </section>` : ''}
+
         <section class="card setrow">
           <div class="card__head"><h2 class="card__title">이 앱은</h2></div>
           <p class="sheet__desc">학교 물품이 어디 있는지 바로 찾는 앱이에요. 건물 → 층 → 실 → 보관함 → 칸 순서로 알려 드려요.</p>
@@ -8933,6 +8946,16 @@
         try { localStorage.setItem('school-items:big', bigType ? '1' : ''); } catch {}
         document.body.classList.toggle('is-big', bigType);
         render();
+      });
+
+      view.querySelector('#s-probe')?.addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        const out = view.querySelector('#s-probeout');
+        btn.disabled = true;
+        out.hidden = false;
+        out.textContent = '확인하는 중이에요…';
+        out.textContent = await probeAI();
+        btn.disabled = false;
       });
 
       view.querySelector('#s-out')?.addEventListener('click', async () => {
