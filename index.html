@@ -2435,8 +2435,8 @@
     // 아래 두 줄을 채우면 여러 선생님이 같은 학교 자료를 함께 봐요.
     // 비워 두면 이 기기에만 저장되는 '혼자 쓰기' 모드로 돌아갑니다.
     const SUPABASE = {
-      url: 'https://zhytrtgnedatjwflfgkj.supabase.co',
-      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoeXRydGduZWRhdGp3ZmxmZ2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDAwMTksImV4cCI6MjEwNDg3NjAxOX0.q4A5M70jFDDrmY-Mtdx0QXRNsQzkDASoZgBGX7TA0QE',
+      url: 'https://dpnjqfqxxiagctxrhccd.supabase.co',
+      anonKey: 'sb_publishable_sxWgyiA7CjxV2Hx4R_ryNw_vT4kDRQo',
     };
 
     // 학교 이름으로 주소를 찾아 주는 나이스 교육정보 개방 포털 인증키.
@@ -2445,7 +2445,7 @@
 
     // 배치도를 읽는 Supabase Edge Function의 주소 이름(slug).
     // 대시보드에서 함수 주소 끝부분을 보고 적어 주세요. 예: .../functions/v1/smooth-task → 'smooth-task'
-    const AI_FUNCTION = 'smooth-task';
+    const AI_FUNCTION = 'parse-spaces';
 
     let sb = null;        // Supabase 연결. 설정이 없으면 null
     let session = null;   // 로그인한 사람
@@ -2712,8 +2712,8 @@
         <label class="agree">
           <input type="checkbox" id="g-agree" ${agreed ? 'checked' : ''}>
           <span><b>안내를 읽고 동의합니다</b>
-            <small><a href="#/terms">이용약관</a>과 <a href="#/privacy">개인정보처리방침</a>에 동의하며,
-            자료가 나라 밖 서버(Supabase·Google·Vercel)에 저장되는 것에 동의합니다.</small>
+            <small><a href="#/terms">이용약관</a>과 <a href="#/privacy">개인정보처리방침</a>에 동의합니다.
+            물품 자료는 한국(서울) 서버에 저장되며, 로그인과 화면 전달에는 해외 서버를 거칩니다.</small>
           </span>
         </label>`;
     }
@@ -8627,12 +8627,12 @@
       <table class="legal__table">
         <thead><tr><th>맡는 곳</th><th>맡기는 일</th><th>두는 곳</th></tr></thead>
         <tbody>
-          <tr><td>Supabase, Inc.</td><td>자료 보관과 로그인 처리</td><td>해외 서버</td></tr>
+          <tr><td>Supabase, Inc.</td><td>자료 보관과 로그인 처리</td><td><b>한국(서울) 서버</b></td></tr>
           <tr><td>Google LLC</td><td>구글 계정으로 로그인 확인</td><td>해외 서버</td></tr>
           <tr><td>Vercel Inc.</td><td>앱 화면 전달</td><td>해외 서버</td></tr>
         </tbody>
       </table>
-      <p class="legal__note">자료가 나라 밖 서버에 저장되므로 가입할 때 이 점에 동의를 받습니다. 동의하지 않으면 앱을 쓸 수 없습니다. 맡기는 곳이 바뀌면 이 방침을 고쳐 알립니다.</p>
+      <p class="legal__note">물품·대여·인수인계 자료는 <b>한국(서울)에 있는 서버</b>에 저장합니다. 다만 구글 계정으로 로그인할 때와 앱 화면을 받아 올 때는 해외 서버를 거치므로, 가입할 때 이 점에 동의를 받습니다. 동의하지 않으면 앱을 쓸 수 없습니다. 맡기는 곳이 바뀌면 이 방침을 고쳐 알립니다.</p>
 
       <h2>6. 다른 곳에 주지 않습니다</h2>
       <p>학교는 모은 개인정보를 다른 사람이나 기관에 주지 않습니다. 다만 법에 따라 수사기관이 적법한 절차로 요구하는 경우에는 그 범위에서 따릅니다.</p>
