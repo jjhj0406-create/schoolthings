@@ -113,6 +113,12 @@
     .rail__item[aria-current="page"] .icon { color: var(--marker); }
     .rail__foot { margin-top: auto; padding: 16px 12px 0; border-top: 1px solid rgba(255, 255, 255, .1); font-size: 13px; color: rgba(255, 255, 255, .5); line-height: 1.5; }
     .rail__foot strong { display: block; color: #fff; font-size: 14px; font-weight: 700; }
+    .rail__legal { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .08); font-size: 11.5px; color: rgba(255, 255, 255, .4); line-height: 1.6; }
+    .rail__legal a { color: rgba(255, 255, 255, .55); }
+    .rail__legal a:hover { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
+    .rail__legal span { margin: 0 5px; opacity: .5; }
+    .rail__legal small { display: block; margin-top: 4px; font-size: 11px; color: rgba(255, 255, 255, .3); }
+
     .rail__who { display: block; padding: 8px; margin: -8px; border-radius: 10px; transition: background-color 120ms, color 120ms; }
     .rail__who:hover { background: rgba(255, 255, 255, .07); color: rgba(255, 255, 255, .75); }
 
@@ -318,7 +324,7 @@
     .photo:focus-within { border-color: var(--navy); }
     .photo input { position: absolute; opacity: 0; width: 1px; height: 1px; }
     .photo__icon { width: 44px; height: 44px; border-radius: 10px; background: var(--field); display: grid; place-items: center; color: var(--ink-2); flex: none; overflow: hidden; }
-    .photo__icon img { width: 100%; height: 100%; object-fit: cover; }
+    .photo__icon img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
     .photo__text { font-size: 14px; font-weight: 600; line-height: 1.35; }
     .photo__text small { display: block; font-size: 12px; font-weight: 500; color: var(--ink-2); }
     .photo__busy { display: none; font-size: 14px; font-weight: 600; color: var(--ink-2); }
@@ -355,7 +361,13 @@
     .path__step:not(.is-set) .path__value { color: rgba(255, 255, 255, .35); font-weight: 500; }
 
     .preview__memo { margin-top: 14px; font-size: 14px; line-height: 1.45; color: rgba(255, 255, 255, .85); background: rgba(255, 255, 255, .1); border-radius: 10px; padding: 10px 12px; overflow-wrap: anywhere; }
-    .preview__photo { margin-top: 14px; width: 100%; height: 110px; object-fit: cover; border-radius: 12px; }
+    /* 올린 사진의 비율을 그대로 보여 줍니다. 잘리지 않게, 너무 커지지도 않게. */
+    .preview__photo {
+      display: block; margin-top: 14px;
+      max-width: 100%; max-height: 240px; width: auto; height: auto;
+      object-fit: contain; border-radius: 12px;
+      background: rgba(0, 0, 0, .18);
+    }
     .preview > #preview { min-height: 0; overflow: auto; }
     .preview__foot { margin-top: auto; padding-top: 18px; display: grid; gap: 10px; }
     .preview__done {
@@ -3338,7 +3350,12 @@
       const meCard = online() && session
         ? `<div class="rail__me"><span class="rail__mail">${esc(myEmail())}</span><button class="rail__out" type="button" id="rail-out">로그아웃</button></div>`
         : '';
-      document.getElementById('rail-foot').innerHTML = whoCard + meCard;
+      const footLinks = `
+        <p class="rail__legal">
+          <a href="#/terms">이용약관</a><span>·</span><a href="#/privacy">개인정보처리방침</a>
+          <small>© 2026 학교 물품 어디 있지?. All rights reserved.</small>
+        </p>`;
+      document.getElementById('rail-foot').innerHTML = whoCard + meCard + footLinks;
       document.getElementById('rail-out')?.addEventListener('click', async () => {
         await sb.auth.signOut();
         me = null; session = null; state = blank(); render();
@@ -8908,33 +8925,23 @@
             <p class="side-empty">지금은 이 기기에만 저장하는 방식이라 계정이 없어요.</p>
           </section>`}
 
-        ${online() && isAdmin() ? `
-          <section class="card setrow" aria-labelledby="s4-title">
-            <div class="card__head"><h2 class="card__title" id="s4-title">배치도 AI</h2></div>
-            <div class="setline">
-              <div class="setline__main">
-                <p class="setline__name">연결 확인</p>
-                <p class="setline__sub">배치도를 읽는 기능이 제대로 붙어 있는지 확인해요.</p>
-              </div>
-              <button class="btn btn--ghost" type="button" id="s-probe">확인하기</button>
-            </div>
-            <pre class="wizdrop__probe" id="s-probeout" hidden></pre>
-          </section>` : ''}
-
         <section class="card setrow">
-          <div class="card__head"><h2 class="card__title">이 앱은</h2></div>
-          <p class="sheet__desc">학교 물품이 어디 있는지 바로 찾는 앱이에요. 건물 → 층 → 실 → 보관함 → 칸 순서로 알려 드려요.</p>
+          <div class="card__head"><h2 class="card__title">약관과 방침</h2></div>
           <div class="setline">
             <div class="setline__main">
-              <p class="setline__name">약관과 방침</p>
-              <p class="setline__sub">어떤 정보를 모으고 어떻게 지키는지 적어 두었어요.</p>
+              <p class="setline__name">이용약관</p>
+              <p class="setline__sub">서비스 이용에 관한 권리와 의무를 정한 문서입니다.</p>
             </div>
-            <div class="setabout__btns">
-              <a class="btn btn--ghost" href="#/terms">이용약관</a>
-              <a class="btn btn--ghost" href="#/privacy">개인정보처리방침</a>
-            </div>
+            <a class="btn btn--ghost" href="#/terms">보기</a>
           </div>
-          <p class="wiz__hint">글꼴: 학교안심 (한국교육학술정보원)<br>© 2026 학교 물품 어디 있지?</p>
+          <div class="setline">
+            <div class="setline__main">
+              <p class="setline__name">개인정보처리방침</p>
+              <p class="setline__sub">어떤 정보를 어떻게 모으고 지키는지 적어 두었습니다.</p>
+            </div>
+            <a class="btn btn--ghost" href="#/privacy">보기</a>
+          </div>
+          <p class="wiz__hint">글꼴: 학교안심 (한국교육학술정보원)<br>© 2026 학교 물품 어디 있지?. All rights reserved.</p>
         </section>`;
     }
 
@@ -8946,16 +8953,6 @@
         try { localStorage.setItem('school-items:big', bigType ? '1' : ''); } catch {}
         document.body.classList.toggle('is-big', bigType);
         render();
-      });
-
-      view.querySelector('#s-probe')?.addEventListener('click', async (e) => {
-        const btn = e.currentTarget;
-        const out = view.querySelector('#s-probeout');
-        btn.disabled = true;
-        out.hidden = false;
-        out.textContent = '확인하는 중이에요…';
-        out.textContent = await probeAI();
-        btn.disabled = false;
       });
 
       view.querySelector('#s-out')?.addEventListener('click', async () => {
