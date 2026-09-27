@@ -2587,10 +2587,20 @@
           reason: r.reason || '', witness: r.witness || '', docDate: r.doc_date || null,
         })),
         school: me.school
-          ? { name: me.school.name, address: me.school.address || '', teacher: me.school.teacher,
-              position: me.school.position || '교사', place: me.school.place, tel: me.school.tel }
+          ? {
+              name: me.school.name, address: me.school.address || '', teacher: me.school.teacher,
+              position: me.school.position || '교사', place: me.school.place, tel: me.school.tel,
+              // 서버에 아직 없으면 이 기기에 있던 설정을 지키고, 곧 서버에 올린다
+              spaces: me.school.spaces || school().spaces || null,
+            }
           : state.school,
       };
+
+      // 기기에만 있던 공간 설정은 곧바로 서버에 올려 둔다 (다음 접속에도 남도록)
+      if (isAdmin() && !me?.school?.spaces && state.school?.spaces) {
+        sb.from('schools').update({ spaces: state.school.spaces }).eq('id', me.schoolId)
+          .then(({ error }) => { if (error) console.error('spaces 저장 실패', error); });
+      }
     }
 
     /* 표의 칸 이름과 앱의 이름을 서로 옮겨 준다 */
@@ -2679,6 +2689,7 @@
           name: next.school.name, address: next.school.address || '',
           teacher: next.school.teacher, position: next.school.position || '',
           place: next.school.place, tel: next.school.tel,
+          spaces: next.school.spaces || null,   // 건물·층·실 설정도 함께 저장
         }).eq('id', me.schoolId));
       }
 
