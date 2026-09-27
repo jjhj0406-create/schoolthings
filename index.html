@@ -196,7 +196,7 @@
     .plan .pin-ring { fill: none; stroke: var(--marker); stroke-width: 2; opacity: .5; }
     .find__title { position: relative; font-size: clamp(24px, 2.6vw, 34px); font-weight: 800; line-height: 1.15; letter-spacing: -0.05em; margin-bottom: 26px; white-space: nowrap; }
     .search {
-      position: relative; display: flex; align-items: center; gap: 12px;
+      position: relative; display: flex; align-items: center; gap: 12px; min-width: 0;
       height: 58px; padding: 0 8px 0 18px; max-width: 560px;
       background: #fff; color: var(--ink); border-radius: var(--r-md);
       box-shadow: 0 10px 30px -14px rgba(0, 0, 0, .45);
@@ -2131,6 +2131,50 @@
       .setabout__btns .btn { flex: 1; }
     }
 
+    /* 아주 좁은 화면(또는 글씨 크게 보기)에서도 넘치지 않게 */
+    @media (max-width: 360px) {
+      .search--wide { padding: 0 4px 0 10px; gap: 6px; }
+      .search--wide > .icon { display: none; }
+      .search__go { padding: 0 10px; }
+      .seek { padding: 12px 10px; }
+      .place__acts .btn, .roomview__head .btn { flex: 1; min-width: 0; }
+    }
+
+    /* 폰에서는 물품을 고르기 전까지 아래 칸을 감춰, 한 번에 하나씩 하도록 합니다 */
+    @media (max-width: 760px) {
+      .lend-rest.is-wait { display: none; }
+    }
+
+    .pick__count { font-size: 13px; font-weight: 600; color: var(--ink-3); margin: 10px 0 6px; }
+    .pick__count .num { color: var(--ink); }
+    .pick__more {
+      width: 100%; height: 46px; margin-top: 8px; border-radius: 12px;
+      background: var(--field); font-size: 15px; font-weight: 700; color: var(--ink-2);
+    }
+    .pick__more:hover { background: #e7eaf2; color: var(--ink); }
+
+    /* ───────── 모바일 더보기 ───────── */
+    .moreback { align-items: flex-end; }
+    .moresheet {
+      width: 100%; max-width: 560px; margin: 0 auto;
+      background: var(--card); border-radius: 24px 24px 0 0;
+      padding: 10px 18px calc(18px + env(safe-area-inset-bottom));
+      box-shadow: 0 -18px 50px -20px rgba(23, 32, 74, .5);
+      animation: sheetup 200ms cubic-bezier(.2, .8, .2, 1) both;
+    }
+    @keyframes sheetup { from { transform: translateY(20px); opacity: .6; } to { transform: none; opacity: 1; } }
+    .moresheet__grip { display: block; width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto 12px; }
+    .morelist { list-style: none; display: grid; gap: 3px; }
+    .morerow {
+      display: flex; align-items: center; gap: 13px; width: 100%;
+      padding: 15px 12px; border-radius: 13px; font-size: 16px; font-weight: 600; text-align: left;
+    }
+    .morerow:hover, .morerow:active { background: var(--field); }
+    .morerow .icon { width: 20px; height: 20px; color: var(--ink-2); flex: none; }
+    .morerow span { flex: 1; min-width: 0; }
+    .morerow__go { width: 16px; height: 16px; color: var(--ink-3); }
+    .moresheet .bigbtn { width: 100%; margin-top: 10px; height: 52px; }
+
     .placebar { display: none; }
     .tabbar { display: none; }
 
@@ -2284,7 +2328,11 @@
       .signbox__acts .mini { white-space: nowrap; }
       .sheet { padding: 18px; }
       .seek { position: sticky; top: env(safe-area-inset-top); z-index: 5; padding: 10px; border-radius: 18px; gap: 10px; }
-      .search--wide { height: 52px; }
+      .search--wide { height: 52px; gap: 8px; padding: 0 6px 0 12px; }
+      .search--wide input { font-size: 16px; }
+      .seek { padding: 14px 12px; }
+      .search__go { padding: 0 12px; font-size: 14px; }
+      .search__clear { width: 30px; height: 30px; }
       .search--wide input { font-size: 16px; }
       .filters { flex-wrap: nowrap; overflow-x: auto; margin: 0 -10px; padding: 0 10px; scrollbar-width: none; }
       .filters::-webkit-scrollbar { display: none; }
@@ -3090,7 +3138,8 @@
       next: 'M9 6l6 6-6 6',
       print: 'M7 9V3h10v6 M7 17H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2 M7 14h10v7H7z',
       refresh: 'M20 11a8 8 0 10-2.3 5.7 M20 5v6h-6',
-      settings: 'M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z',
+      more: 'M4 6h16 M4 12h16 M4 18h16',
+            settings: 'M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z',
             qr: 'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h2v2h-2z M18 14h2v2h-2z M14 18h2v2h-2z M18 18h2v2h-2z',
       manager: 'M12 12.5a4 4 0 100-8 4 4 0 000 8z M4.5 20.5a7.5 7.5 0 0115 0',
       edit: 'M4 20h4L18.5 9.5l-4-4L4 16z M14 6l4 4',
@@ -3108,6 +3157,7 @@
       { key: 'ledger', label: '비품 대장', href: '#/ledger', tab: false },
       { key: 'handover', label: '인수인계', href: '#/handover', tab: false, manage: true },
       { key: 'settings', label: '설정', href: '#/settings', tab: false },
+      { key: 'more', label: '더보기', action: 'more', rail: false },
     ];
 
     /* ════════ 한글 검색 (→ src/lib/search.js) ════════ */
@@ -3357,7 +3407,7 @@
       };
       const menu = MENU.filter((m) => (!m.admin || isAdmin()) && (!m.manage || canImport())
         && !(m.key === 'handover' && missingTables.has('handovers')));
-      document.getElementById('rail-nav').innerHTML = menu.map((m) => item(m, 'rail__item', true)).join('');
+      document.getElementById('rail-nav').innerHTML = menu.filter((m) => m.rail !== false).map((m) => item(m, 'rail__item', true)).join('');
       document.getElementById('tabbar').innerHTML = menu.filter((m) => m.tab !== false).map((m) => item(m, 'tabbar__item', false)).join('');
       const s = school();
       const who = s.teacher ? `${s.teacher} ${s.position || '선생님'}` : '물품 담당';
@@ -4409,6 +4459,7 @@
 
     /* ── 빌리기 ── */
     let lend = null;
+    let lendShow = 10;   // 빌릴 물품 목록에 보여 줄 개수
     const emptyLend = () => ({
       itemId: '', qty: 1, dueAt: plusDays(1), period: '', periodNote: '', memo: '', q: '', cat: '',
       staffName: writerName(),
@@ -4466,7 +4517,7 @@
             <p class="field__error" id="e-item"></p>`}
         </form>
 
-        <section class="sheet card" aria-labelledby="lend-who">
+        <section class="sheet card lend-rest ${chosen ? '' : 'is-wait'}" aria-labelledby="lend-who">
           <h2 class="sheet__title" id="lend-who">누가, 언제까지</h2>
           <p class="sheet__desc">반납일이 지나면 대여 현황에서 빨갛게 보여요. <span class="req">*</span> 표시는 꼭 적어야 해요.</p>
 
@@ -4525,6 +4576,7 @@
     }
 
     function mountLend(view) {
+      lend = lend || emptyLend();
       const form = view.querySelector('#lend-form');
       let tried = false;
 
@@ -4551,12 +4603,21 @@
           return;
         }
         const q = lend.q.trim();
-        const found = (q ? searchItems(pool, q).map((r) => r.item) : pool.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt))).slice(0, 10);
+        // 검색어가 없으면 자주 빌린 물품을 먼저 보여 준다
+        const often = new Map();
+        for (const l of state.loans || []) often.set(l.itemId, (often.get(l.itemId) || 0) + 1);
+        const sorted = pool.slice().sort((a, b) =>
+          (often.get(b.id) || 0) - (often.get(a.id) || 0) || b.createdAt.localeCompare(a.createdAt));
+        const all = q ? searchItems(pool, q).map((r) => r.item) : sorted;
+        const found = all.slice(0, lendShow);
         if (!found.length) {
           box.innerHTML = `<p class="pick__none">${q ? `‘${esc(q)}’${esc(josa(q, '은/는').slice(q.length))} 찾지 못했어요.` : `${esc(lend.cat)}에는 빌릴 수 있는 물품이 없어요.`}</p>`;
           return;
         }
-        box.innerHTML = `<ul class="pick__results">${found.map((it) => {
+        const rest = all.length - found.length;
+        box.innerHTML = `
+          <p class="pick__count">${q ? `<b class="num">${n(all.length)}개</b> 찾았어요` : '자주 빌리는 물품부터 보여 드려요'}</p>
+          <ul class="pick__results">${found.map((it) => {
           const left = leftOf(it);
           return `<li>
             <button class="pickrow" type="button" data-pick="${it.id}" ${left ? '' : 'disabled'}>
@@ -4565,7 +4626,8 @@
               <span class="pickrow__where">${esc(pathOf(it).join(' › '))}</span>
             </button>
           </li>`;
-        }).join('')}</ul>`;
+        }).join('')}</ul>
+          ${rest > 0 ? `<button class="pick__more" type="button" id="l-more">${n(rest)}개 더 보기</button>` : ''}`;
       }
 
       function readLend() {
@@ -4648,9 +4710,10 @@
       });
 
       const qBox = view.querySelector('#l-q');
-      if (qBox) qBox.addEventListener('input', () => { lend.q = qBox.value; renderResults(); });
+      if (qBox) qBox.addEventListener('input', () => { lend.q = qBox.value; lendShow = 10; renderResults(); });
 
       view.addEventListener('click', (e) => {
+        if (e.target.closest('#l-more')) { lendShow += 20; renderResults(); return; }
         const pick = e.target.closest('[data-pick]');
         if (pick) { lend = { ...readLend(), itemId: pick.dataset.pick, qty: 1 }; render(); return; }
         if (e.target.closest('#l-change')) { lend = { ...readLend(), itemId: '', qty: 1 }; render(); return; }
@@ -8841,6 +8904,37 @@
       });
     }
 
+    /* ── 모바일 더보기 시트 ── */
+    function openMore() {
+      const rows = MENU.filter((m) => m.tab === false && (!m.admin || isAdmin()) && (!m.manage || canImport())
+        && !(m.key === 'handover' && missingTables.has('handovers')));
+
+      const back = document.createElement('div');
+      back.className = 'signback moreback';
+      back.innerHTML = `
+        <div class="moresheet" role="dialog" aria-modal="true" aria-label="더보기">
+          <span class="moresheet__grip" aria-hidden="true"></span>
+          <ul class="morelist">
+            ${rows.map((m) => (m.action
+              ? `<li><button class="morerow" type="button" data-more-action="${esc(m.action)}">${icon(ICONS[m.key])}<span>${esc(m.label)}</span>${icon(ICONS.next, 'icon morerow__go')}</button></li>`
+              : `<li><a class="morerow" href="${esc(m.href)}">${icon(ICONS[m.key])}<span>${esc(m.label)}</span>${icon(ICONS.next, 'icon morerow__go')}</a></li>`)).join('')}
+            <li><a class="morerow" href="${esc(CONTACT.kakao)}" target="_blank" rel="noopener">${icon(ICONS.chat)}<span>만든 사람에게 문의하기</span>${icon(ICONS.next, 'icon morerow__go')}</a></li>
+          </ul>
+          <button class="bigbtn bigbtn--ghost" type="button" id="more-close">닫기</button>
+        </div>`;
+      document.body.append(back);
+
+      const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      back.addEventListener('click', (e) => {
+        if (e.target === back || e.target.closest('#more-close')) { close(); return; }
+        const act = e.target.closest('[data-more-action]');
+        if (act) { close(); if (act.dataset.moreAction === 'spaces') openSpaces(); return; }
+        if (e.target.closest('.morerow')) close();
+      });
+    }
+
     /* ════════ 설정 (→ src/pages/settings.js) ════════ */
     function settingsView() {
       const mail = session?.user?.email || '';
@@ -10309,6 +10403,7 @@
 
     document.addEventListener('click', (e) => {
       if (e.target.closest('[data-action="spaces"]')) { openSpaces(); return; }
+      if (e.target.closest('[data-action="more"]')) { openMore(); return; }
 
       // 수정하기
       const edit = e.target.closest('[data-edit]');
