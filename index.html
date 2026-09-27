@@ -6658,7 +6658,10 @@
         }
         return Array.isArray(data.rooms) ? data.rooms.filter((r) => r && r.name) : null;
       } catch {
-        aiWhy = '서버에 닿지 못했어요. 인터넷을 확인해 주세요.';
+        // 여기로 오면 요청이 서버까지 가지 못한 것이다. 원인이 둘 중 하나다.
+        aiWhy = `배치도 읽기 서버에 닿지 못했어요. 관리 담당 선생님께 아래 두 가지를 확인해 달라고 해 주세요.
+① Supabase → Edge Functions 에 '${AI_FUNCTION}' 이라는 이름의 함수가 있는지
+② 그 함수 설정에서 'Enforce JWT Verification' 이 꺼져 있는지`;
         return null;
       }
     }
