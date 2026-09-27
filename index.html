@@ -113,7 +113,15 @@
     .rail__item[aria-current="page"] .icon { color: var(--marker); }
     .rail__foot { margin-top: auto; padding: 16px 12px 0; border-top: 1px solid rgba(255, 255, 255, .1); font-size: 13px; color: rgba(255, 255, 255, .5); line-height: 1.5; }
     .rail__foot strong { display: block; color: #fff; font-size: 14px; font-weight: 700; }
-    .rail__legal { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .08); font-size: 11.5px; color: rgba(255, 255, 255, .4); line-height: 1.6; }
+    .rail__ask {
+      display: flex; align-items: center; gap: 7px; margin-top: 14px;
+      padding: 9px 10px; border-radius: 10px;
+      background: rgba(255, 255, 255, .07); color: rgba(255, 255, 255, .75);
+      font-size: 12.5px; font-weight: 700;
+    }
+    .rail__ask:hover { background: rgba(255, 255, 255, .13); color: #fff; }
+    .rail__ask .icon { width: 15px; height: 15px; flex: none; }
+    .rail__legal { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .08); font-size: 11.5px; color: rgba(255, 255, 255, .4); line-height: 1.6; }
     .rail__legal a { color: rgba(255, 255, 255, .55); }
     .rail__legal a:hover { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
     .rail__legal span { margin: 0 5px; opacity: .5; }
@@ -2606,14 +2614,13 @@
     const fromRowLoan = (r) => ({
       id: r.id, itemId: r.item_id, itemName: r.item_name, path: r.path, qty: r.qty, who: r.who,
       dueAt: r.due_at, period: r.period, periodNote: r.period_note, memo: r.memo,
-      ...(r.who_type ? { whoType: r.who_type } : {}),
       ...(r.by_user ? { by: r.by_user } : {}),
       ...(r.sign ? { sign: r.sign } : {}),
       outAt: r.out_at, returnedAt: r.returned_at,
     });
     const toRowLoan = (l) => ({
       id: l.id, school_id: me.schoolId, item_id: l.itemId, item_name: l.itemName, path: l.path || '',
-      qty: l.qty, who: l.who, who_type: l.whoType || 'staff', by_user: l.by || '', due_at: l.dueAt || null, period: l.period || '',
+      qty: l.qty, who: l.who, who_type: 'staff', by_user: l.by || '', due_at: l.dueAt || null, period: l.period || '',
       period_note: l.periodNote || '', memo: l.memo || '', sign: l.sign || null,
       out_at: l.outAt, returned_at: l.returnedAt,
     });
@@ -3351,6 +3358,7 @@
         ? `<div class="rail__me"><span class="rail__mail">${esc(myEmail())}</span><button class="rail__out" type="button" id="rail-out">로그아웃</button></div>`
         : '';
       const footLinks = `
+        <a class="rail__ask" href="${esc(CONTACT.kakao)}" target="_blank" rel="noopener">${icon(ICONS.chat)}만든 사람에게 문의하기</a>
         <p class="rail__legal">
           <a href="#/terms">이용약관</a><span>·</span><a href="#/privacy">개인정보처리방침</a>
           <small>© 2026 학교 물품 어디 있지?. All rights reserved.</small>
@@ -4392,17 +4400,11 @@
     let lend = null;
     const emptyLend = () => ({
       itemId: '', qty: 1, dueAt: plusDays(1), period: '', periodNote: '', memo: '', q: '', cat: '',
-      whoType: 'staff', staffName: writerName(), grade: '', classNo: '', studentName: '',
+      staffName: writerName(),
     });
 
-    // 빌리는 분을 한 줄로 만든다. 학생은 학년·반까지 붙여 동명이인을 가린다.
-    function whoText(d) {
-      if (d.whoType === 'student') {
-        const bits = [d.grade && `${d.grade}학년`, d.classNo && `${d.classNo}반`, d.studentName].filter(Boolean);
-        return bits.join(' ');
-      }
-      return d.staffName;
-    }
+    // 빌리는 분 이름 (교직원만 이용합니다)
+    const whoText = (d) => (d.staffName || '').trim();
     const PERIODS = ['1', '2', '3', '4', '5', '6', '7', '8'];
     const WHENS = [{ d: 0, label: '오늘' }, { d: 1, label: '내일' }, { d: 3, label: '3일 뒤' }, { d: 7, label: '일주일 뒤' }];
 
@@ -4457,33 +4459,13 @@
           <h2 class="sheet__title" id="lend-who">누가, 언제까지</h2>
           <p class="sheet__desc">반납일이 지나면 대여 현황에서 빨갛게 보여요. <span class="req">*</span> 표시는 꼭 적어야 해요.</p>
 
-          <fieldset class="field">
-            <legend class="field__label">빌리는 분<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></legend>
-            <div class="whotabs" role="group" aria-label="누가 빌리나요">
-              <button class="whotab" type="button" data-whotype="staff" aria-pressed="${d.whoType !== 'student'}">${icon(ICONS.manager)}교직원</button>
-              <button class="whotab" type="button" data-whotype="student" aria-pressed="${d.whoType === 'student'}">${icon(ICONS.student)}학생</button>
-            </div>
-
-            <div class="whobox" ${d.whoType === 'student' ? 'hidden' : ''} id="who-staff">
-              <input class="input" id="l-staff" name="staffName" form="lend-form" list="l-staff-list" placeholder="예: 김하늘" autocomplete="off" value="${esc(d.staffName)}" aria-label="교직원 이름">
-              <datalist id="l-staff-list">${[...new Set((state.loans || []).filter((l) => l.whoType !== 'student').map((l) => l.who))].map((w) => `<option value="${esc(w)}"></option>`).join('')}</datalist>
-            </div>
-
-            <div class="whobox" ${d.whoType === 'student' ? '' : 'hidden'} id="who-student">
-              <div class="whoclass">
-                <span class="whonum">
-                  <input class="input num" id="l-grade" name="grade" form="lend-form" type="number" inputmode="numeric" min="1" max="9" placeholder="0" value="${esc(d.grade)}" aria-label="학년">
-                  <span class="whonum__unit">학년</span>
-                </span>
-                <span class="whonum">
-                  <input class="input num" id="l-class" name="classNo" form="lend-form" type="number" inputmode="numeric" min="1" max="99" placeholder="0" value="${esc(d.classNo)}" aria-label="반">
-                  <span class="whonum__unit">반</span>
-                </span>
-                <input class="input" id="l-sname" name="studentName" form="lend-form" placeholder="이름" autocomplete="off" value="${esc(d.studentName)}" aria-label="학생 이름">
-              </div>
-            </div>
+          <div class="field">
+            <label class="field__label" for="l-staff">빌리는 분<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
+            <input class="input" id="l-staff" name="staffName" form="lend-form" list="l-staff-list" placeholder="예: 김하늘" autocomplete="off" value="${esc(d.staffName)}">
+            <datalist id="l-staff-list">${[...new Set((state.loans || []).map((l) => l.who))].filter(Boolean).map((w) => `<option value="${esc(w)}"></option>`).join('')}</datalist>
+            <p class="wiz__hint">이 프로그램은 교직원만 이용합니다. 학생이 쓸 물품은 담당 선생님 이름으로 빌려 주세요.</p>
             <p class="field__error" id="e-who"></p>
-          </fieldset>
+          </div>
 
           <div class="field">
             <label class="field__label" for="l-due">반납 예정일<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
@@ -4583,9 +4565,6 @@
           ...lend,
           qty: Math.min(Math.max(1, parseInt(fd.get('qty'), 10) || 1), Math.max(1, max)),
           staffName: (fd.get('staffName') || '').trim(),
-          grade: (fd.get('grade') || '').trim(),
-          classNo: (fd.get('classNo') || '').trim(),
-          studentName: (fd.get('studentName') || '').trim(),
           dueAt: fd.get('dueAt') || '',
           period: fd.get('period') || '',
           periodNote: (fd.get('periodNote') || '').trim(),
@@ -4620,11 +4599,7 @@
         const out = [];
         if (!chosen) out.push(['item', '빌릴 물품을 골라 주세요']);
         else if (lend.qty > leftOf(chosen)) out.push(['qty', `지금은 ${leftOf(chosen)}개까지 빌릴 수 있어요`]);
-        if (lend.whoType === 'student') {
-          if (!lend.grade || !lend.classNo || !lend.studentName) out.push(['who', '학년, 반, 이름을 모두 적어 주세요']);
-        } else if (!lend.staffName) {
-          out.push(['who', '빌리는 분 이름을 적어 주세요']);
-        }
+        if (!lend.staffName) out.push(['who', '빌리는 분 이름을 적어 주세요']);
         if (!lend.dueAt) out.push(['due', '반납 예정일을 정해 주세요']);
         else if (daysBetween(today(), lend.dueAt) < 0) out.push(['due', '오늘보다 이전 날짜는 고를 수 없어요']);
         return out;
@@ -4677,18 +4652,6 @@
         }
         const when = e.target.closest('[data-when]');
         if (when) { view.querySelector('#l-due').value = plusDays(Number(when.dataset.when)); sync(); return; }
-        const wt = e.target.closest('[data-whotype]');
-        if (wt) {
-          lend = { ...readLend(), whoType: wt.dataset.whotype };
-          for (const b of view.querySelectorAll('[data-whotype]')) {
-            b.setAttribute('aria-pressed', String(b.dataset.whotype === lend.whoType));
-          }
-          view.querySelector('#who-staff').hidden = lend.whoType === 'student';
-          view.querySelector('#who-student').hidden = lend.whoType !== 'student';
-          view.querySelector(lend.whoType === 'student' ? '#l-grade' : '#l-staff').focus();
-          sync();
-          return;
-        }
         const cat = e.target.closest('[data-cat]');
         if (cat) { lend = { ...readLend(), cat: cat.dataset.cat }; renderCats(); renderResults(); return; }
 
@@ -4701,8 +4664,7 @@
         const list = problems();
         showProblems(list);
         if (list.length) {
-          const first = { item: '#l-q', qty: '#l-qty',
-            who: lend.whoType === 'student' ? '#l-grade' : '#l-staff', due: '#l-due' }[list[0][0]];
+          const first = { item: '#l-q', qty: '#l-qty', who: '#l-staff', due: '#l-due' }[list[0][0]];
           view.querySelector(first)?.focus();
           return;
         }
@@ -4717,7 +4679,7 @@
           const loan = {
             id: 'lon_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
             itemId: item.id, itemName: item.name, path: pathOf(item).join(' › '),
-            qty: lend.qty, who: whoText(lend), whoType: lend.whoType, dueAt: lend.dueAt,
+            qty: lend.qty, who: whoText(lend), dueAt: lend.dueAt,
           by: session?.user?.id || '',
             period: lend.period, periodNote: lend.period === 'etc' ? lend.periodNote : '',
             memo: lend.memo, sign,
@@ -8582,6 +8544,12 @@
     /* ════════ 약관과 개인정보처리방침 (→ src/pages/legal.js) ════════ */
     const LEGAL_DATE = '2026년 9월 27일';
 
+    // 만든 사람에게 연락하는 곳
+    const CONTACT = {
+      kakao: 'https://open.kakao.com/o/skNQVGPi',
+      mail: 'jjhj0406@gmail.com',
+    };
+
     const legalSchool = () => school().name || '(학교 이름)';
     const legalOwner = () => {
       const t = school().teacher;
@@ -8637,10 +8605,10 @@
             <td>구글 계정을 통한 로그인, 이용자의 직접 입력</td>
           </tr>
           <tr>
-            <td>물품 대여자<br>(교직원·학생)</td>
-            <td>성명, 교직원·학생 구분</td>
-            <td>학년·반, 전자서명 이미지, 비고</td>
-            <td>대여 화면에서 담당 교사 또는 본인의 직접 입력</td>
+            <td>물품 대여자<br>(교직원)</td>
+            <td>성명</td>
+            <td>전자서명 이미지, 비고</td>
+            <td>대여 화면에서 본인 또는 담당 교사의 직접 입력</td>
           </tr>
           <tr>
             <td>인수인계 당사자</td>
@@ -8662,7 +8630,7 @@
           </tr>
         </tbody>
       </table>
-      <p class="legal__note">서비스 이용 과정에서 접속 기록, 접속 아이피(IP) 정보, 서비스 이용 기록이 자동으로 생성되어 수탁사의 서버에 일시적으로 저장될 수 있습니다. 학교는 주민등록번호, 여권번호 등 고유식별정보와 사상·신념, 건강 등 민감정보를 수집하지 않습니다.</p>
+      <p class="legal__note"><b>서비스는 학생의 개인정보를 일절 수집하지 않습니다.</b> 물품 대여는 교직원 명의로만 이루어지며, 학생이 사용할 물품도 담당 교사의 이름으로 대여합니다. 서비스 이용 과정에서 접속 기록, 접속 아이피(IP) 정보, 서비스 이용 기록이 자동으로 생성되어 수탁사의 서버에 일시적으로 저장될 수 있습니다. 학교는 주민등록번호, 여권번호 등 고유식별정보와 사상·신념, 건강 등 민감정보를 수집하지 않습니다.</p>
 
       <h2>제3조 (개인정보의 처리 및 보유 기간)</h2>
       <p>학교는 법령에 따른 보유·이용 기간 또는 정보주체로부터 동의받은 기간 내에서 개인정보를 처리·보유합니다.</p>
@@ -8670,7 +8638,7 @@
         <thead><tr><th>구분</th><th>보유 기간</th><th>근거</th></tr></thead>
         <tbody>
           <tr><td>가입 교직원 정보</td><td>회원 탈퇴 또는 소속 해제 시 지체 없이 파기</td><td>동의 목적 달성</td></tr>
-          <tr><td>대여·반납 기록 및 전자서명</td><td>반납 완료일부터 1년</td><td>물품 회수 및 분실 확인</td></tr>
+          <tr><td>대여·반납 기록 및 전자서명</td><td>반납 완료일부터 1년</td><td>물품 회수 및 분실 여부 확인</td></tr>
           <tr><td>인수인계서</td><td>작성일부터 5년</td><td>물품 관리 책임의 확인</td></tr>
           <tr><td>물품 문의 게시물</td><td>작성일부터 1년 또는 작성자·관리자의 삭제 시까지</td><td>동의 목적 달성</td></tr>
           <tr><td>물품 조사 응답</td><td>조사 종료 후 6개월</td><td>동의 목적 달성</td></tr>
@@ -8678,8 +8646,9 @@
       </table>
       <p class="legal__note">다른 법령에서 더 긴 보존 기간을 정한 경우에는 해당 법령을 따릅니다. 보유 기간이 지난 개인정보는 관리 담당 교사가 삭제하며, 서비스는 삭제가 필요한 기록을 관리 화면에서 안내합니다.</p>
 
-      <h2>제4조 (만 14세 미만 아동 및 학생 정보의 처리)</h2>
-      <p>서비스의 가입 대상은 학교의 교직원으로 한정되며, 학생은 회원으로 가입할 수 없습니다. 다만 물품 대여 과정에서 학생의 성명, 학년·반, 전자서명이 기록될 수 있습니다. 이 정보는 학교가 교육활동 및 물품 관리 업무를 수행하기 위하여 「개인정보 보호법」 제15조 제1항 제3호에 따라 처리하는 것으로, 대여한 물품의 회수 이외의 목적으로는 이용하지 않습니다. 학생 또는 법정대리인은 담임교사 또는 아래 개인정보 보호책임자를 통하여 열람·정정·삭제를 요구할 수 있습니다.</p>
+      <h2>제4조 (아동 및 학생 개인정보의 미수집)</h2>
+      <p>서비스의 이용 대상은 학교의 교직원으로 한정됩니다. 학생은 회원으로 가입할 수 없으며, 학교는 <b>학생을 포함한 만 14세 미만 아동의 개인정보를 수집·처리하지 않습니다.</b></p>
+      <p>물품 대여 기능은 교직원 명의로만 이용할 수 있도록 설계되어 있으며, 학생이 사용할 물품의 경우에도 담당 교사가 본인의 이름으로 대여합니다. 이용자는 대여자 성명, 비고 등 어떠한 입력란에도 학생의 성명, 학년·반 등 학생을 식별할 수 있는 정보를 입력하여서는 아니 됩니다.</p>
 
       <h2>제5조 (개인정보의 제3자 제공)</h2>
       <p>학교는 정보주체의 개인정보를 제1조의 목적 범위 내에서만 처리하며, 정보주체의 동의, 법률의 특별한 규정 등 「개인정보 보호법」 제17조 및 제18조에 해당하는 경우에만 제3자에게 제공합니다. 현재 제3자에게 제공하는 개인정보는 없습니다.</p>
@@ -8767,7 +8736,7 @@
         <thead><tr><th>용어</th><th>뜻</th></tr></thead>
         <tbody>
           <tr><td>서비스</td><td>학교 물품의 위치 확인, 대여 관리, 비품 대장 및 인수인계를 지원하는 웹 기반 프로그램</td></tr>
-          <tr><td>이용자</td><td>서비스에 가입하여 이를 이용하는 학교의 교직원</td></tr>
+          <tr><td>이용자</td><td>서비스에 가입하여 이를 이용하는 학교의 교직원 (학생은 이용 대상이 아님)</td></tr>
           <tr><td>학교</td><td>참여 코드로 구분되는 이용 단위이며, 해당 학교의 자료를 보유하는 주체</td></tr>
           <tr><td>관리 담당자</td><td>학교를 최초로 개설하였거나 권한을 부여받아 가입 승인과 자료 관리를 수행하는 이용자</td></tr>
         </tbody>
@@ -8787,6 +8756,7 @@
       <ul>
         <li>학교 업무와 무관한 목적으로 서비스를 이용하는 행위</li>
         <li>업무상 필요한 범위를 넘어 타인의 개인정보를 입력하거나 외부로 유출하는 행위</li>
+        <li><b>학생의 성명, 학년·반 등 학생을 식별할 수 있는 정보를 입력하는 행위</b></li>
         <li>학교 참여 코드, 공유 링크, QR 라벨을 학교 외부에 배포하는 행위</li>
         <li>서비스의 정상적인 운영을 방해하거나 서버에 과도한 부하를 발생시키는 행위</li>
         <li>서비스를 역설계하거나 권한 없이 자료에 접근하려는 행위</li>
@@ -8811,7 +8781,7 @@
       </ul>
 
       <h2>제10조 (개인정보의 보호)</h2>
-      <p>서비스의 개인정보 처리에 관한 사항은 별도의 <b>개인정보처리방침</b>에 따릅니다. 이용자는 대여자 등 타인의 개인정보를 입력할 때 필요한 최소한의 범위로 한정하여야 합니다.</p>
+      <p>서비스의 개인정보 처리에 관한 사항은 별도의 <b>개인정보처리방침</b>에 따릅니다. 서비스는 교직원만을 이용 대상으로 하며, <b>학생을 포함한 미성년자의 개인정보는 수집하지 않습니다.</b> 이용자는 대여자 등 타인의 개인정보를 입력할 때 필요한 최소한의 범위로 한정하여야 하며, 학생을 식별할 수 있는 정보는 입력하지 않아야 합니다.</p>
 
       <h2>제11조 (준거법 및 관할)</h2>
       <p>이 약관은 대한민국 법령에 따라 해석되며, 서비스 이용과 관련하여 분쟁이 발생한 경우 「민사소송법」에 따른 관할 법원에 제기합니다.</p>
@@ -8924,6 +8894,26 @@
             <div class="card__head"><h2 class="card__title">계정</h2></div>
             <p class="side-empty">지금은 이 기기에만 저장하는 방식이라 계정이 없어요.</p>
           </section>`}
+
+        <section class="card setrow" aria-labelledby="s5-title">
+          <div class="card__head"><h2 class="card__title" id="s5-title">도움이 필요하세요?</h2></div>
+          <p class="sheet__desc">쓰다가 막히거나 고쳤으면 하는 점이 있으면 알려 주세요.</p>
+          <div class="setline">
+            <div class="setline__main">
+              <p class="setline__name">카카오톡 오픈채팅</p>
+              <p class="setline__sub">가장 빠르게 답을 받을 수 있어요.</p>
+            </div>
+            <a class="btn btn--solid" href="${esc(CONTACT.kakao)}" target="_blank" rel="noopener">${icon(ICONS.chat)}문의하기</a>
+          </div>
+          ${CONTACT.mail ? `
+            <div class="setline">
+              <div class="setline__main">
+                <p class="setline__name">이메일</p>
+                <p class="setline__sub">${esc(CONTACT.mail)}</p>
+              </div>
+              <a class="btn btn--ghost" href="mailto:${esc(CONTACT.mail)}">메일 쓰기</a>
+            </div>` : ''}
+        </section>
 
         <section class="card setrow">
           <div class="card__head"><h2 class="card__title">약관과 방침</h2></div>
