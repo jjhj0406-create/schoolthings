@@ -2219,6 +2219,16 @@
     .qpick__path { display: block; font-size: 12.5px; color: var(--ink-3); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .qpick__right { font-size: 13px; font-weight: 700; color: var(--board); flex: none; }
 
+    /* 자동 승인 스위치 */
+    .autojoin {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 12px;
+      padding: 14px 16px; border-radius: 14px; background: var(--field); cursor: pointer;
+    }
+    .autojoin__main { flex: 1; min-width: 0; }
+    .autojoin b { display: block; font-size: 15px; }
+    .autojoin small { display: block; font-size: 13px; color: var(--ink-2); line-height: 1.5; margin-top: 3px; word-break: keep-all; }
+    .autojoin .toggle { flex: none; }
+
     .empty__go { margin-top: 14px; }
 
     /* ───────── 자주 묻는 질문 ───────── */
@@ -9238,7 +9248,7 @@
           ['한눈에 보기', '물품 수, 대여 중, 늦음, 챙길 일을 숫자로 보여 줘요.'],
           ['챙길 일', '늦은 반납, 수리 필요, 대장 빈칸처럼 손봐야 할 것들이 모여요.'],
           ['물품 모으기', '링크를 만들어 보내면 선생님들이 각자 물품을 적어 내요.'],
-          ['우리 학교 선생님', '가입 신청을 승인하고 권한을 줄 수 있어요.'],
+          ['우리 학교 선생님', '가입 신청을 승인하고 권한을 줄 수 있어요. 스위치를 켜면 승인 없이 바로 쓰게 할 수도 있어요.'],
         ],
       },
       settings: {
@@ -9291,6 +9301,10 @@
       {
         q: '학교 코드는 어디서 받나요?',
         a: '우리 학교의 관리 담당 선생님께 여쭤보세요. 관리 담당 선생님은 <b>관리 담당 선생님</b> 화면에서 6자리 코드를 확인하고 알려 줄 수 있어요. 코드를 넣고 신청하면 담당 선생님이 승인한 뒤에 쓸 수 있어요.',
+      },
+      {
+        q: '가입 승인을 매번 하기 번거로워요',
+        a: '관리 담당 화면의 <b>우리 학교 선생님</b>을 펼치면 <b>코드를 넣으면 바로 쓰게 하기</b> 스위치가 있어요. 켜 두면 코드를 넣은 분이 승인 없이 바로 들어옵니다. 다만 코드가 학교 밖으로 새면 누구나 들어올 수 있으니, 학기 초처럼 많이 가입할 때만 켜 두었다가 끄시는 걸 권해요.',
       },
       {
         q: '물품을 한꺼번에 올리고 싶어요',
@@ -10148,10 +10162,38 @@
             </div>
           </li>`;
 
-        list.innerHTML = members.length
-          ? `<ul class="mlist">${[...pending, ...active].map(row).join('')}</ul>`
-          : '<p class="side-empty">아직 가입한 선생님이 없어요.</p>';
+        const auto = Boolean(me?.school?.auto_join);
+        list.innerHTML = `
+          <label class="autojoin">
+            <span class="autojoin__main">
+              <b>코드를 넣으면 바로 쓰게 하기</b>
+              <small>${auto
+                ? '지금은 승인 없이 바로 들어옵니다. 코드가 밖으로 새지 않도록 조심해 주세요.'
+                : '지금은 신청이 오면 담당 선생님이 승인해야 합니다.'}</small>
+            </span>
+            <span class="toggle ${auto ? 'is-on' : ''}" id="auto-join" role="switch" tabindex="0" aria-checked="${auto}" aria-label="코드를 넣으면 바로 쓰게 하기">
+              <span class="toggle__dot"></span>
+            </span>
+          </label>
+          ${members.length
+            ? `<ul class="mlist">${[...pending, ...active].map(row).join('')}</ul>`
+            : '<p class="side-empty">아직 가입한 선생님이 없어요.</p>'}`;
       }
+
+      view.addEventListener('click', (e) => {
+        if (!e.target.closest('#auto-join')) return;
+        const next = !me?.school?.auto_join;
+        sb.rpc('set_auto_join', { on_off: next }).then(({ error }) => {
+          if (error) {
+            console.error(error);
+            flash('바꾸지 못했어요. supabase-update.sql을 실행했는지 확인해 주세요', 'warn');
+            return;
+          }
+          if (me?.school) me.school.auto_join = next;
+          drawTeam();
+          flash(next ? '이제 코드를 넣으면 바로 쓸 수 있어요' : '이제 승인을 거쳐야 쓸 수 있어요');
+        });
+      });
 
       view.querySelector('#who-form').addEventListener('submit', (e) => {
         e.preventDefault();
