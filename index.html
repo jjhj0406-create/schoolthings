@@ -10166,12 +10166,9 @@
         list.innerHTML = `
           <label class="autojoin">
             <span class="autojoin__main">
-              <b>코드를 넣으면 바로 쓰게 하기</b>
-              <small>${auto
-                ? '지금은 승인 없이 바로 들어옵니다. 코드가 밖으로 새지 않도록 조심해 주세요.'
-                : '지금은 신청이 오면 담당 선생님이 승인해야 합니다.'}</small>
+              <b>자동 승인 ${auto ? 'ON' : 'OFF'}</b>
             </span>
-            <span class="toggle ${auto ? 'is-on' : ''}" id="auto-join" role="switch" tabindex="0" aria-checked="${auto}" aria-label="코드를 넣으면 바로 쓰게 하기">
+            <span class="toggle ${auto ? 'is-on' : ''}" id="auto-join" role="switch" tabindex="0" aria-checked="${auto}" aria-label="자동 승인">
               <span class="toggle__dot"></span>
             </span>
           </label>
@@ -10185,8 +10182,16 @@
         const next = !me?.school?.auto_join;
         sb.rpc('set_auto_join', { on_off: next }).then(({ error }) => {
           if (error) {
-            console.error(error);
-            flash('바꾸지 못했어요. supabase-update.sql을 실행했는지 확인해 주세요', 'warn');
+            console.error('set_auto_join', error);
+            const why = `${error.message || ''} ${error.code || ''}`;
+            const tip = /schema cache|does not exist|PGRST202|404/i.test(why)
+              ? 'Supabase에 set_auto_join 함수가 아직 없어요. supabase-update.sql의 26번을 실행해 주세요.'
+              : /NOT_ADMIN/i.test(why)
+                ? '관리 담당 선생님만 바꿀 수 있어요.'
+                : /auto_join/i.test(why)
+                  ? 'schools 표에 auto_join 칸이 없어요. 26번 첫 줄(alter table)을 실행해 주세요.'
+                  : `바꾸지 못했어요. ${why.trim().slice(0, 80)}`;
+            flash(tip, 'warn');
             return;
           }
           if (me?.school) me.school.auto_join = next;
