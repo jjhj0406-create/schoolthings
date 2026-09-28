@@ -2178,7 +2178,7 @@
     }
 
     /* ───────── 화면별 도움말 ───────── */
-    .top__row { display: inline-flex; align-items: center; gap: 8px; }
+    .top__row { display: inline-flex; align-items: baseline; gap: 8px; }
     .helpbtn {
       width: 26px; height: 26px; border-radius: 50%; flex: none;
       display: grid; place-items: center; background: var(--field); color: var(--ink-3);
@@ -2186,6 +2186,7 @@
     }
     .helpbtn:hover { background: var(--navy); color: #fff; }
     .helpbtn .icon { width: 16px; height: 16px; }
+    .helpbtn { position: relative; top: 2px; }
     .helpbox { width: min(520px, 100%); text-align: left; }
     .helplist { display: grid; gap: 1px; margin-top: 18px; background: var(--line); border-radius: 14px; overflow: hidden; }
     .helprow { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 12px; padding: 13px 15px; background: #fff; }
@@ -2195,6 +2196,28 @@
     @media (max-width: 760px) {
       .helprow { grid-template-columns: 1fr; gap: 3px; }
     }
+
+    /* 아이폰·안드로이드의 기본 달력 입력이 칸 밖으로 나가는 것을 막습니다 */
+    input[type="date"] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; min-width: 0; max-width: 100%;
+      font-size: 16px;   /* 16px 아래면 아이폰이 화면을 확대해 버립니다 */
+    }
+    input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
+    input[type="date"]::-webkit-calendar-picker-indicator { margin-left: auto; }
+
+    /* 찾기 화면의 가운데를 채우는 목록 */
+    .qpicks { display: none; }
+    @media (min-width: 761px) {
+      .qpicks { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 8px; padding-top: 22px; border-top: 1px solid var(--line); }
+    }
+    .qpicks__title { font-size: 13px; font-weight: 800; color: var(--ink-3); margin-bottom: 8px; }
+    .qpick { display: flex; align-items: center; gap: 12px; padding: 10px 11px; border-radius: 11px; }
+    .qpick:hover { background: var(--field); }
+    .qpick__main { flex: 1; min-width: 0; }
+    .qpick__name { display: block; font-size: 15px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .qpick__path { display: block; font-size: 12.5px; color: var(--ink-3); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .qpick__right { font-size: 13px; font-weight: 700; color: var(--board); flex: none; }
 
     .empty__go { margin-top: 14px; }
 
@@ -3864,6 +3887,39 @@
       { q: '삼각데',      text: '애/에가 헷갈려도 돼요' },
     ];
 
+    /* 검색어가 없을 때 가운데를 채워 주는 목록.
+       폰에서는 화면이 길어지므로 넓은 화면에서만 보여 줍니다. */
+    function emptyPicksHTML(all) {
+      if (!all.length) return '';
+      const often = new Map();
+      for (const l of state.loans || []) often.set(l.itemId, (often.get(l.itemId) || 0) + 1);
+
+      const hot = all.filter((i) => often.get(i.id)).sort((a, b) => often.get(b.id) - often.get(a.id)).slice(0, 5);
+      const fresh = all.slice().sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')).slice(0, 5);
+
+      const row = (it, right) => `
+        <a class="qpick" href="#/search?q=${encodeURIComponent(it.name)}">
+          <span class="qpick__main">
+            <span class="qpick__name">${esc(it.name)}</span>
+            <span class="qpick__path">${esc(pathOf(it).join(' › ') || '장소 미지정')}</span>
+          </span>
+          <span class="qpick__right">${esc(right)}</span>
+        </a>`;
+
+      return `
+        <div class="qpicks">
+          ${hot.length ? `
+            <section class="qpicks__col">
+              <p class="qpicks__title">자주 빌리는 물품</p>
+              ${hot.map((it) => row(it, `${n(often.get(it.id))}번`)).join('')}
+            </section>` : ''}
+          <section class="qpicks__col">
+            <p class="qpicks__title">최근 등록한 물품</p>
+            ${fresh.map((it) => row(it, `${n(it.qty)}개`)).join('')}
+          </section>
+        </div>`;
+    }
+
     function searchView(params) {
       const q = params.get('q') || '';
       return `
@@ -4056,7 +4112,8 @@
                 <a class="btn btn--ghost" href="#/places">장소별로 보기</a>
                 <a class="btn btn--ghost" href="#/ledger">비품 대장 보기</a>
               </div>
-            </div>`;
+            </div>
+            ${emptyPicksHTML(all)}`;
           announce('');
           return;
         }
@@ -9216,7 +9273,7 @@
           </dl>
           <div class="rankbox__acts">
             <a class="rankbox__btn rankbox__btn--quiet" href="#/help">자주 묻는 질문</a>
-            <button class="rankbox__btn rankbox__btn--go" type="button" id="ph-close">알겠어요</button>
+            <button class="rankbox__btn rankbox__btn--go" type="button" id="ph-close">닫기</button>
           </div>
         </div>`;
       document.body.append(back);
@@ -9387,13 +9444,6 @@
             <div class="card__head"><h2 class="card__title">계정</h2></div>
             <p class="side-empty">지금은 이 기기에만 저장하는 방식이라 계정이 없어요.</p>
           </section>`}
-
-        <section class="card setrow startcard" aria-labelledby="s6-title">
-          ${stepListHTML(isAdmin() ? startSteps() : useSteps(), {
-            eyebrow: '무엇부터 할지 모르겠다면',
-            title: isAdmin() ? '담당 선생님은 이 순서로' : '이렇게 써 보세요',
-          })}
-        </section>
 
         <section class="card setrow" aria-labelledby="s5-title">
           <div class="card__head"><h2 class="card__title" id="s5-title">도움이 필요하세요?</h2></div>
