@@ -829,7 +829,8 @@
     /* 카드 높이를 화면에 억지로 맞추지 않는다. 겹침의 원인이었다. */
     /* 카드 높이를 화면에 억지로 맞추지 않는다. 겹침의 원인이었다. */
     .main.is-manager,
-    .main.is-handover { grid-template-rows: none; grid-auto-rows: max-content; align-content: start; }
+    .main.is-handover,
+    .main.is-help { grid-template-rows: none; grid-auto-rows: max-content; align-content: start; }
     .mgrsum {
       grid-column: 1 / -1;
       display: flex; flex-flow: row wrap; gap: 14px 30px; padding: 16px 22px;
@@ -2176,7 +2177,7 @@
     .empty__go { margin-top: 14px; }
 
     /* ───────── 자주 묻는 질문 ───────── */
-    .faq { grid-column: 1 / -1; max-width: 760px; }
+    .faq { grid-column: 1 / -1; max-width: 760px; min-height: 0; height: auto; align-self: start; }
     .faqlist { list-style: none; display: grid; gap: 4px; margin-top: 6px; }
     .faqrow summary {
       display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none;
