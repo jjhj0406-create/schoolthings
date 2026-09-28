@@ -2134,6 +2134,9 @@
 
     /* 아주 좁은 화면(또는 글씨 크게 보기)에서도 넘치지 않게 */
     @media (max-width: 360px) {
+      .top { flex-wrap: wrap; gap: 10px; }
+      .top__actions { width: 100%; flex-wrap: wrap; }
+      .top__actions .btn { flex: 1; min-width: 0; }
       .search--wide { padding: 0 4px 0 10px; gap: 6px; }
       .search--wide > .icon { display: none; }
       .search__go { padding: 0 10px; }
@@ -2172,6 +2175,25 @@
     @media (max-width: 760px) {
       .startrow { flex-wrap: wrap; }
       .startrow.is-next .btn { width: 100%; margin-left: 34px; }
+    }
+
+    /* ───────── 화면별 도움말 ───────── */
+    .top__row { display: inline-flex; align-items: center; gap: 8px; }
+    .helpbtn {
+      width: 26px; height: 26px; border-radius: 50%; flex: none;
+      display: grid; place-items: center; background: var(--field); color: var(--ink-3);
+      transition: background-color 120ms, color 120ms;
+    }
+    .helpbtn:hover { background: var(--navy); color: #fff; }
+    .helpbtn .icon { width: 16px; height: 16px; }
+    .helpbox { width: min(520px, 100%); text-align: left; }
+    .helplist { display: grid; gap: 1px; margin-top: 18px; background: var(--line); border-radius: 14px; overflow: hidden; }
+    .helprow { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 12px; padding: 13px 15px; background: #fff; }
+    .helprow dt { font-size: 14px; font-weight: 700; color: var(--board); word-break: keep-all; }
+    .helprow dd { font-size: 14px; line-height: 1.6; color: var(--ink-2); word-break: keep-all; }
+
+    @media (max-width: 760px) {
+      .helprow { grid-template-columns: 1fr; gap: 3px; }
     }
 
     .empty__go { margin-top: 14px; }
@@ -3524,8 +3546,8 @@
     /* ════════ 홈 (→ src/pages/home.js) ════════ */
     /* 처음 오신 담당 선생님께 순서를 알려 주는 카드.
        네 가지를 모두 마치면 저절로 사라집니다. */
+    // 담당 선생님이 할 일
     function startSteps() {
-      const assets = state.items.filter((i) => i.asset).length;
       return [
         { key: 'school', done: Boolean(school().name && school().name !== '우리 학교'),
           title: '학교 이름 적기', desc: '화면 곳곳에 우리 학교 이름으로 보여요.',
@@ -3542,40 +3564,60 @@
       ];
     }
 
+    // 모든 선생님이 해 보면 좋은 일 (설정 화면에 둡니다)
+    function useSteps() {
+      const mine = (state.loans || []).length > 0;
+      return [
+        { key: 'find', done: (state.recent || []).length > 0,
+          title: '물품 찾아보기', desc: '이름이나 장소를 적으면 보관함과 칸까지 알려 줘요.',
+          href: '#/search', btn: '찾아보기' },
+        { key: 'place', done: hasSpaces(),
+          title: '우리 학교 둘러보기', desc: '장소별 보기에서 실마다 무엇이 있는지 볼 수 있어요.',
+          href: '#/places', btn: '둘러보기' },
+        { key: 'lend', done: mine,
+          title: '빌려 보기', desc: '서명 한 번이면 누가 언제까지 빌렸는지 남아요.',
+          href: '#/lend', btn: '빌려 보기' },
+        { key: 'ask', done: (state.posts || []).length > 0,
+          title: '궁금한 것 물어보기', desc: '찾는 물품이 없으면 홈의 물품 문의에 남겨 보세요.',
+          href: '#/', btn: '홈으로' },
+      ];
+    }
+
+    // 체크리스트 한 덩어리를 그린다 (홈과 설정에서 함께 씁니다)
+    function stepListHTML(steps, opt = {}) {
+      const done = steps.filter((x) => x.done).length;
+      const next = steps.find((x) => !x.done);
+      return `
+        <div class="startcard__head">
+          <div>
+            <p class="startcard__eyebrow">${esc(opt.eyebrow || '처음이신가요')}</p>
+            <h2 class="startcard__title">${esc(opt.title || '이 순서로 하면 쉬워요')}</h2>
+          </div>
+          <span class="startcard__count num">${n(done)} / ${n(steps.length)}</span>
+        </div>
+        <div class="startcard__bar" aria-hidden="true"><span style="width:${(done / steps.length) * 100}%"></span></div>
+        <ol class="startlist">
+          ${steps.map((x) => `
+            <li class="startrow ${x.done ? 'is-done' : ''} ${x === next ? 'is-next' : ''}">
+              <span class="startrow__mark" aria-hidden="true">${x.done ? icon(ICONS.check) : ''}</span>
+              <span class="startrow__main">
+                <span class="startrow__name">${esc(x.title)}</span>
+                ${x === next ? `<span class="startrow__desc">${esc(x.desc)}</span>` : ''}
+              </span>
+              ${x === next
+                ? (x.action
+                    ? `<button class="btn btn--solid" type="button" data-action="${esc(x.action)}">${esc(x.btn)}</button>`
+                    : `<a class="btn btn--solid" href="${esc(x.href)}">${esc(x.btn)}</a>`)
+                : ''}
+            </li>`).join('')}
+        </ol>`;
+    }
+
     function startCardHTML() {
       if (!isAdmin()) return '';
       const steps = startSteps();
-      const done = steps.filter((x) => x.done).length;
-      if (done === steps.length) return '';          // 다 끝나면 사라져요
-      const next = steps.find((x) => !x.done);
-
-      return `
-        <section class="card startcard" aria-labelledby="start-title">
-          <div class="startcard__head">
-            <div>
-              <p class="startcard__eyebrow">처음이신가요</p>
-              <h2 class="startcard__title" id="start-title">이 순서로 하면 쉬워요</h2>
-            </div>
-            <span class="startcard__count num">${n(done)} / ${n(steps.length)}</span>
-          </div>
-          <div class="startcard__bar" aria-hidden="true"><span style="width:${(done / steps.length) * 100}%"></span></div>
-
-          <ol class="startlist">
-            ${steps.map((x) => `
-              <li class="startrow ${x.done ? 'is-done' : ''} ${x === next ? 'is-next' : ''}">
-                <span class="startrow__mark" aria-hidden="true">${x.done ? icon(ICONS.check) : ''}</span>
-                <span class="startrow__main">
-                  <span class="startrow__name">${esc(x.title)}</span>
-                  ${x === next ? `<span class="startrow__desc">${esc(x.desc)}</span>` : ''}
-                </span>
-                ${x === next
-                  ? (x.action
-                      ? `<button class="btn btn--solid" type="button" data-action="${esc(x.action)}">${esc(x.btn)}</button>`
-                      : `<a class="btn btn--solid" href="${esc(x.href)}">${esc(x.btn)}</a>`)
-                  : ''}
-              </li>`).join('')}
-          </ol>
-        </section>`;
+      if (steps.every((x) => x.done)) return '';          // 다 끝나면 사라져요
+      return `<section class="card startcard" aria-labelledby="start-title">${stepListHTML(steps)}</section>`;
     }
 
     function homeView() {
@@ -3634,7 +3676,7 @@
         <header class="top">
           <div>
             <p class="top__date">${todayLabel()}</p>
-            <h1 class="top__title" tabindex="-1">${esc(school().name)}</h1>
+            <span class="top__row"><h1 class="top__title" tabindex="-1">${esc(school().name)}</h1>${helpBtn('home')}</span>
           </div>
           <div class="top__actions">
             <a class="btn btn--ghost" href="#/add">${icon(ICONS.add)}물품 등록</a>
@@ -3828,7 +3870,7 @@
         <header class="top">
           <div>
             <a class="back" href="#/">${icon(ICONS.back)}홈</a>
-            <h1 class="top__title" tabindex="-1">찾기</h1>
+            <span class="top__row"><h1 class="top__title" tabindex="-1">찾기</h1>${helpBtn('find')}</span>
           </div>
           <div class="top__actions">
             <a class="btn btn--ghost" href="#/add">${icon(ICONS.add)}물품 등록</a>
@@ -4222,7 +4264,7 @@
         <header class="top">
           <div>
             <a class="back" href="#/">${icon(ICONS.back)}홈</a>
-            <h1 class="top__title" tabindex="-1">장소별 보기</h1>
+            <span class="top__row"><h1 class="top__title" tabindex="-1">장소별 보기</h1>${helpBtn('place')}</span>
           </div>
           <div class="top__actions">
             <a class="btn btn--ghost" href="#/search">${icon(ICONS.find)}이름으로 찾기</a>
@@ -4506,7 +4548,7 @@
         <header class="top">
           <div>
             <a class="back" href="#/">${icon(ICONS.back)}홈</a>
-            <h1 class="top__title" tabindex="-1">대여</h1>
+            <span class="top__row"><h1 class="top__title" tabindex="-1">대여</h1>${helpBtn('rent')}</span>
           </div>
           <div class="top__actions">
             <a class="btn btn--solid" href="#/lend">${icon(ICONS.rent)}빌리기</a>
@@ -4596,7 +4638,7 @@
         <header class="top">
           <div>
             <a class="back" href="#/rent">${icon(ICONS.back)}대여</a>
-            <h1 class="top__title" tabindex="-1">빌리기</h1>
+            <span class="top__row"><h1 class="top__title" tabindex="-1">빌리기</h1>${helpBtn('lend')}</span>
           </div>
         </header>
 
@@ -5650,7 +5692,7 @@
         <header class="top">
           <div>
             <a class="back" href="#/">${icon(ICONS.back)}홈</a>
-            <h1 class="top__title" tabindex="-1">비품 대장</h1>
+            <span class="top__row"><h1 class="top__title" tabindex="-1">비품 대장</h1>${helpBtn('ledger')}</span>
           </div>
           <div class="top__actions">
             ${canImport() ? `<button class="btn btn--solid" type="button" id="l-import">${icon(ICONS.upload)}파일로 가져오기</button>` : ''}
@@ -8268,7 +8310,7 @@
         <header class="top">
           <div>
             <a class="back" href="#/">${icon(ICONS.back)}홈</a>
-            <h1 class="top__title" tabindex="-1">인수인계서 쓰기</h1>
+            <span class="top__row"><h1 class="top__title" tabindex="-1">인수인계서 쓰기</h1>${helpBtn('handover')}</span>
           </div>
           <div class="top__actions">
             <button class="btn btn--ghost" type="button" id="h-clear">새로 쓰기</button>
@@ -9051,6 +9093,142 @@
       });
     }
 
+    /* ════════ 화면별 도움말 (물음표 버튼) ════════ */
+    const PAGE_HELP = {
+      home: {
+        title: '홈 화면',
+        lead: '앱을 열면 가장 먼저 만나는 곳이에요.',
+        rows: [
+          ['가운데 검색창', '물품 이름이나 장소를 적으면 바로 찾아 줘요. 초성만 넣어도 됩니다.'],
+          ['전체 물품', '학교에 등록된 물품이 몇 개인지, 지금 몇 개가 나가 있는지 보여 줘요.'],
+          ['자주 대여하는 물품', '많이 빌려 가는 물품 순서예요. 눌러 보면 지금 누가 빌렸는지 알 수 있어요.'],
+          ['물품 문의', '어디 있는지 모르겠으면 여기에 남겨 보세요. 아는 선생님이 댓글로 알려 줘요.'],
+        ],
+      },
+      find: {
+        title: '찾기',
+        lead: '물품이 어디 있는지 확인하는 곳이에요.',
+        rows: [
+          ['이렇게 적어 보세요', '“빔프로젝터”처럼 이름을 적어도 되고, “과학실”처럼 장소로 찾아도 돼요.'],
+          ['초성도 됩니다', 'ㅂㅍㄹㅈㅌ 라고만 적어도 빔프로젝터가 나와요.'],
+          ['결과 읽는 법', '본관 › 3층 › 과학 준비실 › 2번 캐비닛 › 위에서 2칸 처럼 마지막 칸까지 알려 줘요.'],
+          ['찾는 게 없다면', '아직 등록되지 않았을 수 있어요. 홈의 물품 문의에 남겨 보세요.'],
+        ],
+      },
+      place: {
+        title: '장소별 보기',
+        lead: '실마다 어떤 물품이 있는지 둘러보는 곳이에요.',
+        rows: [
+          ['왼쪽에서 고르기', '건물을 고르고 층을 따라 내려가면서 실을 누르면 돼요.'],
+          ['오른쪽 목록', '그 실에 있는 물품이 보관함별로 묶여서 나와요.'],
+          ['QR 단추', '그 실의 QR을 만들어 인쇄할 수 있어요. 문에 붙여 두면 폰으로 찍어서 바로 볼 수 있어요.'],
+          ['여기에 등록', '그 실에 새 물품을 넣을 때 누르면 장소가 미리 채워진 채로 열려요.'],
+        ],
+      },
+      add: {
+        title: '물품 등록',
+        lead: '새 물품을 앱에 넣는 곳이에요.',
+        rows: [
+          ['꼭 적을 것', '물품 이름, 수량, 건물, 층, 실이에요. 별표가 붙은 칸이에요.'],
+          ['보관함과 칸', '“2번 캐비닛”, “위에서 2칸”처럼 적어 두면 찾을 때 훨씬 편해요.'],
+          ['비품 여부', '학교 대장에 올라 있는 비품이면 켜 주세요. 비품 대장에서 따로 관리돼요.'],
+          ['엑셀로 한꺼번에', '오른쪽 위 단추를 누르면 여러 개를 한 번에 올릴 수 있어요.'],
+        ],
+      },
+      rent: {
+        title: '대여 현황',
+        lead: '지금 나가 있는 물품을 보는 곳이에요.',
+        rows: [
+          ['반납하기', '물품을 돌려받으면 그 줄의 반납하기를 눌러 주세요.'],
+          ['빨간 표시', '반납일이 지난 것이에요. 빌려 간 분께 한 번 알려 주세요.'],
+          ['서명 보기', '빌릴 때 받은 손글씨 서명을 확인할 수 있어요.'],
+        ],
+      },
+      lend: {
+        title: '빌리기',
+        lead: '물품을 빌려 갈 때 기록을 남기는 곳이에요.',
+        rows: [
+          ['물품 고르기', '자주 빌리는 물품이 먼저 나와요. 없으면 검색해서 고르세요.'],
+          ['빌리는 분', '교직원 이름을 적어 주세요. 학생이 쓸 물품도 담당 선생님 이름으로 빌려요.'],
+          ['반납 예정일', '오늘·내일·3일 뒤처럼 눌러서 정하거나 날짜를 직접 고르면 돼요.'],
+          ['서명하고 빌리기', '마지막에 손가락이나 마우스로 서명하면 기록이 남아요.'],
+        ],
+      },
+      ledger: {
+        title: '비품 대장',
+        lead: '학교 비품과 담당 선생님을 모아 둔 곳이에요.',
+        rows: [
+          ['비품명 누르기', '고유번호, 규격, 취득일 같은 자세한 내용이 팝업으로 나와요.'],
+          ['담당자', '누가 맡고 있는지 적어 두는 칸이에요. 비어 있으면 자세히 보기에서 적을 수 있어요.'],
+          ['인수인계', '담당이 바뀔 때 누르면 두 분이 서명하고 담당자가 바뀌어요.'],
+          ['여러 개 고르기', '여러 비품을 한 번에 넘기거나 담당자를 지정할 때 쓰세요.'],
+        ],
+      },
+      handover: {
+        title: '인수인계',
+        lead: '비품을 넘기는 문서를 만드는 곳이에요.',
+        rows: [
+          ['네 단계로', '문서 정보 → 비품 고르기 → 서명 → 인쇄 순서로 진행돼요.'],
+          ['비품 고르기', '“○○ 담당만 보기”를 켜면 그분이 맡은 비품만 나와요.'],
+          ['만들고 나면', '고른 비품의 담당이 인수자로 바뀌고, 문서는 기록으로 남아요.'],
+          ['내 인수인계서', '오른쪽에서 내가 넘긴 문서를 다시 인쇄할 수 있어요.'],
+        ],
+      },
+      manager: {
+        title: '관리 담당 선생님',
+        lead: '물품 담당 선생님이 쓰는 곳이에요.',
+        rows: [
+          ['한눈에 보기', '물품 수, 대여 중, 늦음, 챙길 일을 숫자로 보여 줘요.'],
+          ['챙길 일', '늦은 반납, 수리 필요, 대장 빈칸처럼 손봐야 할 것들이 모여요.'],
+          ['물품 모으기', '링크를 만들어 보내면 선생님들이 각자 물품을 적어 내요.'],
+          ['우리 학교 선생님', '가입 신청을 승인하고 권한을 줄 수 있어요.'],
+        ],
+      },
+      settings: {
+        title: '설정',
+        lead: '내 정보와 도움말이 있는 곳이에요.',
+        rows: [
+          ['글씨 크게 보기', '화면 전체가 한 단계 커져요. 한 번 켜 두면 계속 유지돼요.'],
+          ['처음이신가요', '무엇부터 하면 좋은지 순서대로 알려 줘요.'],
+          ['자주 묻는 질문', '코드 받기, 엑셀 올리기 같은 것들을 모아 두었어요.'],
+          ['회원 탈퇴', '이 학교에서 나갈 때 쓰세요. 되돌릴 수 없어요.'],
+        ],
+      },
+    };
+
+    function helpBtn(key) {
+      if (!PAGE_HELP[key]) return '';
+      return `<button class="helpbtn" type="button" data-help="${esc(key)}" aria-label="이 화면 도움말">${icon(ICONS.help)}</button>`;
+    }
+
+    function openPageHelp(key) {
+      const h = PAGE_HELP[key];
+      if (!h) return;
+
+      const back = document.createElement('div');
+      back.className = 'signback';
+      back.innerHTML = `
+        <div class="signbox helpbox" role="dialog" aria-modal="true" aria-labelledby="ph-title">
+          <p class="signbox__title" id="ph-title">${esc(h.title)}</p>
+          <p class="signbox__desc">${esc(h.lead)}</p>
+          <dl class="helplist">
+            ${h.rows.map(([k, v]) => `<div class="helprow"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}
+          </dl>
+          <div class="rankbox__acts">
+            <a class="rankbox__btn rankbox__btn--quiet" href="#/help">자주 묻는 질문</a>
+            <button class="rankbox__btn rankbox__btn--go" type="button" id="ph-close">알겠어요</button>
+          </div>
+        </div>`;
+      document.body.append(back);
+
+      const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
+      const onKey = (e) => { if (e.key === 'Escape') close(); };
+      document.addEventListener('keydown', onKey);
+      back.addEventListener('click', (e) => {
+        if (e.target === back || e.target.closest('#ph-close') || e.target.closest('a')) close();
+      });
+    }
+
     /* ════════ 자주 묻는 질문 (→ src/pages/help.js) ════════ */
     const FAQ = [
       {
@@ -9155,7 +9333,7 @@
         <header class="top">
           <div>
             <a class="back" href="#/">${icon(ICONS.back)}홈</a>
-            <h1 class="top__title" tabindex="-1">설정</h1>
+            <span class="top__row"><h1 class="top__title" tabindex="-1">설정</h1>${helpBtn('settings')}</span>
           </div>
         </header>
 
@@ -9209,6 +9387,13 @@
             <div class="card__head"><h2 class="card__title">계정</h2></div>
             <p class="side-empty">지금은 이 기기에만 저장하는 방식이라 계정이 없어요.</p>
           </section>`}
+
+        <section class="card setrow startcard" aria-labelledby="s6-title">
+          ${stepListHTML(isAdmin() ? startSteps() : useSteps(), {
+            eyebrow: '무엇부터 할지 모르겠다면',
+            title: isAdmin() ? '담당 선생님은 이 순서로' : '이렇게 써 보세요',
+          })}
+        </section>
 
         <section class="card setrow" aria-labelledby="s5-title">
           <div class="card__head"><h2 class="card__title" id="s5-title">도움이 필요하세요?</h2></div>
@@ -9417,7 +9602,7 @@
         <header class="top">
           <div>
             <a class="back" href="#/">${icon(ICONS.back)}홈</a>
-            <h1 class="top__title" tabindex="-1">관리 담당 선생님</h1>
+            <span class="top__row"><h1 class="top__title" tabindex="-1">관리 담당 선생님</h1>${helpBtn('manager')}</span>
           </div>
         </header>
 
@@ -10065,7 +10250,7 @@
         <header class="top">
           <div>
             <a class="back" href="${esc(backTo)}">${icon(ICONS.back)}${esc(backLabel(backTo))}</a>
-            <h1 class="top__title" tabindex="-1">${editing ? '물품 수정' : '물품 등록'}</h1>
+            <span class="top__row"><h1 class="top__title" tabindex="-1">${editing ? '물품 수정' : '물품 등록'}</h1>${helpBtn('add')}</span>
           </div>
           ${!editing && canImport() ? `<div class="top__actions">
             <button class="btn btn--ghost" type="button" id="bulk-open">${icon(ICONS.upload)}엑셀로 한꺼번에</button>
@@ -10622,6 +10807,8 @@
     document.addEventListener('click', (e) => {
       if (e.target.closest('[data-action="spaces"]')) { openSpaces(); return; }
       if (e.target.closest('[data-action="more"]')) { openMore(); return; }
+      const hb = e.target.closest('[data-help]');
+      if (hb) { openPageHelp(hb.dataset.help); return; }
 
       // 수정하기
       const edit = e.target.closest('[data-edit]');
