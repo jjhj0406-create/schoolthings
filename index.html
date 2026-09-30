@@ -3122,11 +3122,12 @@
         }
         // 자동 승인이 켜져 있으면 바로 쓸 수 있습니다
         const joined = data?.status === 'active';
+        console.log('join_school 응답:', data);
         found = null; codeTyped = ''; justApplied = !joined;
         await loadMe();
         if (joined) await loadData();
         render();
-        flash(joined ? '가입됐어요. 바로 쓰실 수 있어요' : '신청을 보냈어요');
+        flash(joined ? '가입됐어요. 바로 쓰실 수 있어요' : `신청을 보냈어요 (서버 응답: ${data?.status || '없음'})`);
       });
 
       const hits = root.querySelector('#g-hits');
