@@ -2220,13 +2220,10 @@
     .qpick__right { font-size: 13px; font-weight: 700; color: var(--board); flex: none; }
 
     /* 자동 승인 스위치 */
-    .autojoin {
-      display: flex; align-items: center; gap: 14px; margin-bottom: 12px;
-      padding: 14px 16px; border-radius: 14px; background: var(--field); cursor: pointer;
-    }
-    .autojoin__main { flex: 1; min-width: 0; }
-    .autojoin b { display: block; font-size: 15px; }
-    .autojoin small { display: block; font-size: 13px; color: var(--ink-2); line-height: 1.5; margin-top: 3px; word-break: keep-all; }
+    .teamtop { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+    .teamtop .sheet__desc { flex: 1; min-width: 180px; margin: 0; }
+    .autojoin { display: inline-flex; align-items: center; gap: 10px; flex: none; cursor: pointer; }
+    .autojoin b { font-size: 14px; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
     .autojoin .toggle { flex: none; }
 
     .empty__go { margin-top: 14px; }
@@ -9719,7 +9716,15 @@
               <span class="fold__count num" id="team-meta"></span>
             </button>
             <div class="fold-body" id="team-body" hidden>
-              <p class="sheet__desc">이 코드를 알려 주면 가입을 신청할 수 있어요. 승인해야 자료가 보여요.</p>
+              <div class="teamtop">
+                <p class="sheet__desc">이 코드를 알려 주면 가입을 신청할 수 있어요.</p>
+                <label class="autojoin">
+                  <b id="auto-label">자동 승인 ${me?.school?.auto_join ? 'ON' : 'OFF'}</b>
+                  <span class="toggle ${me?.school?.auto_join ? 'is-on' : ''}" id="auto-join" role="switch" tabindex="0" aria-checked="${Boolean(me?.school?.auto_join)}" aria-label="자동 승인">
+                    <span class="toggle__dot"></span>
+                  </span>
+                </label>
+              </div>
             <div class="code">
               <span class="code__val" id="team-code">${esc(me?.school?.join_code || '------')}</span>
               <button class="mini mini--quiet" type="button" id="code-copy">복사</button>
@@ -10164,14 +10169,6 @@
 
         const auto = Boolean(me?.school?.auto_join);
         list.innerHTML = `
-          <label class="autojoin">
-            <span class="autojoin__main">
-              <b>자동 승인 ${auto ? 'ON' : 'OFF'}</b>
-            </span>
-            <span class="toggle ${auto ? 'is-on' : ''}" id="auto-join" role="switch" tabindex="0" aria-checked="${auto}" aria-label="자동 승인">
-              <span class="toggle__dot"></span>
-            </span>
-          </label>
           ${members.length
             ? `<ul class="mlist">${[...pending, ...active].map(row).join('')}</ul>`
             : '<p class="side-empty">아직 가입한 선생님이 없어요.</p>'}`;
@@ -10184,18 +10181,15 @@
           if (error) {
             console.error('set_auto_join', error);
             const why = `${error.message || ''} ${error.code || ''}`;
-            const tip = /schema cache|does not exist|PGRST202|404/i.test(why)
-              ? 'Supabase에 set_auto_join 함수가 아직 없어요. supabase-update.sql의 26번을 실행해 주세요.'
-              : /NOT_ADMIN/i.test(why)
-                ? '관리 담당 선생님만 바꿀 수 있어요.'
-                : /auto_join/i.test(why)
-                  ? 'schools 표에 auto_join 칸이 없어요. 26번 첫 줄(alter table)을 실행해 주세요.'
-                  : `바꾸지 못했어요. ${why.trim().slice(0, 80)}`;
-            flash(tip, 'warn');
+            // 무엇이 문제인지 서버가 보낸 문장을 그대로 보여 준다
+            flash(`자동 승인을 바꾸지 못했어요 · ${why.trim().slice(0, 120)}`, 'warn');
             return;
           }
           if (me?.school) me.school.auto_join = next;
-          drawTeam();
+          const lab = view.querySelector('#auto-label');
+          const sw = view.querySelector('#auto-join');
+          if (lab) lab.textContent = `자동 승인 ${next ? 'ON' : 'OFF'}`;
+          if (sw) { sw.classList.toggle('is-on', next); sw.setAttribute('aria-checked', String(next)); }
           flash(next ? '이제 코드를 넣으면 바로 쓸 수 있어요' : '이제 승인을 거쳐야 쓸 수 있어요');
         });
       });
