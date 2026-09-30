@@ -3115,9 +3115,11 @@
         const { data, error } = await sb.rpc('join_school', { code: found.code, member_name: who, position_name: pos });
         busy(btn, false);
         if (error) {
-          say(String(error.message).includes('NO_SCHOOL')
+          console.error('join_school', error);
+          const why = `${error.message || ''} ${error.code || ''}`.trim();
+          say(why.includes('NO_SCHOOL')
             ? '학교를 찾지 못했어요. 코드를 다시 확인해 주세요.'
-            : '신청하지 못했어요. 잠시 뒤 다시 해 주세요.');
+            : `신청하지 못했어요 · ${why.slice(0, 120)}`);
           return;
         }
         // 자동 승인이 켜져 있으면 바로 쓸 수 있습니다
