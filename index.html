@@ -3112,7 +3112,7 @@
         const pos = root.querySelector('#g-mypos').value;
         if (!who) { say('내 이름을 적어 주세요.'); nameBox.focus(); return; }
         busy(btn, true); say('');
-        const { error } = await sb.rpc('join_school', { code: found.code, member_name: who, position_name: pos });
+        const { data, error } = await sb.rpc('join_school', { code: found.code, member_name: who, position_name: pos });
         busy(btn, false);
         if (error) {
           say(String(error.message).includes('NO_SCHOOL')
@@ -3120,10 +3120,13 @@
             : '신청하지 못했어요. 잠시 뒤 다시 해 주세요.');
           return;
         }
-        found = null; codeTyped = ''; justApplied = true;
+        // 자동 승인이 켜져 있으면 바로 쓸 수 있습니다
+        const joined = data?.status === 'active';
+        found = null; codeTyped = ''; justApplied = !joined;
         await loadMe();
+        if (joined) await loadData();
         render();
-        flash('신청을 보냈어요');
+        flash(joined ? '가입됐어요. 바로 쓰실 수 있어요' : '신청을 보냈어요');
       });
 
       const hits = root.querySelector('#g-hits');
