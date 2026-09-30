@@ -830,7 +830,8 @@
     /* 카드 높이를 화면에 억지로 맞추지 않는다. 겹침의 원인이었다. */
     .main.is-manager,
     .main.is-handover,
-    .main.is-help { grid-template-rows: none; grid-auto-rows: max-content; align-content: start; }
+    .main.is-help,
+    .main.is-home { grid-template-rows: none; grid-auto-rows: max-content; align-content: start; }
     .mgrsum {
       grid-column: 1 / -1;
       display: flex; flex-flow: row wrap; gap: 14px 30px; padding: 16px 22px;
@@ -1919,6 +1920,7 @@
       .hstep__label { display: none; }
       .hstep button { padding: 11px 4px; }
       .hwrap__acts { flex-direction: column-reverse; }
+      .hwrap__acts .bigbtn { flex: none; width: 100%; height: 52px; }
       .hsum__row { grid-template-columns: 90px minmax(0, 1fr); }
     }
 
@@ -2226,6 +2228,14 @@
     .autojoin { display: inline-flex; align-items: center; gap: 10px; flex: none; cursor: pointer; }
     .autojoin b { font-size: 14px; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
     .autojoin .toggle { flex: none; }
+
+    /* 폰에서 손가락으로 누르기 좋은 크기를 지킵니다 */
+    @media (max-width: 760px) {
+      .back { height: 36px; padding: 0 8px; margin-left: -8px; }
+      .helpbtn { width: 32px; height: 32px; }
+      .helpbtn .icon { width: 18px; height: 18px; }
+      .side-clear, #recent-clear button { min-height: 32px; padding: 0 8px; }
+    }
 
     .empty__go { margin-top: 14px; }
 
