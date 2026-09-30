@@ -10178,7 +10178,7 @@
       view.addEventListener('click', (e) => {
         if (!e.target.closest('#auto-join')) return;
         const next = !me?.school?.auto_join;
-        sb.rpc('set_auto_join', { on_off: next }).then(({ error }) => {
+        sb.rpc('set_auto_join', { on_off: next }).then(({ data, error }) => {
           if (error) {
             console.error('set_auto_join', error);
             const why = `${error.message || ''} ${error.code || ''}`;
@@ -10186,12 +10186,18 @@
             flash(`자동 승인을 바꾸지 못했어요 · ${why.trim().slice(0, 120)}`, 'warn');
             return;
           }
-          if (me?.school) me.school.auto_join = next;
+          // 서버가 실제로 저장한 값을 그대로 씁니다
+          const saved = typeof data?.auto_join === 'boolean' ? data.auto_join : next;
+          if (me?.school) me.school.auto_join = saved;
           const lab = view.querySelector('#auto-label');
           const sw = view.querySelector('#auto-join');
-          if (lab) lab.textContent = `자동 승인 ${next ? 'ON' : 'OFF'}`;
-          if (sw) { sw.classList.toggle('is-on', next); sw.setAttribute('aria-checked', String(next)); }
-          flash(next ? '이제 코드를 넣으면 바로 쓸 수 있어요' : '이제 승인을 거쳐야 쓸 수 있어요');
+          if (lab) lab.textContent = `자동 승인 ${saved ? 'ON' : 'OFF'}`;
+          if (sw) { sw.classList.toggle('is-on', saved); sw.setAttribute('aria-checked', String(saved)); }
+          if (saved !== next) {
+            flash('서버에 저장되지 않았어요. 관리 담당 선생님인지 확인해 주세요', 'warn');
+            return;
+          }
+          flash(saved ? '이제 코드를 넣으면 바로 쓸 수 있어요' : '이제 승인을 거쳐야 쓸 수 있어요');
         });
       });
 
