@@ -6463,6 +6463,25 @@
       commit({ ...state, school: { ...school(), spaces: { buildings: wiz.buildings, rooms } } });
     }
 
+    // 서버에 정말 저장됐는지 직접 넣고 되읽어 확인합니다.
+    async function saveSpacesToServer() {
+      const spaces = { buildings: wiz.buildings, rooms: wiz.rooms };
+      if (!sb || !me?.schoolId) return { ok: true, local: true };   // 이 기기에만 쓰는 방식
+      if (!isAdmin()) return { ok: false, why: '관리 담당 선생님만 저장할 수 있어요' };
+
+      const { error } = await sb.from('schools').update({ spaces }).eq('id', me.schoolId);
+      if (error) return { ok: false, why: error.message || '저장하지 못했어요' };
+
+      const { data, error: readErr } = await sb.rpc('my_membership');
+      if (readErr) return { ok: false, why: readErr.message || '확인하지 못했어요' };
+
+      const saved = data?.school?.spaces;
+      const rooms = saved?.rooms?.length || 0;
+      if (!saved) return { ok: false, why: '서버에 저장되지 않았어요' };
+      if (me?.school) me.school.spaces = saved;
+      return { ok: true, rooms };
+    }
+
     function drawWiz() {
       const root = document.getElementById('wizroot');
       if (!wizOpen) { root.innerHTML = ''; return; }
@@ -6694,12 +6713,22 @@
         flash('학교 공간 설정을 지웠어요');
       });
 
-      root.querySelector('#wiz-save')?.addEventListener('click', () => {
+      root.querySelector('#wiz-save')?.addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        btn.disabled = true;
         saveSpaces();
+        const res = await saveSpacesToServer();
         registerRooms(wiz.rooms.map((r) => ({ building: r.building, floor: r.floor || '', name: r.name })));
+        btn.disabled = false;
         closeSpaces(true);
-        flash('학교 공간을 저장했어요');
         render();
+        if (res.ok) {
+          flash(res.local
+            ? '학교 공간을 저장했어요'
+            : `학교 공간을 저장했어요 · 실 ${n(res.rooms)}곳`);
+        } else {
+          flash(`저장하지 못했어요 · ${String(res.why).slice(0, 90)}`, 'warn');
+        }
       });
 
       /* 건물 더하기 */
