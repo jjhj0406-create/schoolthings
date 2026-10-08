@@ -2586,6 +2586,7 @@
     const STORE_KEY = 'school-items:v1';
     const blank = () => ({ items: [], loans: [], recent: [], handovers: [], posts: [], comments: [], collects: [], submissions: [] });
     let memoryStore = blank();
+    let dataReady = false;   // 서버에서 자료를 한 번이라도 제대로 받아왔는가
     let cacheOff = false;   // 기기 사본을 접었는지
     const store = {
       load() {
@@ -2722,12 +2723,21 @@
 
     async function loadData() {
       if (!sb || me?.status !== 'active') return;
+      dataReady = false;
       missingTables.clear();
-      const [items, loans, hos, pss, cms, cols, subs] = await Promise.all([
-        fetchAll('items'), fetchAll('loans'), fetchMaybe('handovers'),
-        fetchMaybe('posts'), fetchMaybe('comments'),
-        fetchMaybe('collects'), fetchMaybe('submissions'),
-      ]);
+      let loaded;
+      try {
+        loaded = await Promise.all([
+          fetchAll('items'), fetchAll('loans'), fetchMaybe('handovers'),
+          fetchMaybe('posts'), fetchMaybe('comments'),
+          fetchMaybe('collects'), fetchMaybe('submissions'),
+        ]);
+      } catch (e) {
+        console.error('자료를 받아오지 못했어요', e);
+        flash('자료를 받아오지 못했어요. 새로고침해 주세요', 'warn');
+        return;   // dataReady 를 올리지 않아, 지우기가 서버로 가지 않습니다
+      }
+      const [items, loans, hos, pss, cms, cols, subs] = loaded;
       state = {
         ...state,
         items: items.map(fromRowItem),
@@ -2760,6 +2770,9 @@
             }
           : state.school,
       };
+
+      // 여기까지 왔으면 서버 자료를 제대로 받아온 것이다
+      dataReady = true;
 
       // 기기에만 있던 공간 설정은 곧바로 서버에 올려 둔다 (다음 접속에도 남도록)
       if (isAdmin() && !me?.school?.spaces && state.school?.spaces) {
@@ -2810,12 +2823,19 @@
     // 바뀐 줄만 골라 서버에 보낸다. 화면은 먼저 바뀌고 저장은 뒤따라간다.
     async function pushDiff(prev, next) {
       if (!sb || me?.status !== 'active') return;
+
+      // 서버에서 자료를 제대로 받아오기 전에는 '지우기'를 보내지 않는다.
+      // (불러오기에 실패한 빈 화면이 서버 자료를 지워 버리는 사고를 막는다)
+      if (!dataReady) {
+        console.warn('자료를 아직 받아오지 못해, 지우기는 보내지 않습니다');
+      }
+
       const jobs = [];
       const diff = (a, b, table, toRow) => {
         const before = new Map(a.map((x) => [x.id, x]));
         const after = new Map(b.map((x) => [x.id, x]));
         const changed = [...after.values()].filter((x) => JSON.stringify(before.get(x.id)) !== JSON.stringify(x));
-        const gone = [...before.keys()].filter((id) => !after.has(id));
+        const gone = dataReady ? [...before.keys()].filter((id) => !after.has(id)) : [];
         for (const part of chunk(changed)) jobs.push(sb.from(table).upsert(part.map(toRow)));
         for (const part of chunk(gone)) jobs.push(sb.from(table).delete().in('id', part));
       };
