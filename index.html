@@ -2151,34 +2151,6 @@
       .lend-rest.is-wait { display: none; }
     }
 
-    /* ───────── 시작하기 체크리스트 ───────── */
-    .startcard { grid-column: 1 / -1; }
-    .startcard__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-    .startcard__eyebrow { font-size: 12px; font-weight: 800; color: var(--board); }
-    .startcard__title { font-family: var(--font-title); font-size: 20px; letter-spacing: -0.03em; margin-top: 3px; }
-    .startcard__count { font-size: 14px; font-weight: 800; color: var(--ink-3); flex: none; }
-    .startcard__bar { height: 6px; border-radius: 3px; background: var(--field); margin-top: 12px; overflow: hidden; }
-    .startcard__bar span { display: block; height: 100%; border-radius: 3px; background: var(--board); transition: width 240ms ease-out; }
-    .startlist { list-style: none; display: grid; gap: 4px; margin-top: 14px; }
-    .startrow { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 12px; }
-    .startrow__mark {
-      width: 22px; height: 22px; border-radius: 50%; flex: none; display: grid; place-items: center;
-      box-shadow: inset 0 0 0 1.5px #c9cfdd; color: #fff;
-    }
-    .startrow__mark .icon { width: 13px; height: 13px; stroke-width: 3; }
-    .startrow.is-done .startrow__mark { background: var(--board); box-shadow: none; }
-    .startrow.is-done .startrow__name { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--line); }
-    .startrow.is-next { background: var(--field); }
-    .startrow__main { flex: 1; min-width: 0; }
-    .startrow__name { display: block; font-size: 15px; font-weight: 700; }
-    .startrow__desc { display: block; font-size: 13px; color: var(--ink-2); margin-top: 2px; line-height: 1.5; word-break: keep-all; }
-    .startrow .btn { flex: none; height: 40px; }
-
-    @media (max-width: 760px) {
-      .startrow { flex-wrap: wrap; }
-      .startrow.is-next .btn { width: 100%; margin-left: 34px; }
-    }
-
     /* ───────── 화면별 도움말 ───────── */
     .top__row { display: inline-flex; align-items: baseline; gap: 8px; }
     .helpbtn {
@@ -3619,82 +3591,6 @@
     const goSearch = (q = '') => { if (q) addRecent(q); location.hash = '#/search' + (q ? '?q=' + encodeURIComponent(q) : ''); };
 
     /* ════════ 홈 (→ src/pages/home.js) ════════ */
-    /* 처음 오신 담당 선생님께 순서를 알려 주는 카드.
-       네 가지를 모두 마치면 저절로 사라집니다. */
-    // 담당 선생님이 할 일 (실제로 쓰는 순서대로)
-    function startSteps() {
-      return [
-        { key: 'spaces', done: hasSpaces(),
-          title: '학교 공간 설정하기', desc: '건물과 층, 실을 미리 정해 두면 등록이 훨씬 쉬워져요.',
-          action: 'spaces', btn: '설정하기' },
-        { key: 'items', done: state.items.length > 0,
-          title: '물품 등록하기', desc: '엑셀로 한꺼번에 올리거나, 하나씩 등록할 수 있어요.',
-          href: '#/add', btn: '등록하러 가기' },
-        { key: 'lend', done: (state.loans || []).length > 0,
-          title: '빌려 보기', desc: '서명 한 번이면 누가 언제까지 빌렸는지 남아요.',
-          href: '#/lend', btn: '빌려 보기' },
-        { key: 'share', done: Boolean(state.items.length > 0 && (members.length > 1)),
-          title: '선생님들께 코드 알리기', desc: '관리 담당 화면의 6자리 코드를 알려 주면 함께 쓸 수 있어요.',
-          href: '#/manager', btn: '코드 보기' },
-      ];
-    }
-
-    // 모든 선생님이 해 보면 좋은 일 (설정 화면에 둡니다)
-    function useSteps() {
-      const mine = (state.loans || []).length > 0;
-      return [
-        { key: 'find', done: (state.recent || []).length > 0,
-          title: '물품 찾아보기', desc: '이름이나 장소를 적으면 보관함과 칸까지 알려 줘요.',
-          href: '#/search', btn: '찾아보기' },
-        { key: 'place', done: hasSpaces(),
-          title: '우리 학교 둘러보기', desc: '장소별 보기에서 실마다 무엇이 있는지 볼 수 있어요.',
-          href: '#/places', btn: '둘러보기' },
-        { key: 'lend', done: mine,
-          title: '빌려 보기', desc: '서명 한 번이면 누가 언제까지 빌렸는지 남아요.',
-          href: '#/lend', btn: '빌려 보기' },
-        { key: 'ask', done: (state.posts || []).length > 0,
-          title: '궁금한 것 물어보기', desc: '찾는 물품이 없으면 홈의 물품 문의에 남겨 보세요.',
-          href: '#/', btn: '홈으로' },
-      ];
-    }
-
-    // 체크리스트 한 덩어리를 그린다 (홈과 설정에서 함께 씁니다)
-    function stepListHTML(steps, opt = {}) {
-      const done = steps.filter((x) => x.done).length;
-      const next = steps.find((x) => !x.done);
-      return `
-        <div class="startcard__head">
-          <div>
-            <p class="startcard__eyebrow">${esc(opt.eyebrow || '처음이신가요')}</p>
-            <h2 class="startcard__title">${esc(opt.title || '이 순서로 하면 쉬워요')}</h2>
-          </div>
-          <span class="startcard__count num">${n(done)} / ${n(steps.length)}</span>
-        </div>
-        <div class="startcard__bar" aria-hidden="true"><span style="width:${(done / steps.length) * 100}%"></span></div>
-        <ol class="startlist">
-          ${steps.map((x) => `
-            <li class="startrow ${x.done ? 'is-done' : ''} ${x === next ? 'is-next' : ''}">
-              <span class="startrow__mark" aria-hidden="true">${x.done ? icon(ICONS.check) : ''}</span>
-              <span class="startrow__main">
-                <span class="startrow__name">${esc(x.title)}</span>
-                ${x === next ? `<span class="startrow__desc">${esc(x.desc)}</span>` : ''}
-              </span>
-              ${x === next
-                ? (x.action
-                    ? `<button class="btn btn--solid" type="button" data-action="${esc(x.action)}">${esc(x.btn)}</button>`
-                    : `<a class="btn btn--solid" href="${esc(x.href)}">${esc(x.btn)}</a>`)
-                : ''}
-            </li>`).join('')}
-        </ol>`;
-    }
-
-    function startCardHTML() {
-      if (!isAdmin()) return '';
-      const steps = startSteps();
-      if (steps.every((x) => x.done)) return '';          // 다 끝나면 사라져요
-      return `<section class="card startcard" aria-labelledby="start-title">${stepListHTML(steps)}</section>`;
-    }
-
     function homeView() {
       const items = state.items;
       const loans = state.loans || [];
@@ -3767,7 +3663,6 @@
           </div>
         </header>
 
-        ${startCardHTML()}
 
         <section class="find" aria-labelledby="find-title">
           ${PLAN_SVG}
@@ -9327,7 +9222,6 @@
         lead: '내 정보와 도움말이 있는 곳이에요.',
         rows: [
           ['글씨 크게 보기', '화면 전체가 한 단계 커져요. 한 번 켜 두면 계속 유지돼요.'],
-          ['처음이신가요', '무엇부터 하면 좋은지 순서대로 알려 줘요.'],
           ['자주 묻는 질문', '코드 받기, 엑셀 올리기 같은 것들을 모아 두었어요.'],
           ['회원 탈퇴', '이 학교에서 나갈 때 쓰세요. 되돌릴 수 없어요.'],
         ],
