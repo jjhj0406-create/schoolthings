@@ -2876,6 +2876,7 @@
         address: [r.ORG_RDNMA, r.ORG_RDNDA].filter(Boolean).map((v) => v.trim()).join(' '),
         area: r.ATPT_OFCDC_SC_NM || '',
         kind: r.SCHUL_KND_SC_NM || '',
+        code: String(r.SD_SCHUL_CODE || '').trim(),   // 학교마다 하나뿐인 표준코드
       }));
     }
 
@@ -2973,6 +2974,41 @@
       }
 
       if (kind === 'create') {
+        // 만들려는 학교가 이미 있을 때는 새로 만들지 않고 가입 신청을 하도록 합니다
+        if (taken) {
+          return gateShell(`
+            ${whoStrip()}
+            <h1 class="gate__title">이미 등록된 학교예요</h1>
+            <p class="gate__desc">${taken.exact
+              ? '다른 선생님이 먼저 만들어 두셨어요. 새로 만들면 물품이 따로 쌓여 서로 보이지 않으니, 이 학교에 가입을 신청해 주세요.'
+              : '이름이 같은 학교가 이미 있어요. 우리 학교가 맞다면 가입을 신청해 주세요.'}</p>
+            <div class="found">
+              <p class="found__name">${esc(taken.name)}</p>
+              <p class="found__addr">${esc(taken.address || '주소가 아직 적혀 있지 않아요')}</p>
+            </div>
+            <div class="gform">
+              <div class="row">
+                <div class="field">
+                  <label class="field__label" for="g-me2">내 이름<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
+                  <input class="input" id="g-me2" type="text" placeholder="예: 김하늘" autocomplete="name" value="${esc(myName())}">
+                </div>
+                <div class="field">
+                  <label class="field__label" for="g-mypos2">직위</label>
+                  <div class="selectbox">
+                    <select class="input" id="g-mypos2">
+                      ${POSITIONS.map((v) => `<option value="${esc(v)}" ${v === '교사' ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+                    </select>
+                    ${icon(ICONS.caret, 'icon selectbox__caret')}
+                  </div>
+                </div>
+              </div>
+              <button class="bigbtn bigbtn--navy" type="button" id="g-apply">가입 신청하기</button>
+            </div>
+            <p class="gate__err" id="g-err"></p>
+            <p class="gate__foot">신청하면 관리 담당 선생님이 확인하고 승인해요.<br>
+              <button type="button" id="g-taken-back">코드를 받았어요</button>${taken.exact ? '' : `<br>
+              <button type="button" id="g-anyway">우리 학교가 아니에요. 새로 만들기</button>`}</p>`);
+        }
         return gateShell(`
           ${whoStrip()}
           <h1 class="gate__title">학교를 만들어요</h1>
@@ -2981,7 +3017,7 @@
             <div class="field">
               <label class="field__label" for="g-name">학교 이름<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
               <div class="findrow">
-                <input class="input" id="g-name" type="text" placeholder="예: 전주화정초등학교" autocomplete="off" value="${esc(picked ? picked.name : '')}">
+                <input class="input" id="g-name" type="text" placeholder="예: 전주화정초등학교" autocomplete="off" value="${esc(picked ? picked.name : typedSchool.name)}">
                 ${NEIS_KEY ? '<button class="findrow__go" type="button" id="g-find">학교 찾기</button>' : ''}
               </div>
               <p class="gform__hint">줄여 쓰지 말고 정식 이름으로 적어 주세요. 전주화정초(X) · 전주화정초등학교(O)</p>
@@ -2989,7 +3025,7 @@
             <div id="g-hits"></div>
             <div class="field">
               <label class="field__label" for="g-addr">학교 주소</label>
-              <input class="input" id="g-addr" type="text" placeholder="예: 전북특별자치도 전주시 덕진구 화정1길 15" autocomplete="off" value="${esc(picked ? picked.address : '')}">
+              <input class="input" id="g-addr" type="text" placeholder="예: 전북특별자치도 전주시 덕진구 화정1길 15" autocomplete="off" value="${esc(picked ? picked.address : typedSchool.address)}">
               <p class="gform__hint">${NEIS_KEY ? '학교 찾기를 쓰면 자동으로 채워져요.' : '다른 선생님이 학교가 맞는지 확인할 때 보여요.'}</p>
             </div>
             <div class="row">
@@ -3051,6 +3087,9 @@
     let codeTyped = '';       // 다시 그릴 때 코드가 사라지지 않게
     let justApplied = false;  // 방금 신청을 보냈는지
     let picked = null;       // 나이스에서 고른 학교
+    let taken = null;        // 만들려는 학교가 이미 있을 때 { exact, school_id, name, address }
+    let skipNameCheck = false;  // "이름만 같을 뿐 다른 학교예요"를 고른 경우
+    let typedSchool = { name: '', address: '' };   // 적어 둔 것이 사라지지 않게
 
     function mountGate(root, kind) {
       const err = root.querySelector('#g-err');
@@ -3074,12 +3113,38 @@
         me = null; session = null; render();
       });
 
-      const goCreate = () => { gateMode = 'create'; found = null; render(); };
+      const goCreate = () => { gateMode = 'create'; found = null; taken = null; skipNameCheck = false; typedSchool = { name: '', address: '' }; render(); };
       root.querySelector('#g-new')?.addEventListener('click', () => {
         if (agreed) { goCreate(); return; }
         openAgree(() => { agreed = true; goCreate(); });
       });
-      root.querySelector('#g-back')?.addEventListener('click', () => { gateMode = 'start'; render(); });
+      root.querySelector('#g-back')?.addEventListener('click', () => { gateMode = 'start'; taken = null; render(); });
+
+      /* ── 이미 등록된 학교일 때 ── */
+      root.querySelector('#g-taken-back')?.addEventListener('click', () => { gateMode = 'start'; taken = null; render(); });
+      // 이름만 같고 실제로는 다른 학교일 때만 보이는 길.
+      // 이렇게 와도 주소나 표준코드가 같으면 서버가 끝내 막아 줍니다.
+      root.querySelector('#g-anyway')?.addEventListener('click', () => { taken = null; skipNameCheck = true; render(); });
+
+      root.querySelector('#g-apply')?.addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        const nameBox = root.querySelector('#g-me2');
+        const who = nameBox.value.trim();
+        const pos = root.querySelector('#g-mypos2').value;
+        if (!who) { say('내 이름을 적어 주세요.'); nameBox.focus(); return; }
+        busy(btn, true); say('');
+        const { error } = await sb.rpc('apply_to_school',
+          { p_school_id: taken.school_id, member_name: who, position_name: pos });
+        busy(btn, false);
+        if (error) {
+          say(`신청하지 못했어요 · ${String(error.message || '').slice(0, 120)}`);
+          return;
+        }
+        taken = null; gateMode = 'start'; justApplied = true;
+        await loadMe();
+        render();
+        flash('신청을 보냈어요');
+      });
 
       const code = root.querySelector('#g-code');
       if (code) {
@@ -3143,7 +3208,8 @@
       });
 
       const hits = root.querySelector('#g-hits');
-      root.querySelector('#g-name')?.addEventListener('input', () => { if (hits) hits.innerHTML = ''; });
+      // 이름을 손으로 고치면 아까 고른 학교의 표준코드는 더 이상 믿을 수 없습니다
+      root.querySelector('#g-name')?.addEventListener('input', () => { picked = null; if (hits) hits.innerHTML = ''; });
       root.querySelector('#g-find')?.addEventListener('click', async (e) => {
         const btn = e.currentTarget;
         const q = root.querySelector('#g-name').value.trim();
@@ -3161,6 +3227,7 @@
             : '<p class="hits__wait">그런 이름의 학교를 찾지 못했어요. 직접 적어 주세요.</p>';
           hits.querySelectorAll('[data-hit]').forEach((btn) => btn.addEventListener('click', () => {
             const h = list[Number(btn.dataset.hit)];
+            picked = h;                       // 표준코드까지 기억해 둡니다
             root.querySelector('#g-name').value = h.name;
             root.querySelector('#g-addr').value = h.address;
             hits.innerHTML = '';
@@ -3184,14 +3251,36 @@
         const btn = e.currentTarget;
         busy(btn, true); say('');
         const addr = root.querySelector('#g-addr').value.trim();
-        const { error } = await sb.rpc('create_school', { school_name: name, school_address: addr, teacher_name: who, position_name: pos });
+        // 고른 학교의 이름을 그대로 두었을 때만 표준코드를 함께 보냅니다
+        const scode = picked && picked.name === name ? (picked.code || '') : '';
+        typedSchool = { name, address: addr };
+
+        // ① 같은 학교가 이미 있는지 먼저 알아봅니다
+        if (!skipNameCheck) {
+          const hit = await sb.rpc('school_taken', { p_code: scode, p_name: name, p_address: addr });
+          if (!hit.error && hit.data?.found) {
+            busy(btn, false);
+            taken = hit.data;
+            render();
+            return;
+          }
+        }
+
+        // ② 없으면 만듭니다
+        const { error } = await sb.rpc('create_school', { school_name: name, school_address: addr, teacher_name: who, position_name: pos, school_code: scode });
         busy(btn, false);
         if (error) {
-          say(String(error.message).includes('ALREADY_JOINED')
+          const why = String(error.message || '');
+          if (why.includes('SCHOOL_EXISTS')) {     // ①과 ② 사이에 누가 먼저 만들었을 때
+            const again = await sb.rpc('school_taken', { p_code: scode, p_name: name, p_address: addr });
+            if (!again.error && again.data?.found) { taken = again.data; render(); return; }
+          }
+          say(why.includes('ALREADY_JOINED')
             ? '이미 다른 학교에 속해 있어요.'
             : '학교를 만들지 못했어요. 잠시 뒤 다시 해 주세요.');
           return;
         }
+        skipNameCheck = false; picked = null; typedSchool = { name: '', address: '' };
         await loadMe(); await loadData(); render();
         setTimeout(openSpaces, 400);   // 학교를 만들자마자 공간 설정을 이어서
       });
@@ -10187,6 +10276,11 @@
           const exact = list.find((x) => x.name === q) || list[0];
           if (nameBox) nameBox.value = exact.name;
           if (addrBox) addrBox.value = exact.address;
+          // 우리 학교의 표준코드를 서버에 넣어 둡니다.
+          // 그래야 다른 선생님이 같은 학교를 또 만들지 못해요.
+          if (exact.code && online()) {
+            sb.rpc('set_school_code', { p_code: exact.code }).catch(() => {});
+          }
           msg.textContent = list.length > 1
             ? `${exact.name} 주소를 넣었어요. 같은 이름이 ${n(list.length)}곳 있으니 확인해 주세요.`
             : `${exact.name} 주소를 넣었어요.`;
