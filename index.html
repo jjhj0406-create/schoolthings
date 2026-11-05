@@ -743,6 +743,25 @@
     .rrow__name s { color: var(--ink-3); text-decoration-thickness: 1px; }
     .rrow__head .pill { flex: none; margin-top: 1px; }
     .rrow__who { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+    /* 비품에 붙여 둔 번호 (노트북5 같은 것) */
+    .utag {
+      display: inline-block; vertical-align: 2px; margin-left: 2px;
+      padding: 1px 8px; border-radius: 7px;
+      background: var(--field); color: var(--ink-2);
+      font-size: 13px; font-weight: 800; letter-spacing: -0.01em;
+    }
+    /* 번호로 찾았을 때 맨 위에 뜨는 알림 */
+    .taghit {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px;
+      margin-bottom: 14px; padding: 14px 16px; border-radius: 12px;
+      background: var(--field);
+    }
+    .taghit__tag { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
+    .taghit__who { flex: 1; min-width: 0; font-size: 14px; color: var(--ink-2); word-break: keep-all; }
+    .taghit .btn { flex: none; height: 38px; }
+    @media (max-width: 520px) {
+      .taghit .btn { width: 100%; }
+    }
     .rrow__where { font-size: 13px; color: var(--ink-3); }
     .rrow__memo { font-size: 13px; color: var(--ink-2); margin-top: 3px; line-height: 1.45; }
     .rrow__acts { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; margin: 8px -9px -2px 0; }
@@ -2792,6 +2811,7 @@
       id: r.id, itemId: r.item_id, itemName: r.item_name, path: r.path, qty: r.qty, who: r.who,
       dueAt: r.due_at, period: r.period, periodNote: r.period_note, memo: r.memo,
       ...(r.by_user ? { by: r.by_user } : {}),
+      ...(r.unit_tag ? { unitTag: r.unit_tag } : {}),
       ...(r.sign ? { sign: r.sign } : {}),
       outAt: r.out_at, returnedAt: r.returned_at,
     });
@@ -2799,6 +2819,7 @@
       id: l.id, school_id: me.schoolId, item_id: l.itemId, item_name: l.itemName, path: l.path || '',
       qty: l.qty, who: l.who, who_type: 'staff', by_user: l.by || '', due_at: l.dueAt || null, period: l.period || '',
       period_note: l.periodNote || '', memo: l.memo || '', sign: l.sign || null,
+      unit_tag: l.unitTag || '',
       out_at: l.outAt, returned_at: l.returnedAt,
     });
 
@@ -4192,8 +4213,15 @@
           meta.textContent = '0개';
           const g = guesses(all, q);
           const said = josa(q, '은/는').slice(q.length);
-          body.innerHTML = `
-            <div class="nohit">
+          // 번호로 찾은 것이면 그 안내가 먼저다. '등록하기'는 보이지 않게 한다.
+          // 빌려 간 노트북5를 새 물품으로 등록하면 자료가 어지러워진다.
+          const tagHit = tagHitHTML(q);
+          body.innerHTML = tagHit
+            ? tagHit + `<div class="nohit">
+                 <strong>물품 이름으로는 찾지 못했어요</strong>
+                 <span>위에 나온 대여 기록을 확인해 보세요.</span>
+               </div>`
+            : `<div class="nohit">
               <strong>‘${esc(q)}’${esc(said)} 아직 없어요</strong>
               <span>앞 글자만 넣거나, 장소 이름으로 찾아보세요.</span>
               ${g.length ? `<div class="nohit__guess"><span class="nohit__guess-label">혹시 이걸 찾으세요?</span>${g.map((x) => `<button class="pchip" type="button" data-q="${esc(x)}">${esc(x)}</button>`).join('')}</div>` : ''}
@@ -4201,14 +4229,14 @@
                 <a class="btn btn--solid" href="#/add?name=${encodeURIComponent(q)}">‘${esc(q)}’${esc(josa(q, '으로/로').slice(q.length))} 등록하기</a>
               </div>
             </div>`;
-          announce(`${josa(q, '은/는')} 찾지 못했어요`);
+          announce(tagHit ? `${q} 대여 기록을 찾았어요` : `${josa(q, '은/는')} 찾지 못했어요`);
           return;
         }
 
         const groups = groupHits(shown);
         title.textContent = '찾은 물품';
         meta.textContent = `${n(shown.length)}개${groups.length < shown.length ? ` · ${n(groups.length)}가지` : ''}`;
-        body.innerHTML = (shown.length
+        body.innerHTML = tagHitHTML(q) + (shown.length
           ? `<ul class="hits" id="s-list">${groups.slice(0, 60).map(groupHTML).join('')}</ul>${groups.length > 60 ? `<p class="imp__more num">그 밖에 ${n(groups.length - 60)}가지 더 있어요. 검색어를 더 적어 주세요.</p>` : ''}`
           : `<div class="nohit"><strong>조건에 맞는 물품이 없어요</strong><span>위에서 고른 조건을 풀어 보세요.</span></div>`);
         announce(q ? `${shown.length}개 찾았어요` : '');
@@ -4585,6 +4613,60 @@
       return Math.max(0, item.qty - out);
     }
 
+    /* ── 비품 개체 번호 ──
+       학교에서는 노트북에 '노트북5'처럼 따로 번호를 붙여 씁니다.
+       비품 대장의 고유번호(2024-0012)는 선생님들이 모르기 때문에,
+       빌릴 때 이 번호를 받아 두면 어느 것이 나갔는지 알 수 있습니다. */
+
+    // 적는 방식이 사람마다 흔들려도 같은 번호로 보도록 다듬는다
+    //   '노트북 05' · '노트북05' → '노트북5'
+    const normTag = (v) => String(v || '').trim().toLowerCase()
+      .replace(/\s+/g, '').replace(/\d+/g, (d) => String(parseInt(d, 10)));
+
+    // 비품은 이름이 같으면 한 묶음으로 본다. 노트북 20대가 20줄로 깔리지 않게.
+    const groupKeyOf = (it) => (it.asset ? 'A|' + it.name : 'I|' + it.id);
+
+    function groupOf(item) {
+      if (!item) return null;
+      const key = groupKeyOf(item);
+      const items = state.items.filter((i) => groupKeyOf(i) === key);
+      const places = [...new Set(items.map((i) => pathOf(i).join(' › ')))];
+      return {
+        key, name: item.name, asset: !!item.asset, items,
+        qty: items.reduce((a, i) => a + i.qty, 0),
+        left: items.reduce((a, i) => a + leftOf(i), 0),
+        place: places.length === 1 ? places[0] : `${n(places.length)}곳에 나뉘어 있어요`,
+      };
+    }
+
+    const inGroup = (g, l) => g.items.some((i) => i.id === l.itemId);
+    // 지금 나가 있는 번호 가운데 같은 것을 찾는다
+    const tagOut = (g, tag) => {
+      const t = normTag(tag);
+      if (!g || !t) return null;
+      return activeLoans().find((l) => l.unitTag && inGroup(g, l) && normTag(l.unitTag) === t) || null;
+    };
+    // 지금까지 쓰인 번호 (자동완성에 씁니다)
+    const tagsUsed = (g) => (!g ? [] : [...new Set((state.loans || [])
+      .filter((l) => l.unitTag && inGroup(g, l)).map((l) => l.unitTag))].slice(0, 40));
+
+    // '노트북5'로 찾으면 지금 누가 빌려 갔는지 알려 준다
+    function tagHitHTML(q) {
+      const t = normTag(q);
+      if (!t) return '';
+      const hits = (state.loans || []).filter((l) => l.unitTag && normTag(l.unitTag) === t);
+      if (!hits.length) return '';
+      const out = hits.filter((l) => !l.returnedAt);
+      const l = out[0] || hits[hits.length - 1];
+      return `<div class="taghit">
+          <p class="taghit__tag">${esc(l.unitTag)}</p>
+          <p class="taghit__who">${out.length
+            ? `${esc(l.who)} 님이 빌려 가셨어요${l.dueAt ? ` · ${esc(dateShort(l.dueAt))}까지` : ''}`
+            : `${esc(l.who)} 님이 빌렸다가 돌려주셨어요`}</p>
+          <a class="btn btn--ghost" href="#/rent">대여 현황 보기</a>
+        </div>`;
+    }
+
     // 몇 교시까지 빌리는지
     const periodText = (l) => (!l.period ? '' : (l.period === 'etc' ? (l.periodNote || '기타') : `${l.period}교시`));
 
@@ -4630,7 +4712,7 @@
       return `
         <li class="rrow ${st.key === 'late' ? 'is-late' : ''} ${loan.returnedAt ? 'is-back' : ''}">
           <div class="rrow__head">
-            <p class="rrow__name">${gone ? `<s>${esc(loan.itemName)}</s>` : esc(loan.itemName)}${loan.qty > 1 ? ` <span class="num">${n(loan.qty)}개</span>` : ''}</p>
+            <p class="rrow__name">${gone ? `<s>${esc(loan.itemName)}</s>` : esc(loan.itemName)}${loan.unitTag ? ` <span class="utag">${esc(loan.unitTag)}</span>` : ''}${loan.qty > 1 ? ` <span class="num">${n(loan.qty)}개</span>` : ''}</p>
             <span class="pill ${PILL[st.key]}">${esc(st.label)}</span>
           </div>
           <p class="rrow__who">${esc(loan.who)}</p>
@@ -4729,7 +4811,7 @@
     let lend = null;
     let lendShow = 10;   // 빌릴 물품 목록에 보여 줄 개수
     const emptyLend = () => ({
-      itemId: '', qty: 1, dueAt: plusDays(1), period: '', periodNote: '', memo: '', q: '', cat: '',
+      itemId: '', qty: 1, unitTag: '', dueAt: plusDays(1), period: '', periodNote: '', memo: '', q: '', cat: '',
       staffName: writerName(),
     });
 
@@ -4742,7 +4824,8 @@
       lend = lend || emptyLend();
       const d = lend;
       const chosen = state.items.find((i) => i.id === d.itemId);
-      const left = chosen ? leftOf(chosen) : 0;
+      const g = groupOf(chosen);
+      const left = g ? g.left : 0;
 
       return `
         <header class="top">
@@ -4756,14 +4839,26 @@
           <h2 class="sheet__title" id="lend-what">무엇을 빌리나요</h2>
           <p class="sheet__desc">대여 가능으로 등록된 물품만 고를 수 있어요.</p>
 
-          ${chosen ? `
+          ${g ? `
             <div class="chosen">
-              <p class="chosen__name">${esc(chosen.name)}</p>
+              <p class="chosen__name">${esc(g.name)}</p>
               <button class="chosen__change" type="button" id="l-change">바꾸기</button>
-              <p class="chosen__where">${esc(pathOf(chosen).join(' › '))}</p>
-              <p class="chosen__left num">지금 빌릴 수 있는 수량 ${n(left)}개</p>
+              <p class="chosen__where">${esc(g.place)}</p>
+              <p class="chosen__left num">${g.asset && g.qty > 1
+                ? `모두 ${n(g.qty)}개 중 ${n(left)}개를 빌릴 수 있어요`
+                : `지금 빌릴 수 있는 수량 ${n(left)}개`}</p>
             </div>
 
+            ${g.asset ? `
+            <div class="field" style="margin-top:16px">
+              <label class="field__label" for="l-tag">몇 번을 빌리시나요 <small>선택</small></label>
+              <input class="input" id="l-tag" name="unitTag" form="lend-form" list="l-tag-list"
+                     placeholder="예: ${esc(g.name)}5" autocomplete="off" value="${esc(d.unitTag || '')}">
+              <datalist id="l-tag-list">${tagsUsed(g).map((t) => `<option value="${esc(t)}"></option>`).join('')}</datalist>
+              <p class="wiz__hint">물건에 붙어 있는 번호를 적어 주세요. 적어 두면 나중에 어느 것이 나갔는지 알 수 있어요.</p>
+              <p class="field__error" id="e-tag"></p>
+            </div>`
+            : `
             <div class="field" style="margin-top:16px">
               <label class="field__label" for="l-qty">빌리는 수량<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
               <div class="stepper">
@@ -4772,7 +4867,7 @@
                 <button type="button" data-lstep="1" aria-label="하나 더하기" ${d.qty >= left ? 'disabled' : ''}>${icon(ICONS.add)}</button>
               </div>
               <p class="field__error" id="e-qty"></p>
-            </div>`
+            </div>`}`
           : `
             <div class="pick">
               <div class="cats" id="l-cats" role="group" aria-label="분류로 고르기"></div>
@@ -4876,7 +4971,16 @@
         for (const l of state.loans || []) often.set(l.itemId, (often.get(l.itemId) || 0) + 1);
         const sorted = pool.slice().sort((a, b) =>
           (often.get(b.id) || 0) - (often.get(a.id) || 0) || b.createdAt.localeCompare(a.createdAt));
-        const all = q ? searchItems(pool, q).map((r) => r.item) : sorted;
+        const hits = q ? searchItems(pool, q).map((r) => r.item) : sorted;
+        // 비품은 이름이 같으면 한 줄로 묶는다
+        const all = [];
+        const seenKey = new Set();
+        for (const it of hits) {
+          const k = groupKeyOf(it);
+          if (seenKey.has(k)) continue;
+          seenKey.add(k);
+          all.push(groupOf(it));
+        }
         const found = all.slice(0, lendShow);
         if (!found.length) {
           box.innerHTML = `<p class="pick__none">${q ? `‘${esc(q)}’${esc(josa(q, '은/는').slice(q.length))} 찾지 못했어요.` : `${esc(lend.cat)}에는 빌릴 수 있는 물품이 없어요.`}</p>`;
@@ -4884,27 +4988,27 @@
         }
         const rest = all.length - found.length;
         box.innerHTML = `
-          <p class="pick__count">${q ? `<b class="num">${n(all.length)}개</b> 찾았어요` : '자주 빌리는 물품부터 보여 드려요'}</p>
-          <ul class="pick__results">${found.map((it) => {
-          const left = leftOf(it);
-          return `<li>
-            <button class="pickrow" type="button" data-pick="${it.id}" ${left ? '' : 'disabled'}>
-              <span class="pickrow__name">${esc(it.name)}</span>
-              <span class="pickrow__left num ${left ? '' : 'is-none'}">${left ? `${n(left)}개 가능` : '모두 나감'}</span>
-              <span class="pickrow__where">${esc(pathOf(it).join(' › '))}</span>
+          <p class="pick__count">${q ? `<b class="num">${n(all.length)}가지</b> 찾았어요` : '자주 빌리는 물품부터 보여 드려요'}</p>
+          <ul class="pick__results">${found.map((gr) => `<li>
+            <button class="pickrow" type="button" data-pick="${gr.items[0].id}" ${gr.left ? '' : 'disabled'}>
+              <span class="pickrow__name">${esc(gr.name)}</span>
+              <span class="pickrow__left num ${gr.left ? '' : 'is-none'}">${!gr.left ? '모두 나감'
+                : (gr.qty > 1 ? `${n(gr.qty)}개 중 ${n(gr.left)}개 가능` : `${n(gr.left)}개 가능`)}</span>
+              <span class="pickrow__where">${esc(gr.place)}</span>
             </button>
-          </li>`;
-        }).join('')}</ul>
+          </li>`).join('')}</ul>
           ${rest > 0 ? `<button class="pick__more" type="button" id="l-more">${n(rest)}개 더 보기</button>` : ''}`;
       }
 
       function readLend() {
         const fd = new FormData(form);
-        const chosen = state.items.find((i) => i.id === lend.itemId);
-        const max = chosen ? leftOf(chosen) : 1;
+        const g = groupOf(state.items.find((i) => i.id === lend.itemId));
+        const max = g ? g.left : 1;
         return {
           ...lend,
-          qty: Math.min(Math.max(1, parseInt(fd.get('qty'), 10) || 1), Math.max(1, max)),
+          // 비품은 번호로 한 개씩 빌립니다
+          qty: g && g.asset ? 1 : Math.min(Math.max(1, parseInt(fd.get('qty'), 10) || 1), Math.max(1, max)),
+          unitTag: (fd.get('unitTag') || '').trim(),
           staffName: (fd.get('staffName') || '').trim(),
           dueAt: fd.get('dueAt') || '',
           period: fd.get('period') || '',
@@ -4916,20 +5020,22 @@
       function renderPreview() {
         const d = lend;
         const chosen = state.items.find((i) => i.id === d.itemId);
+        const g = groupOf(chosen);
         const line = (k, v) => `<span class="preview__k">${k}</span><span class="preview__v ${v ? '' : 'is-empty'}">${esc(v || '아직 비어 있어요')}</span>`;
         view.querySelector('#l-preview').innerHTML = `
           <p class="preview__label">이렇게 기록돼요</p>
-          <p class="preview__name ${chosen ? '' : 'is-empty'}">${esc(chosen ? chosen.name : '빌릴 물품')}</p>
-          <p class="preview__qty num">${n(d.qty)}개</p>
+          <p class="preview__name ${g ? '' : 'is-empty'}">${esc(g ? g.name : '빌릴 물품')}</p>
+          <p class="preview__qty num">${g && g.asset ? (d.unitTag ? esc(d.unitTag) : '번호 없음') : `${n(d.qty)}개`}</p>
           <div class="preview__line">
             ${line('빌리는 분', whoText(d))}
             ${line('반납일', d.dueAt ? `${dateShort(d.dueAt)}${periodText(d) ? ` ${periodText(d)}` : ''} (${daysBetween(today(), d.dueAt)}일 뒤)` : '')}
-            ${line('있던 곳', chosen ? pathOf(chosen).join(' › ') : '')}
+            ${line('있던 곳', g ? g.place : '')}
           </div>
           ${d.memo ? `<p class="preview__memo">${esc(d.memo)}</p>` : ''}
           <p class="preview__sign">빌리기를 누르면 서명 화면이 열려요.</p>`;
 
-        view.querySelector('#lb-name').textContent = chosen ? `${chosen.name} ${d.qty}개` : '빌릴 물품을 고르세요';
+        view.querySelector('#lb-name').textContent = !g ? '빌릴 물품을 고르세요'
+          : (g.asset ? `${g.name}${d.unitTag ? ` · ${d.unitTag}` : ''}` : `${g.name} ${d.qty}개`);
         view.querySelector('#lb-due').textContent = whoText(d)
           ? `${whoText(d)} · ${d.dueAt ? `${dateShort(d.dueAt)}${periodText(d) ? ` ${periodText(d)}` : ''}까지` : '반납일을 정하세요'}`
           : '빌리는 분을 적어 주세요';
@@ -4937,9 +5043,15 @@
 
       const problems = () => {
         const chosen = state.items.find((i) => i.id === lend.itemId);
+        const g = groupOf(chosen);
         const out = [];
         if (!chosen) out.push(['item', '빌릴 물품을 골라 주세요']);
-        else if (lend.qty > leftOf(chosen)) out.push(['qty', `지금은 ${leftOf(chosen)}개까지 빌릴 수 있어요`]);
+        else if (!g.asset && lend.qty > g.left) out.push(['qty', `지금은 ${g.left}개까지 빌릴 수 있어요`]);
+        else if (g.asset && !g.left) out.push(['item', '지금은 모두 나가 있어요']);
+        if (g && g.asset && lend.unitTag) {
+          const taken = tagOut(g, lend.unitTag);
+          if (taken) out.push(['tag', `${lend.unitTag}은(는) ${taken.who} 님이 빌려 가셨어요. 번호를 다시 확인해 주세요`]);
+        }
         if (!lend.staffName) out.push(['who', '빌리는 분 이름을 적어 주세요']);
         if (!lend.dueAt) out.push(['due', '반납 예정일을 정해 주세요']);
         else if (daysBetween(today(), lend.dueAt) < 0) out.push(['due', '오늘보다 이전 날짜는 고를 수 없어요']);
@@ -4947,7 +5059,7 @@
       };
 
       function showProblems(list) {
-        for (const key of ['item', 'qty', 'who', 'due']) {
+        for (const key of ['item', 'qty', 'tag', 'who', 'due']) {
           const el = view.querySelector('#e-' + key);
           if (el) el.textContent = (list.find(([k]) => k === key) || [, ''])[1];
         }
@@ -4983,8 +5095,8 @@
       view.addEventListener('click', (e) => {
         if (e.target.closest('#l-more')) { lendShow += 20; renderResults(); return; }
         const pick = e.target.closest('[data-pick]');
-        if (pick) { lend = { ...readLend(), itemId: pick.dataset.pick, qty: 1 }; render(); return; }
-        if (e.target.closest('#l-change')) { lend = { ...readLend(), itemId: '', qty: 1 }; render(); return; }
+        if (pick) { lend = { ...readLend(), itemId: pick.dataset.pick, qty: 1, unitTag: '' }; render(); return; }
+        if (e.target.closest('#l-change')) { lend = { ...readLend(), itemId: '', qty: 1, unitTag: '' }; render(); return; }
         const step = e.target.closest('[data-lstep]');
         if (step) {
           const input = view.querySelector('#l-qty');
@@ -5006,23 +5118,27 @@
         const list = problems();
         showProblems(list);
         if (list.length) {
-          const first = { item: '#l-q', qty: '#l-qty', who: '#l-staff', due: '#l-due' }[list[0][0]];
+          const first = { item: '#l-q', qty: '#l-qty', tag: '#l-tag', who: '#l-staff', due: '#l-due' }[list[0][0]];
           view.querySelector(first)?.focus();
           return;
         }
         // 마지막으로 빌리는 분의 서명을 받는다
-        const chosenItem = state.items.find((i) => i.id === lend.itemId);
+        const g = groupOf(state.items.find((i) => i.id === lend.itemId));
         const dueText = `${dateShort(lend.dueAt)}${periodText(lend) ? ` ${periodText(lend)}` : ''}까지`;
+        const what = g.asset ? (lend.unitTag ? `${g.name} ${lend.unitTag}` : g.name) : `${g.name} ${n(lend.qty)}개`;
         askSign(
           `${whoText(lend)} 님, 여기에 서명해 주세요`,
-          `${chosenItem.name} ${n(lend.qty)}개 · ${dueText} · ${pathOf(chosenItem).join(' › ')}`,
+          `${what} · ${dueText} · ${g.place}`,
           (sign) => {
-          const item = state.items.find((i) => i.id === lend.itemId);
+          // 묶음 안에서 아직 남아 있는 것 하나에 기록을 붙인다
+          const item = (g.asset ? g.items.find((i) => leftOf(i) > 0) : null)
+            || state.items.find((i) => i.id === lend.itemId);
           const loan = {
             id: 'lon_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-            itemId: item.id, itemName: item.name, path: pathOf(item).join(' › '),
+            itemId: item.id, itemName: g.name, path: pathOf(item).join(' › '),
             qty: lend.qty, who: whoText(lend), dueAt: lend.dueAt,
           by: session?.user?.id || '',
+            ...(g.asset && lend.unitTag ? { unitTag: lend.unitTag } : {}),
             period: lend.period, periodNote: lend.period === 'etc' ? lend.periodNote : '',
             memo: lend.memo, sign,
             outAt: new Date().toISOString(), returnedAt: null,
@@ -5032,7 +5148,7 @@
           } catch {
             return '저장 공간이 부족해요. 사진이 많은 물품을 정리해 주세요.';
           }
-          flash(`${loan.itemName} ${n(loan.qty)}개 대여했어요`);
+          flash(loan.unitTag ? `${loan.itemName} ${loan.unitTag} 대여했어요` : `${loan.itemName} ${n(loan.qty)}개 대여했어요`);
           lend = null;
           location.hash = '#/rent';
           return null;
