@@ -143,11 +143,11 @@
 
     .top { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 60px; }
     .top__date { font-size: 14px; color: var(--ink-2); font-weight: 500; }
-    .top__title { font-size: 28px; font-weight: 800; letter-spacing: -0.035em; margin-top: 2px; }
+    .top__title { font-size: 28px; font-weight: 800; letter-spacing: -0.035em; margin-top: 4px; }
     .top__actions { display: flex; align-items: center; gap: 8px; }
     .back {
       display: inline-flex; align-items: center; gap: 2px; margin-left: -6px;
-      height: 28px; padding: 0 6px; border-radius: 8px;
+      height: 28px; padding: 0 8px 0 6px; border-radius: 8px;
       font-size: 14px; font-weight: 600; color: var(--ink-2);
     }
     .back:hover { color: var(--ink); }
@@ -269,9 +269,15 @@
 
     .field { display: grid; gap: 7px; border: 0; min-width: 0; }
     .field + .field { margin-top: 16px; }
-    .field__label { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: 700; }
+    .field__label {
+      display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap;
+      gap: 2px 8px; font-size: 14px; font-weight: 700;
+      line-height: 24px;            /* 별표가 있든 없든 라벨 높이를 같게 */
+    }
     .field__label .req { margin-right: auto; }
-    .field__label small { font-size: 12px; font-weight: 500; color: var(--ink-3); }
+    .field__label small { font-size: 12px; font-weight: 500; color: var(--ink-3); line-height: 18px; margin-left: auto; text-align: right; }
+    /* 나란히 놓인 두 칸은 라벨 줄 높이를 같게 두어 입력칸이 어긋나지 않게 */
+    .row .field__label { height: 24px; flex-wrap: nowrap; }
     .req { color: var(--late); font-weight: 800; margin-left: 3px; }
     legend.field__label { padding: 0; margin-bottom: 7px; width: 100%; }
     .field__error { font-size: 13px; font-weight: 600; color: var(--late); }
@@ -492,7 +498,7 @@
     .recent__x { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: var(--ink-3); flex: none; }
     .recent__x:hover { background: var(--field); color: var(--ink); }
     .recent__x .icon { width: 15px; height: 15px; }
-    .linkish { font-size: 13px; font-weight: 600; color: var(--ink-3); }
+    .linkish { display: inline-flex; align-items: center; min-height: 32px; padding: 0 2px; font-size: 13px; font-weight: 600; color: var(--ink-3); }
     .linkish:hover { color: var(--ink); }
     .side-empty { font-size: 14px; color: var(--ink-3); }
 
@@ -1880,6 +1886,8 @@
     .hwrap__acts .bigbtn { flex: 1; height: 52px; font-size: 16px; }
     .hwrap .row { margin-bottom: 0; }
     .hwrap .field { margin-top: 10px; }
+    .hwrap .row { margin-top: 10px; }
+    .hwrap .row > .field { margin-top: 0; }
 
     .hmine__list { list-style: none; display: grid; gap: 5px; }
     .hmine__row { display: flex; align-items: center; gap: 6px; padding: 11px 13px; border-radius: 12px; background: var(--field); }
@@ -2047,6 +2055,15 @@
     .toggle.is-on .toggle__dot { transform: translateX(22px); }
 
     .setrow { grid-column: span 6; align-self: start; min-width: 0; }
+    /* 카드 높이가 제각각이어도 한쪽 아래가 텅 비지 않도록 흘려 담습니다 */
+    .setgrid { grid-column: 1 / -1; }
+    @media (min-width: 1101px) {
+      .setgrid { columns: 2; column-gap: 18px; }
+      .setgrid .setrow { break-inside: avoid; width: 100%; margin: 0 0 16px; }
+    }
+    @media (max-width: 1100px) {
+      .setgrid { display: grid; gap: 16px; }
+    }
     .setline {
       display: flex; align-items: center; gap: 16px;
       padding: 16px 0; border-top: 1px solid var(--line);
@@ -3815,7 +3832,7 @@
                <span>“이동식 마이크는 어디 있을까요?”처럼<br>적어 두면 아는 분이 알려 줘요</span>
                <button class="btn btn--ghost empty__go" type="button" id="board-write2">${icon(ICONS.add)}첫 글 쓰기</button>
              </div>`}
-        </section>        </section>`;
+        </section>`;
     }
 
     function mountHome(view) {
@@ -9462,6 +9479,8 @@
           </div>
         </header>
 
+        <div class="setgrid">
+
         <section class="card setrow" aria-labelledby="s1-title">
           <div class="card__head"><h2 class="card__title" id="s1-title">내 정보</h2></div>
           <dl class="hsum">
@@ -9522,11 +9541,10 @@
             </div>
             <a class="btn btn--ghost" href="#/help">보기</a>
           </div>
-          <p class="sheet__desc" style="margin-top:14px">여기에 없는 내용은 직접 물어봐 주세요.</p>
           <div class="setline">
             <div class="setline__main">
               <p class="setline__name">카카오톡 오픈채팅</p>
-              <p class="setline__sub">가장 빠르게 답을 받을 수 있어요.</p>
+              <p class="setline__sub">자주 묻는 질문에 없는 내용은 여기로 물어봐 주세요. 가장 빠르게 답을 받을 수 있어요.</p>
             </div>
             <a class="btn btn--solid" href="${esc(CONTACT.kakao)}" target="_blank" rel="noopener">${icon(ICONS.chat)}문의하기</a>
           </div>
@@ -9557,7 +9575,8 @@
             <a class="btn btn--ghost" href="#/privacy">보기</a>
           </div>
           <p class="wiz__hint">글꼴: 학교안심 (한국교육학술정보원)<br>© 2026 학교 물품 어디 있지?. All rights reserved.</p>
-        </section>`;
+        </section>
+        </div>`;
     }
 
     function mountSettings(view) {
