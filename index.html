@@ -2090,9 +2090,7 @@
     .aq__btns { display: grid; gap: 8px; margin-top: 12px; }
     .adet { margin-top: 14px; padding: 14px; border-radius: 12px; background: var(--field); }
     .adet__name { font-size: 15px; font-weight: 800; margin-bottom: 10px; }
-    .aphoto { margin: 12px 0 0; }
-    .aphoto img { display: block; width: 100%; max-height: 260px; object-fit: contain; border-radius: 12px; background: var(--field); }
-    .aphoto figcaption { font-size: 12px; color: var(--ink-3); margin-top: 5px; text-align: center; }
+    .aphoto img { display: block; width: 100%; max-height: 300px; object-fit: contain; border-radius: 12px; background: #fff; margin-top: 8px; }
     .aq__undo { display: block; width: 100%; margin-top: 10px; text-align: center; justify-content: center; }
 
     .ashots { display: grid; gap: 10px; margin-top: 8px; }
@@ -2105,8 +2103,34 @@
       font-size: 14px; font-weight: 700; cursor: pointer;
     }
     .ashot__add .icon { width: 18px; height: 18px; }
-    .aud__ans { font-size: 13px; color: var(--ink-2); margin-top: 12px; line-height: 1.6; }
-    .aud__who { display: block; color: var(--ink-3); word-break: keep-all; }
+    .ansum { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .ansum__fig { font-size: 13px; color: var(--ink-2); }
+    .ansum__fig b { color: var(--ink); font-size: 14px; }
+    .ansum .mini { margin-left: auto; }
+    .anames { margin-top: 8px; }
+    .anames > summary {
+      display: inline-flex; align-items: center; gap: 2px; cursor: pointer;
+      font-size: 13px; font-weight: 700; color: var(--ink-3); padding: 4px 0; list-style: none;
+    }
+    .anames > summary::-webkit-details-marker { display: none; }
+    .anames__caret { width: 16px; height: 16px; transition: transform 140ms; }
+    .anames[open] > summary .anames__caret { transform: rotate(180deg); }
+    .anames__g { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--field); }
+    .anames__t { font-size: 13px; font-weight: 700; }
+    .anames__v { font-size: 13px; color: var(--ink-2); line-height: 1.6; margin-top: 3px; word-break: keep-all; }
+    .anames__note { font-size: 12px; color: var(--ink-3); line-height: 1.5; margin-top: 8px; word-break: keep-all; }
+
+    /* 설문 쪽 참고 사진 — 접어 둡니다 */
+    .aphoto { margin-top: 12px; }
+    .aphoto > summary {
+      display: inline-flex; align-items: center; gap: 4px; cursor: pointer; list-style: none;
+      height: 36px; padding: 0 12px; border-radius: 10px; background: #fff;
+      font-size: 14px; font-weight: 700; color: var(--ink-2);
+    }
+    .aphoto > summary::-webkit-details-marker { display: none; }
+    .aphoto__cam { width: 17px; height: 17px; }
+    .aphoto__caret { width: 16px; height: 16px; transition: transform 140ms; }
+    .aphoto[open] > summary .aphoto__caret { transform: rotate(180deg); }
     .adet .field + .field { margin-top: 12px; }
     .adet .input { background: #fff; }
 
@@ -8465,7 +8489,10 @@
       let step = one ? 'ask' : 'list';   // ask → 쓰는지 묻는 중, fill → 번호 적는 중
 
       const photoHTML = (nm) => (photos[nm]
-        ? `<figure class="aphoto"><img src="${esc(photos[nm])}" alt="${esc(nm)} 참고 사진"><figcaption>참고 사진</figcaption></figure>`
+        ? `<details class="aphoto">
+             <summary>${icon(ICONS.camera, 'icon aphoto__cam')}참고 사진 보기${icon(ICONS.caret, 'icon aphoto__caret')}</summary>
+             <img src="${esc(photos[nm])}" alt="${esc(nm)} 참고 사진">
+           </details>`
         : '');
 
       const detailHTML = (nm) => {
@@ -8473,10 +8500,10 @@
         return `
           <div class="adet" data-adet="${esc(nm)}">
             ${one ? '' : `<p class="adet__name">${esc(nm)}</p>`}
-            ${one ? '' : photoHTML(nm)}
+            ${photoHTML(nm)}
             <div class="field">
               <label class="field__label" for="ad-t-${esc(nm)}">${esc(nm)}의 번호</label>
-              <input class="input" id="ad-t-${esc(nm)}" data-ak="tag" value="${esc(v.tag)}" maxlength="40" autocomplete="off">
+              <input class="input" id="ad-t-${esc(nm)}" data-ak="tag" value="${esc(v.tag)}" placeholder="예: ${esc(nm)}5" maxlength="40" autocomplete="off">
             </div>
             <div class="field">
               <label class="field__label" for="ad-d-${esc(nm)}">반납 예정일</label>
@@ -8502,7 +8529,6 @@
 
           ${one ? `
             <p class="aq">우리 학교 ${esc(josa(names[0], '을/를'))} 사용 중이신가요?</p>
-            ${photoHTML(names[0])}
             ${step === 'ask' ? `
               <div class="aq__btns">
                 <button class="bigbtn bigbtn--navy" type="button" data-ayes="${esc(names[0])}">사용 중입니다</button>
@@ -8693,14 +8719,7 @@
             }).join('')}
           </ul>
 
-          ${(() => {
-            const mine = auditReplies().filter((r) => r.auditId === a.id && r.status !== 'rejected');
-            const whoAll = [...new Set(mine.map((r) => r.who).filter(Boolean))];
-            const whoHave = [...new Set(mine.filter((r) => (r.kind || 'have') === 'have').map((r) => r.who))];
-            if (!whoAll.length) return '';
-            return `<p class="aud__ans">답해 주신 분 <b class="num">${n(whoAll.length)}명</b>${whoHave.length ? ` · 사용 중이라고 하신 분 <b class="num">${n(whoHave.length)}명</b>` : ' · 모두 사용하지 않는다고 하셨어요'}
-              <span class="aud__who">${esc(whoAll.join(', '))}</span></p>`;
-          })()}
+          ${answerBoxHTML(a)}
 
           ${pend.length ? `
             <p class="coll__label" style="margin-top:14px">들어온 답 ${n(pend.length)}건</p>
@@ -8719,6 +8738,68 @@
             </ul>`
           : '<p class="side-empty" style="margin-top:12px">아직 사용 중이라고 하신 분이 없어요. 링크를 복사해 선생님들께 보내 주세요.</p>'}
         </div>`;
+    }
+
+    // 누가 답했는지 — 숫자로 먼저 보여 주고, 명단은 접어 둡니다
+    function answerBoxHTML(a) {
+      const mine = auditReplies().filter((r) => r.auditId === a.id && r.status !== 'rejected');
+      const nameOf = (v) => String(v || '').replace(/\s+/g, '');
+      const have = [...new Set(mine.filter((r) => (r.kind || 'have') === 'have').map((r) => r.who).filter(Boolean))];
+      const none = [...new Set(mine.filter((r) => (r.kind || 'have') !== 'have').map((r) => r.who).filter(Boolean))]
+        .filter((w) => !have.includes(w));
+      const all = [...have, ...none];
+      if (!all.length) return '';
+
+      // 앱에 가입하신 선생님 가운데 아직 답이 없는 분
+      const got = new Set(all.map(nameOf));
+      const yet = (members || [])
+        .filter((m) => m.status === 'active')
+        .map((m) => (m.name || '').trim())
+        .filter((v) => v && !got.has(nameOf(v)));
+
+      const line = (label, list) => (!list.length ? '' : `
+        <div class="anames__g">
+          <p class="anames__t">${esc(label)} <b class="num">${n(list.length)}명</b></p>
+          <p class="anames__v">${esc(list.join(', '))}</p>
+        </div>`);
+
+      return `
+        <div class="ansum">
+          <span class="ansum__fig">답해 주신 분 <b class="num">${n(all.length)}명</b></span>
+          <span class="ansum__fig">사용 중 <b class="num">${n(have.length)}명</b></span>
+          <span class="ansum__fig">사용 안 함 <b class="num">${n(none.length)}명</b></span>
+          <button class="mini mini--quiet" type="button" data-axls="${a.id}">${icon(ICONS.download)}엑셀로 내려받기</button>
+        </div>
+        <details class="anames">
+          <summary>명단 보기${icon(ICONS.caret, 'icon anames__caret')}</summary>
+          ${line('사용 중', have)}
+          ${line('사용하지 않음', none)}
+          ${line('아직 답이 없는 분', yet)}
+          ${yet.length ? '<p class="anames__note">앱에 가입하신 선생님 가운데 답이 없는 분입니다. 가입하지 않고 링크로만 답하신 분은 여기에 안 나와요.</p>' : ''}
+        </details>`;
+    }
+
+    // 답을 통째로 엑셀로
+    async function exportAudit(a) {
+      const XLSX = await xlsx();
+      const rows = auditReplies().filter((r) => r.auditId === a.id)
+        .slice().sort((x, y) => (x.itemName || '').localeCompare(y.itemName) || (x.who || '').localeCompare(y.who));
+      const head = ['품목', '사용 여부', '번호', '성함', '반납 예정일', '처리', '답한 날짜'];
+      const body = rows.map((r) => [
+        r.itemName || '',
+        (r.kind || 'have') === 'have' ? '사용 중' : '사용하지 않음',
+        r.unitTag || '',
+        r.who || '',
+        r.dueAt || '',
+        r.status === 'done' ? '대여로 넣음' : (r.status === 'rejected' ? '뺌' : '아직'),
+        (r.createdAt || '').slice(0, 10),
+      ]);
+      const stamp = ymd(new Date()).replaceAll('-', '');
+      const ws = XLSX.utils.aoa_to_sheet([[a.title || '비품 소재 확인'], [], head, ...body]);
+      ws['!cols'] = [{ wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 13 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '비품 소재 확인');
+      XLSX.writeFile(wb, `비품소재확인_${stamp}.xlsx`);
     }
 
     // 담당 화면의 단추들
@@ -8787,6 +8868,14 @@
           keepAuditOpen = true;
           redraw();
           flash('조사를 시작했어요. 링크를 복사해 보내 주세요');
+          return;
+        }
+
+        // 엑셀로 내려받기
+        const xl = e.target.closest('[data-axls]');
+        if (xl) {
+          const a = audits().find((x) => x.id === xl.dataset.axls);
+          if (a) exportAudit(a).catch(() => flash('내려받지 못했어요', 'warn'));
           return;
         }
 
