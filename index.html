@@ -455,6 +455,7 @@
     .tag { height: 24px; padding: 0 9px; border-radius: 7px; background: #e8ebf3; font-size: 12px; font-weight: 700; color: var(--ink-2); display: inline-flex; align-items: center; }
     .tag--no { background: #fdf0f0; color: var(--late); }
     .tag--fix { background: #fff3e0; color: #b8860b; }
+    .tag--out { background: #eaf3ec; color: var(--board); }
     /* 비품 대장 칸 */
     .assetbox {
       margin-top: 12px; padding: 16px; border-radius: 14px;
@@ -897,10 +898,11 @@
     .todorow__sub { grid-column: 1; font-size: 13px; color: var(--ink-2); margin-top: 2px; }
     .todorow__act { grid-column: 2; grid-row: 1 / -1; display: flex; align-items: center; gap: 6px; }
     .mini {
-      display: inline-flex; align-items: center; justify-content: center;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
       height: 34px; padding: 0 14px; border-radius: 9px;
       font-size: 14px; font-weight: 700; white-space: nowrap; text-align: center;
     }
+    .mini .icon { width: 17px; height: 17px; stroke-width: 2; }
     .mini--go { background: var(--navy); color: #fff; }
     .mini--go:hover { background: var(--navy-2); }
     .mini--back { background: var(--board); color: #fff; }
@@ -2084,6 +2086,7 @@
     /* 링크로 여는 쪽 */
     .give__school { font-size: 13px; font-weight: 700; color: var(--ink-3); margin-bottom: 4px; }
     .aq { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; margin-top: 18px; word-break: keep-all; }
+    .give__due { display: inline-block; margin-top: 6px; font-weight: 700; color: var(--ink-2); }
     .aq__btns { display: grid; gap: 8px; margin-top: 12px; }
     .adet { margin-top: 14px; padding: 14px; border-radius: 12px; background: var(--field); }
     .adet .field + .field { margin-top: 12px; }
@@ -3427,6 +3430,7 @@
       next: 'M9 6l6 6-6 6',
       print: 'M7 9V3h10v6 M7 17H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2 M7 14h10v7H7z',
       refresh: 'M20 11a8 8 0 10-2.3 5.7 M20 5v6h-6',
+      link: 'M10 13.5a3.5 3.5 0 005 0l3-3a3.5 3.5 0 00-5-5l-1 1 M14 10.5a3.5 3.5 0 00-5 0l-3 3a3.5 3.5 0 005 5l1-1',
       more: 'M4 6h16 M4 12h16 M4 18h16',
       help: 'M12 17h.01 M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3 M12 21a9 9 0 100-18 9 9 0 000 18z',
             settings: 'M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z',
@@ -4117,6 +4121,11 @@
         it.repair ? '<span class="tag tag--fix">수리 필요</span>' : '',
         it.lost ? '<span class="tag tag--no">찾는 중</span>' : '',
         it.loanable ? '' : '<span class="tag tag--no">대여 불가</span>',
+        (() => {
+          const out = activeLoans().filter((l) => l.itemId === it.id).reduce((a, l) => a + l.qty, 0);
+          if (!out) return '';
+          return `<span class="tag tag--out">${it.qty > 1 ? `${n(it.qty)}개 중 ${n(out)}개 대여 중` : '대여 중'}</span>`;
+        })(),
         r.why && r.why !== FIELD_WHY.memo ? `<span class="hit__why">${esc(r.why)}</span>` : '',
       ].filter(Boolean).join('');
       return `
@@ -4158,6 +4167,10 @@
             <p class="hit__meta">
               ${it.category ? `<span class="tag">${highlight(it.category, m.category)}</span>` : ''}
               ${it.asset ? '<span class="tag tag--asset">비품</span>' : ''}
+              ${(() => {
+                const out = g.rows.reduce((a, r2) => a + activeLoans().filter((l) => l.itemId === r2.item.id).reduce((x, l) => x + l.qty, 0), 0);
+                return out ? `<span class="tag tag--out">${n(g.qty)}개 중 ${n(out)}개 대여 중</span>` : '';
+              })()}
               <button class="hit__each" type="button" data-group="${esc(g.key)}">${open ? '접기' : '하나씩 보기'}</button>
             </p>
             ${open ? `<ul class="hit__kids">${g.rows.slice(0, 60).map((r2) => `
@@ -8431,12 +8444,12 @@
         return `
           <div class="adet" data-adet="${esc(nm)}">
             <div class="field">
-              <label class="field__label" for="ad-t-${esc(nm)}">${esc(nm)}의 번호를 적어 주세요</label>
+              <label class="field__label" for="ad-t-${esc(nm)}">${esc(nm)}의 번호 <small>아시는 경우</small></label>
               <input class="input" id="ad-t-${esc(nm)}" data-ak="tag" value="${esc(v.tag)}" placeholder="예: ${esc(nm)}5" maxlength="40" autocomplete="off">
-              <p class="gform__hint">물건에 붙어 있는 번호를 그대로 적어 주세요.</p>
+              <p class="gform__hint">물건에 붙어 있는 번호를 그대로 적어 주시면 됩니다. 예) ${esc(nm)}5</p>
             </div>
             <div class="field">
-              <label class="field__label" for="ad-d-${esc(nm)}">${esc(nm)} 반납 날짜를 예상해서 적어 주세요</label>
+              <label class="field__label" for="ad-d-${esc(nm)}">언제쯤 돌려주실까요 <small>대략</small></label>
               <input class="input" id="ad-d-${esc(nm)}" data-ak="due" type="date" value="${esc(v.due)}" min="${today()}">
             </div>
           </div>`;
@@ -8447,17 +8460,18 @@
         root.innerHTML = shell(`
           <p class="give__school">${esc(info.school || '')}</p>
           <h1 class="gate__title">비품 소재 확인</h1>
-          <p class="gate__desc">${info.due_date ? `${esc(dateLabel(info.due_date))}까지 답해 주시면 됩니다.<br>` : ''}어디에 있는지만 알려 주시면 됩니다.</p>
+          <p class="gate__desc">우리 학교 비품이 지금 어디에 있는지 확인하고 있습니다.<br>
+            아시는 것만 알려 주셔도 큰 도움이 됩니다.${info.due_date ? `<br><span class="give__due">${esc(dateShort(info.due_date))}까지 부탁드립니다.</span>` : ''}</p>
 
           ${names.length === 1 ? `
-            <p class="aq">${esc(josa(names[0], '을/를'))} 빌리셨나요?</p>
+            <p class="aq">혹시 ${esc(josa(names[0], '을/를'))} 쓰고 계신가요?</p>
             <div class="aq__btns">
               <button class="bigbtn ${picked.has(names[0]) ? 'bigbtn--navy' : 'bigbtn--ghost'}" type="button" data-ayes="${esc(names[0])}">제가 쓰고 있습니다</button>
               <button class="bigbtn bigbtn--ghost" type="button" id="a-none">아닙니다</button>
             </div>`
           : `
-            <p class="aq">지금 쓰고 계신 것만 골라 주세요.</p>
-            <p class="gform__hint">고르지 않으신 것은 ‘아닙니다’로 넘어갑니다.</p>
+            <p class="aq">혹시 지금 쓰고 계신 것이 있을까요?</p>
+            <p class="gform__hint">쓰고 계신 것만 골라 주시면 됩니다. 고르지 않으신 것은 ‘아닙니다’로 넘어갑니다.</p>
             <div class="audpick">
               ${names.map((nm) => `<button class="wizchip ${picked.has(nm) ? 'is-on' : ''}" type="button" data-ayes="${esc(nm)}">${esc(nm)}</button>`).join('')}
             </div>`}
@@ -8477,7 +8491,7 @@
       function thanks(msg) {
         root.innerHTML = shell(`
           <span class="waitmark is-done" aria-hidden="true">${icon(ICONS.check)}</span>
-          <h1 class="gate__title">고맙습니다</h1>
+          <h1 class="gate__title">감사합니다</h1>
           <p class="gate__desc">${msg}</p>`);
       }
 
@@ -8505,7 +8519,7 @@
           return;
         }
         if (e.target.closest('#a-none')) {
-          thanks('안 쓰고 계시다고 알려 주셔서 고맙습니다.<br>창을 닫으셔도 됩니다.');
+          thanks('확인해 주셔서 감사합니다.<br>창을 닫으셔도 됩니다.');
           return;
         }
         const send = e.target.closest('#a-send');
@@ -8522,7 +8536,7 @@
             draw();
             return;
           }
-          thanks(`${n(data?.count || rows.length)}가지를 알려 주셨어요.<br>담당 선생님이 확인하면 대여 기록으로 남습니다.`);
+          thanks('알려 주신 내용은 담당 선생님께 전해집니다.<br>창을 닫으셔도 됩니다.');
         }
       });
 
