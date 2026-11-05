@@ -8784,18 +8784,21 @@
       const XLSX = await xlsx();
       const rows = auditReplies().filter((r) => r.auditId === a.id)
         .slice().sort((x, y) => (x.itemName || '').localeCompare(y.itemName) || (x.who || '').localeCompare(y.who));
-      const head = ['품목', '사용 여부', '번호', '성함', '반납 예정일', '처리', '답한 날짜'];
+      const head = ['품목', '사용 여부', '관리번호', '성명', '반납 예정일', '처리 상태', '응답일'];
       const body = rows.map((r) => [
         r.itemName || '',
-        (r.kind || 'have') === 'have' ? '사용 중' : '사용하지 않음',
+        (r.kind || 'have') === 'have' ? '사용 중' : '미사용',
         r.unitTag || '',
         r.who || '',
         r.dueAt || '',
-        r.status === 'done' ? '대여로 넣음' : (r.status === 'rejected' ? '뺌' : '아직'),
+        r.status === 'done' ? '대여 등록' : (r.status === 'rejected' ? '제외' : '미처리'),
         (r.createdAt || '').slice(0, 10),
       ]);
       const stamp = ymd(new Date()).replaceAll('-', '');
-      const ws = XLSX.utils.aoa_to_sheet([[a.title || '비품 소재 확인'], [], head, ...body]);
+      const ws = XLSX.utils.aoa_to_sheet([
+        [a.title || '비품 소재 확인'],
+        [`${school().name || ''}${a.dueDate ? ` · 설문 마감 ${a.dueDate}` : ''} · 출력일 ${ymd(new Date())}`],
+        [], head, ...body]);
       ws['!cols'] = [{ wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 13 }];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, '비품 소재 확인');
