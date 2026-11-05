@@ -2065,6 +2065,14 @@
     /* ───────── 비품 소재 확인 ───────── */
     .aud__lead { font-size: 14px; color: var(--ink-2); line-height: 1.55; margin: -4px 0 12px; word-break: keep-all; }
     .audpick { display: flex; flex-wrap: wrap; gap: 8px; }
+    .aplaces { display: flex; flex-wrap: wrap; gap: 6px; }
+    .aplaces .wizchip {
+      font-size: 13px; height: auto; min-height: 38px; padding: 8px 13px;
+      text-align: left; word-break: keep-all; line-height: 1.4;
+      background: #fff; box-shadow: inset 0 0 0 1px var(--line);
+    }
+    .aplaces .wizchip:hover { background: #f4f6fb; }
+    .aplaces .wizchip.is-on { background: var(--navy); color: #fff; box-shadow: none; }
     .audpick .wizchip small { margin-left: 5px; font-size: 12px; font-weight: 600; color: var(--ink-3); }
     .audpick .wizchip.is-on small { color: rgba(255, 255, 255, .75); }
 
@@ -2836,11 +2844,12 @@
         })),
         audits: auds.map((r) => ({
           id: r.id, code: r.code, title: r.title, names: Array.isArray(r.names) ? r.names : [],
-          photos: r.photos || {}, dueDate: r.due_date, closed: !!r.closed, createdAt: r.created_at,
+          photos: r.photos || {}, places: r.places || {},
+          dueDate: r.due_date, closed: !!r.closed, createdAt: r.created_at,
         })),
         auditReplies: arps.map((r) => ({
           id: r.id, auditId: r.audit_id, who: r.who, itemName: r.item_name,
-          unitTag: r.unit_tag || '', dueAt: r.due_at, kind: r.kind || 'have',
+          unitTag: r.unit_tag || '', place: r.place || '', dueAt: r.due_at, kind: r.kind || 'have',
           status: r.status, createdAt: r.created_at,
         })),
         posts: pss.map((r) => ({ id: r.id, title: r.title, body: r.body || '', who: r.who, solved: !!r.solved, createdAt: r.created_at })),
@@ -2947,13 +2956,13 @@
       }));
       diff(prev.audits || [], next.audits || [], 'audits', (x) => ({
         id: x.id, school_id: me.schoolId, code: x.code, title: x.title,
-        names: x.names || [], photos: x.photos || {},
+        names: x.names || [], photos: x.photos || {}, places: x.places || {},
         due_date: x.dueDate || null, closed: !!x.closed, created_at: x.createdAt,
       }));
       diff(prev.auditReplies || [], next.auditReplies || [], 'audit_replies', (x) => ({
         id: x.id, school_id: me.schoolId, audit_id: x.auditId, who: x.who || '',
-        item_name: x.itemName, unit_tag: x.unitTag || '', due_at: x.dueAt || null,
-        kind: x.kind || 'have', status: x.status, created_at: x.createdAt,
+        item_name: x.itemName, unit_tag: x.unitTag || '', place: x.place || '',
+        due_at: x.dueAt || null, kind: x.kind || 'have', status: x.status, created_at: x.createdAt,
       }));
       diff(prev.posts || [], next.posts || [], 'posts', (x) => ({
         id: x.id, school_id: me.schoolId, title: x.title, body: x.body || '',
@@ -8049,6 +8058,13 @@
     }
     const assetGroupByName = (nm) => assetGroups().find((g) => g.name === nm) || null;
 
+    // 이 비품이 지금 어느 곳들에 나뉘어 있는지
+    function placesOfAsset(nm) {
+      const g = assetGroupByName(nm);
+      if (!g) return [];
+      return [...new Set(g.items.map((i) => pathOf(i).join(' › ')).filter(Boolean))];
+    }
+
     // 품목 하나의 진행 상황
     function auditStat(a, name) {
       const g = assetGroupByName(name);
@@ -8482,6 +8498,8 @@
 
       const names = Array.isArray(info.names) ? info.names : [];
       const photos = info.photos || {};
+      const places = info.places || {};
+      const placesOf = (nm) => (Array.isArray(places[nm]) ? places[nm] : []);
       const one = names.length === 1;
       const picked = new Map();     // 품목 이름 → { tag, due }
       let who = '';
@@ -8496,11 +8514,19 @@
         : '');
 
       const detailHTML = (nm) => {
-        const v = picked.get(nm) || { tag: '', due: '' };
+        const v = picked.get(nm) || { tag: '', due: '', place: '' };
         return `
           <div class="adet" data-adet="${esc(nm)}">
             ${one ? '' : `<p class="adet__name">${esc(nm)}</p>`}
             ${photoHTML(nm)}
+            ${placesOf(nm).length > 1 ? `
+            <div class="field">
+              <label class="field__label">어디에 있던 ${esc(nm)}인가요?</label>
+              <div class="aplaces">
+                ${placesOf(nm).map((pl) => `<button class="wizchip ${v.place === pl ? 'is-on' : ''}" type="button" data-aplace="${esc(pl)}">${esc(pl)}</button>`).join('')}
+                <button class="wizchip ${v.place === '모름' ? 'is-on' : ''}" type="button" data-aplace="모름">잘 모르겠습니다</button>
+              </div>
+            </div>` : ''}
             <div class="field">
               <label class="field__label" for="ad-t-${esc(nm)}">${esc(nm)}의 번호</label>
               <input class="input" id="ad-t-${esc(nm)}" data-ak="tag" value="${esc(v.tag)}" placeholder="예: ${esc(nm)}5" maxlength="40" autocomplete="off">
@@ -8589,17 +8615,29 @@
         if (!k) return;
         const nm = e.target.closest('[data-adet]')?.dataset.adet;
         if (!nm) return;
-        picked.set(nm, { ...(picked.get(nm) || { tag: '', due: '' }), [k]: e.target.value });
+        picked.set(nm, { ...(picked.get(nm) || { tag: '', due: '', place: '' }), [k]: e.target.value });
       });
 
       root.addEventListener('click', async (e) => {
+        // 어디에 있던 물건인지 고르기
+        const pl = e.target.closest('[data-aplace]');
+        if (pl) {
+          const nm = pl.closest('[data-adet]')?.dataset.adet;
+          if (nm) {
+            const cur = picked.get(nm) || { tag: '', due: '', place: '' };
+            picked.set(nm, { ...cur, place: cur.place === pl.dataset.aplace ? '' : pl.dataset.aplace });
+            draw();
+          }
+          return;
+        }
+
         // 사용 중이라고 고르기
         const yes = e.target.closest('[data-ayes]');
         if (yes) {
           if (needName()) return;
           const nm = yes.dataset.ayes;
           if (picked.has(nm) && !one) picked.delete(nm);
-          else picked.set(nm, picked.get(nm) || { tag: '', due: '' });
+          else picked.set(nm, picked.get(nm) || { tag: '', due: '', place: placesOf(nm).length === 1 ? placesOf(nm)[0] : '' });
           if (one) step = 'fill';
           err = '';
           draw();
@@ -8623,7 +8661,8 @@
         if (e.target.closest('#a-send')) {
           if (needName()) return;
           const rows = names.map((nm) => (picked.has(nm)
-            ? { name: nm, kind: 'have', tag: (picked.get(nm).tag || '').trim(), due: picked.get(nm).due || '' }
+            ? { name: nm, kind: 'have', tag: (picked.get(nm).tag || '').trim(),
+                place: picked.get(nm).place === '모름' ? '' : (picked.get(nm).place || ''), due: picked.get(nm).due || '' }
             : { name: nm, kind: 'none' }));
           await send(rows);
         }
@@ -8729,7 +8768,7 @@
                 return `<li class="prow ${clash ? 'is-clash' : ''}">
                   <div class="prow__main">
                     <p class="prow__name">${esc(r.itemName)}${r.unitTag ? ` <span class="utag">${esc(r.unitTag)}</span>` : ' <span class="aud__notag">번호 없음</span>'}</p>
-                    <p class="prow__sub">${esc(r.who)}${r.dueAt ? ` · ${esc(dateLabel(r.dueAt))}까지` : ''}${clash ? ` · ${esc(clash)}` : ''}</p>
+                    <p class="prow__sub">${esc(r.who)}${r.place ? ` · ${esc(r.place)}` : ''}${r.dueAt ? ` · ${esc(dateLabel(r.dueAt))}까지` : ''}${clash ? ` · ${esc(clash)}` : ''}</p>
                   </div>
                   <button class="mini mini--go" type="button" data-aok="${r.id}">대여로 넣기</button>
                   <button class="mini mini--quiet" type="button" data-ano="${r.id}">빼기</button>
@@ -8784,11 +8823,12 @@
       const XLSX = await xlsx();
       const rows = auditReplies().filter((r) => r.auditId === a.id)
         .slice().sort((x, y) => (x.itemName || '').localeCompare(y.itemName) || (x.who || '').localeCompare(y.who));
-      const head = ['품목', '사용 여부', '관리번호', '성명', '반납 예정일', '처리 상태', '응답일'];
+      const head = ['품목', '사용 여부', '관리번호', '보관 장소', '성명', '반납 예정일', '처리 상태', '응답일'];
       const body = rows.map((r) => [
         r.itemName || '',
         (r.kind || 'have') === 'have' ? '사용 중' : '미사용',
         r.unitTag || '',
+        r.place || '',
         r.who || '',
         r.dueAt || '',
         r.status === 'done' ? '대여 등록' : (r.status === 'rejected' ? '제외' : '미처리'),
@@ -8799,7 +8839,7 @@
         [a.title || '비품 소재 확인'],
         [`${school().name || ''}${a.dueDate ? ` · 설문 마감 ${a.dueDate}` : ''} · 출력일 ${ymd(new Date())}`],
         [], head, ...body]);
-      ws['!cols'] = [{ wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 13 }];
+      ws['!cols'] = [{ wch: 20 }, { wch: 11 }, { wch: 14 }, { wch: 30 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 13 }];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, '비품 소재 확인');
       XLSX.writeFile(wb, `비품소재확인_${stamp}.xlsx`);
@@ -8863,7 +8903,9 @@
           const a = {
             id: 'aud_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
             code: newCode(), title: title || '비품 소재 확인',
-            names: [...chosen], photos: Object.fromEntries(shots), dueDate: due || null, closed: false,
+            names: [...chosen], photos: Object.fromEntries(shots),
+            places: Object.fromEntries([...chosen].map((v) => [v, placesOfAsset(v)])),
+            dueDate: due || null, closed: false,
             createdAt: new Date().toISOString(),
           };
           commit({ ...state, audits: [...audits(), a] });
@@ -8929,7 +8971,11 @@
           if (!r) return;
           const g = assetGroupByName(r.itemName);
           if (!g) { flash('그 비품을 찾지 못했어요', 'warn'); return; }
-          const item = g.items.find((i) => leftOf(i) > 0) || g.items[0];
+          // 답하신 분이 고른 장소의 것에 붙입니다. 같은 이름이 여러 곳에 있을 때
+          // 엉뚱한 줄에 기록이 붙지 않도록 하기 위한 것입니다.
+          const here = r.place ? g.items.filter((i) => pathOf(i).join(' › ') === r.place) : [];
+          const pool = here.length ? here : g.items;
+          const item = pool.find((i) => leftOf(i) > 0) || pool[0];
           const loan = {
             id: 'lon_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
             itemId: item.id, itemName: g.name, path: pathOf(item).join(' › '),
