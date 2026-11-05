@@ -2143,10 +2143,20 @@
     .apick__where { display: block; font-size: 13px; color: var(--ink-3); margin-top: 3px; line-height: 1.5; word-break: keep-all; }
 
     .aphoto__none {
-      display: inline-flex; align-items: center; gap: 5px; margin-top: 2px;
-      font-size: 13px; color: var(--ink-3);
+      display: flex; align-items: center; gap: 8px;
+      width: 100%; height: 46px; padding: 0 15px; border-radius: 12px;
+      box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--line);
+      font-size: 14px; font-weight: 600; color: var(--ink-3);
     }
-    .aphoto__none .icon { width: 16px; height: 16px; }
+    .aphoto__none .icon { width: 17px; height: 17px; }
+
+    /* 조사 지우기 확인 */
+    .adel { padding: 16px; border-radius: 14px; background: #fff7f5; box-shadow: inset 0 0 0 1px #f3d2cb; }
+    .adel__head { font-size: 15px; font-weight: 800; }
+    .adel__desc { font-size: 13px; color: var(--ink-2); line-height: 1.6; margin: 4px 0 12px; word-break: keep-all; }
+    .adel .field__label { margin-bottom: 4px; }
+    .adel .input { background: #fff; }
+    .adel__acts { display: flex; gap: 6px; margin-top: 10px; }
 
     .ashot__where { font-size: 13px; color: var(--ink-3); margin: -4px 0 10px; line-height: 1.5; word-break: keep-all; }
     .ashot__chk { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 12px; cursor: pointer; }
@@ -2205,11 +2215,13 @@
     /* 설문 쪽 참고 사진 — 접어 둡니다 */
     .aphoto { margin-top: 12px; }
     .aphoto > summary {
-      display: inline-flex; align-items: center; gap: 4px; cursor: pointer; list-style: none;
-      height: 38px; padding: 0 14px; border-radius: 10px; background: var(--field);
+      display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none;
+      width: 100%; height: 46px; padding: 0 15px; border-radius: 12px;
+      background: var(--field); box-sizing: border-box;
       font-size: 14px; font-weight: 700; color: var(--ink-2);
     }
     .aphoto > summary:hover { background: #e7eaf2; color: var(--ink); }
+    .aphoto__caret { margin-left: auto; }
     .aphoto > summary::-webkit-details-marker { display: none; }
     .aphoto__cam { width: 17px; height: 17px; }
     .aphoto__caret { width: 16px; height: 16px; transition: transform 140ms; }
@@ -8370,6 +8382,7 @@
     let collPulledAt = '';    // 마지막으로 서버에서 받아 온 때
     let keepCollOpen = false; // 새로 고침 뒤 카드를 다시 펼친다
     let keepAuditOpen = false;
+    let delAudit = '';        // 지우려고 확인 중인 조사
 
     // 다른 사람이 낸 물품은 서버에만 있다. 필요할 때 다시 받아 온다.
     async function pullCollects() {
@@ -8586,6 +8599,7 @@
       const picked = new Map();     // 품목 이름 → { tag, due }
       let who = '';
       let err = '';
+      const fErr = new Map();            // 품목 → 빠진 것 안내
       let step = one ? 'ask' : 'list';   // ask → 쓰는지 묻는 중, fill → 번호 적는 중
 
       const photoHTML = (nm) => (photos[nm]
@@ -8611,13 +8625,14 @@
             </div>` : ''}
             ${hasTag(nm) ? `
             <div class="field">
-              <label class="field__label" for="ad-t-${esc(nm)}">${esc(nm)}의 번호</label>
+              <label class="field__label" for="ad-t-${esc(nm)}">${esc(nm)}의 번호<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
               <input class="input" id="ad-t-${esc(nm)}" data-ak="tag" value="${esc(v.tag)}" placeholder="예: ${esc(nm)}5" maxlength="40" autocomplete="off">
             </div>` : ''}
             <div class="field">
-              <label class="field__label" for="ad-d-${esc(nm)}">반납 예정일</label>
+              <label class="field__label" for="ad-d-${esc(nm)}">반납 예정일<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
               <input class="input" id="ad-d-${esc(nm)}" data-ak="due" type="date" value="${esc(v.due)}" min="${today()}">
             </div>
+            ${fErr.has(nm) ? `<p class="field__error">${esc(fErr.get(nm))}</p>` : ''}
           </div>`;
       };
 
@@ -8684,6 +8699,28 @@
         return true;
       };
 
+      // 사용 중이라고 하셨으면 번호(있는 비품만)와 반납 예정일을 받아야 합니다
+      const needRest = () => {
+        fErr.clear();
+        let first = '';
+        for (const [nm, v] of picked) {
+          const miss = [];
+          if (hasTag(nm) && !(v.tag || '').trim()) miss.push('번호');
+          if (!v.due) miss.push('반납 예정일');
+          if (miss.length) {
+            fErr.set(nm, `${josa(miss.join('와 '), '을/를')} 적어 주세요.`);
+            if (!first) first = nm;
+          }
+        }
+        if (!first) return false;
+        err = '';
+        draw();
+        const box = root.querySelector(`[data-adet="${CSS.escape(first)}"]`);
+        box?.querySelector('.input[data-ak]')?.focus();
+        box?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return true;
+      };
+
       async function send(rows) {
         const btn = root.querySelector('#a-send') || root.querySelector('#a-no');
         if (btn) btn.disabled = true;
@@ -8710,6 +8747,11 @@
         const nm = e.target.closest('[data-adet]')?.dataset.adet;
         if (!nm) return;
         picked.set(nm, { ...(picked.get(nm) || { tag: '', due: '', place: '' }), [k]: e.target.value });
+        if (fErr.has(nm) && e.target.value) {
+          fErr.delete(nm);
+          const box = e.target.closest('[data-adet]')?.querySelector('.field__error');
+          if (box) box.textContent = '';
+        }
       });
 
       root.addEventListener('click', async (e) => {
@@ -8754,6 +8796,7 @@
         // 보내기
         if (e.target.closest('#a-send')) {
           if (needName()) return;
+          if (needRest()) return;
           const rows = names.map((nm) => (picked.has(nm)
             ? { name: nm, kind: 'have', tag: (picked.get(nm).tag || '').trim(),
                 place: picked.get(nm).place === '모름' ? '' : (picked.get(nm).place || ''), due: picked.get(nm).due || '' }
@@ -8810,6 +8853,21 @@
           <p class="coll__label" style="margin-top:22px">끝난 조사</p>
           <ul class="coll__list">${done.map((a) => {
             const t = auditTotals(a);
+            if (delAudit === a.id) {
+              const cnt = auditReplies().filter((r) => r.auditId === a.id).length;
+              return `<li class="adel">
+                <p class="adel__head">‘${esc(a.title || '비품 소재 확인')}’을 지울까요?</p>
+                <p class="adel__desc">들어온 설문 ${n(cnt)}건도 함께 사라지고, 되돌릴 수 없습니다.<br>
+                  이미 대여로 넣으신 기록은 그대로 남습니다.</p>
+                <label class="field__label" for="adel-code">확인을 위해 학교 코드를 적어 주세요</label>
+                <input class="input" id="adel-code" type="text" autocomplete="off" placeholder="예: A1B2C3" maxlength="10">
+                <p class="field__error" id="adel-err"></p>
+                <div class="adel__acts">
+                  <button class="mini mini--quiet" type="button" data-adelno>그만두기</button>
+                  <button class="mini wipe__go" type="button" data-adelgo="${a.id}">지우기</button>
+                </div>
+              </li>`;
+            }
             return `<li class="crow">
               <div class="crow__main">
                 <p class="crow__title">${esc(a.title || '비품 소재 확인')}</p>
@@ -8855,7 +8913,7 @@
           ${answerBoxHTML(a)}
 
           ${pend.length ? `
-            <p class="coll__label" style="margin-top:14px">들어온 답 ${n(pend.length)}건</p>
+            <p class="coll__label" style="margin-top:14px">들어온 설문 ${n(pend.length)}건</p>
             <ul class="coll__plist">
               ${pend.map((r) => {
                 const clash = auditClash(a, r);
@@ -9057,16 +9115,34 @@
           return;
         }
 
-        // 끝난 조사 지우기
+        // 끝난 조사 지우기 — 학교 코드를 받아 실수를 막습니다
         const dl = e.target.closest('[data-adel]');
         if (dl) {
+          delAudit = dl.dataset.adel; keepAuditOpen = true; redraw();
+          view.querySelector('#adel-code')?.focus();
+          return;
+        }
+        if (e.target.closest('[data-adelno]')) { delAudit = ''; keepAuditOpen = true; redraw(); return; }
+
+        const dg = e.target.closest('[data-adelgo]');
+        if (dg) {
+          const want = String(me?.school?.join_code || '').trim().toUpperCase();
+          const typed = (view.querySelector('#adel-code')?.value || '').trim().toUpperCase();
+          if (!want) { flash('학교 코드를 확인할 수 없어요', 'warn'); return; }
+          if (typed !== want) {
+            const box = view.querySelector('#adel-err');
+            if (box) box.textContent = '학교 코드가 달라요. 우리 학교 선생님 카드에서 확인해 주세요.';
+            return;
+          }
           commit({
             ...state,
-            audits: audits().filter((x) => x.id !== dl.dataset.adel),
-            auditReplies: auditReplies().filter((r) => r.auditId !== dl.dataset.adel),
+            audits: audits().filter((x) => x.id !== dg.dataset.adelgo),
+            auditReplies: auditReplies().filter((r) => r.auditId !== dg.dataset.adelgo),
           });
+          delAudit = '';
           keepAuditOpen = true;
           redraw();
+          flash('조사를 지웠어요');
           return;
         }
 
