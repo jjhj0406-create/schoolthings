@@ -2113,6 +2113,46 @@
       margin-top: 30px; word-break: keep-all;
     }
     .aq__btns { display: grid; gap: 10px; margin-top: 16px; }
+
+    /* 이 비품이 어디어디에 있는지 */
+    .awhere { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .awhere span {
+      display: inline-block; padding: 5px 11px; border-radius: 8px;
+      background: var(--field); font-size: 13px; color: var(--ink-2); word-break: keep-all;
+    }
+
+    /* 품목이 여럿일 때 고르는 줄 */
+    .apicks { list-style: none; display: grid; gap: 8px; margin-top: 16px; }
+    .apick {
+      width: 100%; display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px 15px; border-radius: 14px; text-align: left;
+      background: #fff; box-shadow: inset 0 0 0 1px var(--line);
+      transition: background-color 120ms, box-shadow 120ms;
+    }
+    .apick:hover { background: #f7f9fd; }
+    .apick__box {
+      width: 22px; height: 22px; border-radius: 7px; flex: none; margin-top: 1px;
+      display: grid; place-items: center; color: #fff;
+      box-shadow: inset 0 0 0 1.5px #c9cfdd;
+    }
+    .apick__box .icon { width: 14px; height: 14px; stroke-width: 3; }
+    .apick.is-on { background: #f2f5ff; box-shadow: inset 0 0 0 1.5px var(--navy); }
+    .apick.is-on .apick__box { background: var(--navy); box-shadow: none; }
+    .apick__main { flex: 1; min-width: 0; }
+    .apick__name { display: block; font-size: 16px; font-weight: 700; }
+    .apick__where { display: block; font-size: 13px; color: var(--ink-3); margin-top: 3px; line-height: 1.5; word-break: keep-all; }
+
+    .aphoto__none {
+      display: inline-flex; align-items: center; gap: 5px; margin-top: 2px;
+      font-size: 13px; color: var(--ink-3);
+    }
+    .aphoto__none .icon { width: 16px; height: 16px; }
+
+    .ashot__where { font-size: 13px; color: var(--ink-3); margin: -4px 0 10px; line-height: 1.5; word-break: keep-all; }
+    .ashot__chk { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 12px; cursor: pointer; }
+    .ashot__chk input { width: 18px; height: 18px; margin-top: 2px; flex: none; accent-color: var(--navy); }
+    .ashot__chk b { display: block; font-size: 14px; font-weight: 700; }
+    .ashot__chk small { display: block; font-size: 12px; color: var(--ink-3); line-height: 1.5; margin-top: 2px; word-break: keep-all; }
     .give--audit .bigbtn { width: 100%; height: 56px; margin-top: 0; font-size: 16px; }
     .give--audit .aq__btns .bigbtn { margin-top: 0; }
     .give--audit .audpick { margin-top: 16px; }
@@ -2130,7 +2170,7 @@
       background: #fff; box-shadow: inset 0 0 0 1px var(--line);
     }
     .adet .field + .field { margin-top: 18px; }
-    .adet > .aphoto + .field { margin-top: 16px; }
+    .adet > .aphoto + .field, .adet > .aphoto__none + .field { margin-top: 18px; }
     .adet__name { font-size: 15px; font-weight: 800; margin-bottom: 14px; }
     .aphoto img { display: block; width: 100%; max-height: 300px; object-fit: contain; border-radius: 12px; background: var(--field); margin-top: 10px; }
     .aq__undo { display: block; width: 100%; margin-top: 10px; text-align: center; justify-content: center; }
@@ -2879,7 +2919,7 @@
         })),
         audits: auds.map((r) => ({
           id: r.id, code: r.code, title: r.title, names: Array.isArray(r.names) ? r.names : [],
-          photos: r.photos || {}, places: r.places || {},
+          photos: r.photos || {}, places: r.places || {}, tagged: r.tagged || {},
           dueDate: r.due_date, closed: !!r.closed, createdAt: r.created_at,
         })),
         auditReplies: arps.map((r) => ({
@@ -2991,7 +3031,7 @@
       }));
       diff(prev.audits || [], next.audits || [], 'audits', (x) => ({
         id: x.id, school_id: me.schoolId, code: x.code, title: x.title,
-        names: x.names || [], photos: x.photos || {}, places: x.places || {},
+        names: x.names || [], photos: x.photos || {}, places: x.places || {}, tagged: x.tagged || {},
         due_date: x.dueDate || null, closed: !!x.closed, created_at: x.createdAt,
       }));
       diff(prev.auditReplies || [], next.auditReplies || [], 'audit_replies', (x) => ({
@@ -8534,7 +8574,14 @@
       const names = Array.isArray(info.names) ? info.names : [];
       const photos = info.photos || {};
       const places = info.places || {};
+      const tagged = info.tagged || {};
       const placesOf = (nm) => (Array.isArray(places[nm]) ? places[nm] : []);
+      const hasTag = (nm) => tagged[nm] !== false;   // 담당 선생님이 끄지 않았으면 번호를 묻습니다
+      const whereHTML = (nm) => {
+        const pls = placesOf(nm);
+        if (!pls.length) return '';
+        return `<p class="awhere">${pls.map((pl) => `<span>${esc(pl)}</span>`).join('')}</p>`;
+      };
       const one = names.length === 1;
       const picked = new Map();     // 품목 이름 → { tag, due }
       let who = '';
@@ -8546,7 +8593,7 @@
              <summary>${icon(ICONS.camera, 'icon aphoto__cam')}참고 사진 보기${icon(ICONS.caret, 'icon aphoto__caret')}</summary>
              <img src="${esc(photos[nm])}" alt="${esc(nm)} 참고 사진">
            </details>`
-        : '');
+        : `<p class="aphoto__none">${icon(ICONS.camera, 'icon aphoto__cam')}참고 사진 없음</p>`);
 
       const detailHTML = (nm) => {
         const v = picked.get(nm) || { tag: '', due: '', place: '' };
@@ -8562,10 +8609,11 @@
                 <button class="wizchip ${v.place === '모름' ? 'is-on' : ''}" type="button" data-aplace="모름">잘 모르겠습니다</button>
               </div>
             </div>` : ''}
+            ${hasTag(nm) ? `
             <div class="field">
               <label class="field__label" for="ad-t-${esc(nm)}">${esc(nm)}의 번호</label>
               <input class="input" id="ad-t-${esc(nm)}" data-ak="tag" value="${esc(v.tag)}" placeholder="예: ${esc(nm)}5" maxlength="40" autocomplete="off">
-            </div>
+            </div>` : ''}
             <div class="field">
               <label class="field__label" for="ad-d-${esc(nm)}">반납 예정일</label>
               <input class="input" id="ad-d-${esc(nm)}" data-ak="due" type="date" value="${esc(v.due)}" min="${today()}">
@@ -8592,6 +8640,7 @@
 
           ${one ? `
             <p class="aq">우리 학교 ${esc(josa(names[0], '을/를'))} 사용 중이신가요?</p>
+            ${step === 'ask' ? whereHTML(names[0]) : ''}
             ${step === 'ask' ? `
               <div class="aq__btns">
                 <button class="bigbtn bigbtn--navy" type="button" data-ayes="${esc(names[0])}">사용 중입니다</button>
@@ -8602,9 +8651,17 @@
                <button class="linkish aq__undo" type="button" id="a-back">사용하지 않습니다</button>`}`
           : `
             <p class="aq">우리 학교 비품 중 사용 중이신 것을 골라 주세요</p>
-            <div class="audpick">
-              ${names.map((nm) => `<button class="wizchip ${picked.has(nm) ? 'is-on' : ''}" type="button" data-ayes="${esc(nm)}">${esc(nm)}</button>`).join('')}
-            </div>
+            <ul class="apicks">
+              ${names.map((nm) => `<li>
+                <button class="apick ${picked.has(nm) ? 'is-on' : ''}" type="button" data-ayes="${esc(nm)}">
+                  <span class="apick__box" aria-hidden="true">${picked.has(nm) ? icon(ICONS.check) : ''}</span>
+                  <span class="apick__main">
+                    <span class="apick__name">${esc(nm)}</span>
+                    ${placesOf(nm).length ? `<span class="apick__where">${esc(placesOf(nm).join(' · '))}</span>` : ''}
+                  </span>
+                </button>
+              </li>`).join('')}
+            </ul>
             ${chose.map(detailHTML).join('')}
             <button class="bigbtn bigbtn--navy" type="button" id="a-send">보내기</button>
             ${chose.length ? '' : `<button class="linkish aq__undo" type="button" id="a-no">‘사용하지 않음’으로 보내기</button>`}`}
@@ -8887,29 +8944,40 @@
       const err = () => view.querySelector('#a-err');
       const chosen = new Set();
       const shots = new Map();      // 품목 → 참고 사진 (줄인 그림)
+      const tagged = new Map();     // 품목 → 번호가 붙어 있는지
 
-      // 고른 품목마다 사진 칸을 그린다
+      // 고른 품목마다 설정 칸을 그린다
       function drawShots() {
         const box = view.querySelector('#a-photos');
         if (!box) return;
         const list = [...chosen];
         box.innerHTML = !list.length ? '' : `
-          <p class="field__label" style="margin-top:14px">참고 사진 <small>선택 · 번호가 어디에 붙어 있는지 보여 주면 좋아요</small></p>
+          <p class="field__label" style="margin-top:16px">고른 비품 설정</p>
           <div class="ashots">
-            ${list.map((v) => `
+            ${list.map((v) => {
+              const pls = placesOfAsset(v);
+              return `
               <div class="ashot">
                 <p class="ashot__name">${esc(v)}</p>
+                <p class="ashot__where">${pls.length ? esc(pls.join(' · ')) : '보관 장소가 적혀 있지 않아요'}</p>
+                <label class="ashot__chk">
+                  <input type="checkbox" data-atag="${esc(v)}" ${tagged.get(v) !== false ? 'checked' : ''}>
+                  <span><b>번호가 붙어 있어요</b><small>끄면 설문에서 번호를 묻지 않아요. 빔프로젝터처럼 번호가 없는 비품에 쓰세요.</small></span>
+                </label>
                 ${shots.has(v)
                   ? `<img class="ashot__img" src="${esc(shots.get(v))}" alt="${esc(v)} 참고 사진">
                      <button class="mini mini--quiet" type="button" data-ashotdel="${esc(v)}">사진 빼기</button>`
-                  : `<label class="ashot__add">${icon(ICONS.camera)}사진 넣기
+                  : `<label class="ashot__add">${icon(ICONS.camera)}참고 사진 넣기
                        <input type="file" accept="image/*" data-ashot="${esc(v)}" hidden>
                      </label>`}
-              </div>`).join('')}
+              </div>`;
+            }).join('')}
           </div>`;
       }
 
       view.addEventListener('change', async (e) => {
+        const tg = e.target.closest('[data-atag]');
+        if (tg) { tagged.set(tg.dataset.atag, tg.checked); return; }
         const f = e.target.closest('[data-ashot]');
         if (!f || !f.files?.[0]) return;
         try {
@@ -8923,7 +8991,7 @@
         const nm = e.target.closest('[data-aname]');
         if (nm) {
           const v = nm.dataset.aname;
-          if (chosen.has(v)) { chosen.delete(v); shots.delete(v); } else chosen.add(v);
+          if (chosen.has(v)) { chosen.delete(v); shots.delete(v); tagged.delete(v); } else chosen.add(v);
           nm.classList.toggle('is-on', chosen.has(v));
           drawShots();
           return;
@@ -8942,11 +9010,12 @@
             code: newCode(), title: title || '비품 소재 확인',
             names: [...chosen], photos: Object.fromEntries(shots),
             places: Object.fromEntries([...chosen].map((v) => [v, placesOfAsset(v)])),
+            tagged: Object.fromEntries([...chosen].map((v) => [v, tagged.get(v) !== false])),
             dueDate: due || null, closed: false,
             createdAt: new Date().toISOString(),
           };
           commit({ ...state, audits: [...audits(), a] });
-          chosen.clear(); shots.clear();
+          chosen.clear(); shots.clear(); tagged.clear();
           keepAuditOpen = true;
           redraw();
           flash('조사를 시작했어요. 링크를 복사해 보내 주세요');
