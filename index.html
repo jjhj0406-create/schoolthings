@@ -2157,6 +2157,10 @@
     .adel .field__label { margin-bottom: 4px; }
     .adel .input { background: #fff; }
     .adel__acts { display: flex; gap: 6px; margin-top: 10px; }
+    .adel__chk { display: flex; align-items: flex-start; gap: 9px; margin: 0 0 14px; padding: 11px 12px; border-radius: 10px; background: #fff; cursor: pointer; }
+    .adel__chk input { width: 18px; height: 18px; margin-top: 1px; flex: none; accent-color: #d0342c; }
+    .adel__chk b { display: block; font-size: 14px; font-weight: 700; word-break: keep-all; }
+    .adel__chk small { display: block; font-size: 12px; color: var(--ink-3); line-height: 1.5; margin-top: 2px; word-break: keep-all; }
 
     .ashot__where { font-size: 13px; color: var(--ink-3); margin: -4px 0 10px; line-height: 1.5; word-break: keep-all; }
     .ashot__chk { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 12px; cursor: pointer; }
@@ -2992,6 +2996,7 @@
       dueAt: r.due_at, period: r.period, periodNote: r.period_note, memo: r.memo,
       ...(r.by_user ? { by: r.by_user } : {}),
       ...(r.unit_tag ? { unitTag: r.unit_tag } : {}),
+      ...(r.audit_id ? { auditId: r.audit_id } : {}),
       ...(r.sign ? { sign: r.sign } : {}),
       outAt: r.out_at, returnedAt: r.returned_at,
     });
@@ -3000,6 +3005,7 @@
       qty: l.qty, who: l.who, who_type: 'staff', by_user: l.by || '', due_at: l.dueAt || null, period: l.period || '',
       period_note: l.periodNote || '', memo: l.memo || '', sign: l.sign || null,
       unit_tag: l.unitTag || '',
+      audit_id: l.auditId || '',
       out_at: l.outAt, returned_at: l.returnedAt,
     });
 
@@ -8383,6 +8389,7 @@
     let keepCollOpen = false; // 새로 고침 뒤 카드를 다시 펼친다
     let keepAuditOpen = false;
     let delAudit = '';        // 지우려고 확인 중인 조사
+    let delAuditLoans = false; // 그때 만든 대여 기록까지 지울지
 
     // 다른 사람이 낸 물품은 서버에만 있다. 필요할 때 다시 받아 온다.
     async function pullCollects() {
@@ -8855,10 +8862,15 @@
             const t = auditTotals(a);
             if (delAudit === a.id) {
               const cnt = auditReplies().filter((r) => r.auditId === a.id).length;
+              const loans = (state.loans || []).filter((l) => l.auditId === a.id);
               return `<li class="adel">
                 <p class="adel__head">‘${esc(a.title || '비품 소재 확인')}’을 지울까요?</p>
-                <p class="adel__desc">들어온 설문 ${n(cnt)}건도 함께 사라지고, 되돌릴 수 없습니다.<br>
-                  이미 대여로 넣으신 기록은 그대로 남습니다.</p>
+                <p class="adel__desc">들어온 설문 ${n(cnt)}건도 함께 사라지고, 되돌릴 수 없습니다.</p>
+                ${loans.length ? `
+                <label class="adel__chk">
+                  <input type="checkbox" id="adel-loans" ${delAuditLoans ? 'checked' : ''}>
+                  <span><b>이 조사에서 만든 대여 기록 ${n(loans.length)}건도 함께 지우기</b><small>체크하지 않으면 대여 기록은 그대로 남습니다.</small></span>
+                </label>` : ''}
                 <label class="field__label" for="adel-code">확인을 위해 학교 코드를 적어 주세요</label>
                 <input class="input" id="adel-code" type="text" autocomplete="off" placeholder="예: A1B2C3" maxlength="10">
                 <p class="field__error" id="adel-err"></p>
@@ -9122,7 +9134,7 @@
           view.querySelector('#adel-code')?.focus();
           return;
         }
-        if (e.target.closest('[data-adelno]')) { delAudit = ''; keepAuditOpen = true; redraw(); return; }
+        if (e.target.closest('[data-adelno]')) { delAudit = ''; delAuditLoans = false; keepAuditOpen = true; redraw(); return; }
 
         const dg = e.target.closest('[data-adelgo]');
         if (dg) {
@@ -9134,15 +9146,19 @@
             if (box) box.textContent = '학교 코드가 달라요. 우리 학교 선생님 카드에서 확인해 주세요.';
             return;
           }
+          const aid = dg.dataset.adelgo;
+          const alsoLoans = !!view.querySelector('#adel-loans')?.checked;
+          const gone = alsoLoans ? (state.loans || []).filter((l) => l.auditId === aid).length : 0;
           commit({
             ...state,
-            audits: audits().filter((x) => x.id !== dg.dataset.adelgo),
-            auditReplies: auditReplies().filter((r) => r.auditId !== dg.dataset.adelgo),
+            audits: audits().filter((x) => x.id !== aid),
+            auditReplies: auditReplies().filter((r) => r.auditId !== aid),
+            loans: alsoLoans ? (state.loans || []).filter((l) => l.auditId !== aid) : (state.loans || []),
           });
-          delAudit = '';
+          delAudit = ''; delAuditLoans = false;
           keepAuditOpen = true;
           redraw();
-          flash('조사를 지웠어요');
+          flash(gone ? `조사와 대여 기록 ${n(gone)}건을 지웠어요` : '조사를 지웠어요');
           return;
         }
 
@@ -9164,6 +9180,7 @@
             qty: 1, who: r.who, dueAt: r.dueAt || plusDays(14),
             by: session?.user?.id || '',
             ...(r.unitTag ? { unitTag: r.unitTag } : {}),
+            auditId: r.auditId,
             period: '', periodNote: '',
             memo: '비품 소재 확인에서 받았어요', sign: null,
             outAt: r.createdAt || new Date().toISOString(), returnedAt: null,
