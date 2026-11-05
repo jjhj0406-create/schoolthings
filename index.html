@@ -2089,6 +2089,24 @@
     .give__due { display: inline-block; margin-top: 6px; font-weight: 700; color: var(--ink-2); }
     .aq__btns { display: grid; gap: 8px; margin-top: 12px; }
     .adet { margin-top: 14px; padding: 14px; border-radius: 12px; background: var(--field); }
+    .adet__name { font-size: 15px; font-weight: 800; margin-bottom: 10px; }
+    .aphoto { margin: 12px 0 0; }
+    .aphoto img { display: block; width: 100%; max-height: 260px; object-fit: contain; border-radius: 12px; background: var(--field); }
+    .aphoto figcaption { font-size: 12px; color: var(--ink-3); margin-top: 5px; text-align: center; }
+    .aq__undo { display: block; width: 100%; margin-top: 10px; text-align: center; justify-content: center; }
+
+    .ashots { display: grid; gap: 10px; margin-top: 8px; }
+    .ashot { padding: 12px; border: 1px solid var(--line); border-radius: 12px; }
+    .ashot__name { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .ashot__img { display: block; width: 100%; max-height: 180px; object-fit: contain; border-radius: 10px; background: var(--field); margin-bottom: 8px; }
+    .ashot__add {
+      display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px;
+      border-radius: 10px; background: var(--field); color: var(--ink-2);
+      font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+    .ashot__add .icon { width: 18px; height: 18px; }
+    .aud__ans { font-size: 13px; color: var(--ink-2); margin-top: 12px; line-height: 1.6; }
+    .aud__who { display: block; color: var(--ink-3); word-break: keep-all; }
     .adet .field + .field { margin-top: 12px; }
     .adet .input { background: #fff; }
 
@@ -2794,11 +2812,12 @@
         })),
         audits: auds.map((r) => ({
           id: r.id, code: r.code, title: r.title, names: Array.isArray(r.names) ? r.names : [],
-          dueDate: r.due_date, closed: !!r.closed, createdAt: r.created_at,
+          photos: r.photos || {}, dueDate: r.due_date, closed: !!r.closed, createdAt: r.created_at,
         })),
         auditReplies: arps.map((r) => ({
           id: r.id, auditId: r.audit_id, who: r.who, itemName: r.item_name,
-          unitTag: r.unit_tag || '', dueAt: r.due_at, status: r.status, createdAt: r.created_at,
+          unitTag: r.unit_tag || '', dueAt: r.due_at, kind: r.kind || 'have',
+          status: r.status, createdAt: r.created_at,
         })),
         posts: pss.map((r) => ({ id: r.id, title: r.title, body: r.body || '', who: r.who, solved: !!r.solved, createdAt: r.created_at })),
         comments: cms.map((r) => ({ id: r.id, postId: r.post_id, who: r.who, body: r.body, createdAt: r.created_at })),
@@ -2904,12 +2923,13 @@
       }));
       diff(prev.audits || [], next.audits || [], 'audits', (x) => ({
         id: x.id, school_id: me.schoolId, code: x.code, title: x.title,
-        names: x.names || [], due_date: x.dueDate || null, closed: !!x.closed, created_at: x.createdAt,
+        names: x.names || [], photos: x.photos || {},
+        due_date: x.dueDate || null, closed: !!x.closed, created_at: x.createdAt,
       }));
       diff(prev.auditReplies || [], next.auditReplies || [], 'audit_replies', (x) => ({
         id: x.id, school_id: me.schoolId, audit_id: x.auditId, who: x.who || '',
         item_name: x.itemName, unit_tag: x.unitTag || '', due_at: x.dueAt || null,
-        status: x.status, created_at: x.createdAt,
+        kind: x.kind || 'have', status: x.status, created_at: x.createdAt,
       }));
       diff(prev.posts || [], next.posts || [], 'posts', (x) => ({
         id: x.id, school_id: me.schoolId, title: x.title, body: x.body || '',
@@ -8019,9 +8039,10 @@
         if (dueState(l).key === 'late') { late += l.qty; continue; }
         if (l.unitTag) tags.add(normTag(l.unitTag)); else noTag += l.qty;
       }
-      // 조사로 들어온 답
+      // 조사로 들어온 답 (사용 중이라고 하신 것만)
       for (const r of auditReplies()) {
         if (r.auditId !== a.id || r.itemName !== name || r.status === 'rejected') continue;
+        if ((r.kind || 'have') !== 'have') continue;
         if (r.unitTag) tags.add(normTag(r.unitTag)); else noTag += 1;
       }
       const ok = Math.min(total, tags.size + noTag);
@@ -8041,7 +8062,8 @@
       if (!reply.unitTag) return null;
       const t = normTag(reply.unitTag);
       const other = auditReplies().find((r) => r.id !== reply.id && r.auditId === a.id
-        && r.itemName === reply.itemName && r.status !== 'rejected' && r.unitTag && normTag(r.unitTag) === t);
+        && r.itemName === reply.itemName && r.status !== 'rejected'
+        && (r.kind || 'have') === 'have' && r.unitTag && normTag(r.unitTag) === t);
       if (other) return `${other.who} 님도 같은 번호를 적으셨어요`;
       const g = assetGroupByName(reply.itemName);
       const out = g && activeLoans().find((l) => g.items.some((i) => i.id === l.itemId)
@@ -8419,80 +8441,116 @@
         </div>`;
 
       if (!sb || !code) {
-        root.innerHTML = shell('<h1 class="gate__title">열 수 없는 링크예요</h1><p class="gate__desc">받은 주소를 다시 확인해 주세요.</p>');
+        root.innerHTML = shell('<h1 class="gate__title">열 수 없는 링크입니다</h1><p class="gate__desc">받으신 주소를 다시 확인해 주세요.</p>');
         return;
       }
-      root.innerHTML = shell('<p class="gate__desc">불러오는 중이에요…</p>');
+      root.innerHTML = shell('<p class="gate__desc">불러오는 중입니다…</p>');
 
       const { data: info, error } = await sb.rpc('audit_info', { link_code: code });
       if (error || !info) {
-        root.innerHTML = shell('<h1 class="gate__title">찾을 수 없는 링크예요</h1><p class="gate__desc">지워졌거나 주소가 잘못됐어요. 보낸 분께 다시 받아 주세요.</p>');
+        root.innerHTML = shell('<h1 class="gate__title">찾을 수 없는 링크입니다</h1><p class="gate__desc">지워졌거나 주소가 잘못되었습니다. 보내 주신 분께 다시 받아 주세요.</p>');
         return;
       }
       if (!info.open) {
-        root.innerHTML = shell(`<h1 class="gate__title">마감된 조사예요</h1><p class="gate__desc"><b>${esc(info.title || '비품 소재 확인')}</b>는 이제 받지 않아요.<br>필요하면 보낸 분께 말씀해 주세요.</p>`);
+        root.innerHTML = shell(`<h1 class="gate__title">마감된 설문입니다</h1><p class="gate__desc"><b>${esc(info.title || '비품 소재 확인')}</b>은 더 이상 받지 않습니다.<br>필요하시면 보내 주신 분께 말씀해 주세요.</p>`);
         return;
       }
 
       const names = Array.isArray(info.names) ? info.names : [];
+      const photos = info.photos || {};
+      const one = names.length === 1;
       const picked = new Map();     // 품목 이름 → { tag, due }
       let who = '';
       let err = '';
+      let step = one ? 'ask' : 'list';   // ask → 쓰는지 묻는 중, fill → 번호 적는 중
+
+      const photoHTML = (nm) => (photos[nm]
+        ? `<figure class="aphoto"><img src="${esc(photos[nm])}" alt="${esc(nm)} 참고 사진"><figcaption>참고 사진</figcaption></figure>`
+        : '');
 
       const detailHTML = (nm) => {
         const v = picked.get(nm) || { tag: '', due: '' };
         return `
           <div class="adet" data-adet="${esc(nm)}">
+            ${one ? '' : `<p class="adet__name">${esc(nm)}</p>`}
+            ${one ? '' : photoHTML(nm)}
             <div class="field">
-              <label class="field__label" for="ad-t-${esc(nm)}">${esc(nm)}의 번호 <small>아시는 경우</small></label>
-              <input class="input" id="ad-t-${esc(nm)}" data-ak="tag" value="${esc(v.tag)}" placeholder="예: ${esc(nm)}5" maxlength="40" autocomplete="off">
-              <p class="gform__hint">물건에 붙어 있는 번호를 그대로 적어 주시면 됩니다. 예) ${esc(nm)}5</p>
+              <label class="field__label" for="ad-t-${esc(nm)}">${esc(nm)}의 번호</label>
+              <input class="input" id="ad-t-${esc(nm)}" data-ak="tag" value="${esc(v.tag)}" maxlength="40" autocomplete="off">
             </div>
             <div class="field">
-              <label class="field__label" for="ad-d-${esc(nm)}">언제쯤 돌려주실까요 <small>대략</small></label>
+              <label class="field__label" for="ad-d-${esc(nm)}">반납 예정일</label>
               <input class="input" id="ad-d-${esc(nm)}" data-ak="due" type="date" value="${esc(v.due)}" min="${today()}">
             </div>
           </div>`;
       };
 
+      const headHTML = () => `
+        <p class="give__school">${esc(info.school || '')}</p>
+        <h1 class="gate__title">비품 소재 확인</h1>
+        <p class="gate__desc">현재 비품(${esc(names.join(', '))}) 대여 현행화를 하고 있습니다. 설문에 협조 부탁드립니다.
+          ${info.due_date ? `<br><span class="give__due">설문 마감 예정: ${esc(dateShort(info.due_date))}</span>` : ''}</p>
+        <div class="field" style="margin-top:18px">
+          <label class="field__label" for="a-who">성함<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
+          <input class="input" id="a-who" value="${esc(who)}" placeholder="예: 김하늘" maxlength="30" autocomplete="name">
+        </div>`;
+
       function draw() {
         const chose = [...picked.keys()];
         root.innerHTML = shell(`
-          <p class="give__school">${esc(info.school || '')}</p>
-          <h1 class="gate__title">비품 소재 확인</h1>
-          <p class="gate__desc">우리 학교 비품이 지금 어디에 있는지 확인하고 있습니다.<br>
-            아시는 것만 알려 주셔도 큰 도움이 됩니다.${info.due_date ? `<br><span class="give__due">${esc(dateShort(info.due_date))}까지 부탁드립니다.</span>` : ''}</p>
+          ${headHTML()}
 
-          ${names.length === 1 ? `
-            <p class="aq">혹시 ${esc(josa(names[0], '을/를'))} 쓰고 계신가요?</p>
-            <div class="aq__btns">
-              <button class="bigbtn ${picked.has(names[0]) ? 'bigbtn--navy' : 'bigbtn--ghost'}" type="button" data-ayes="${esc(names[0])}">제가 쓰고 있습니다</button>
-              <button class="bigbtn bigbtn--ghost" type="button" id="a-none">아닙니다</button>
-            </div>`
+          ${one ? `
+            <p class="aq">우리 학교 ${esc(josa(names[0], '을/를'))} 사용 중이신가요?</p>
+            ${photoHTML(names[0])}
+            ${step === 'ask' ? `
+              <div class="aq__btns">
+                <button class="bigbtn bigbtn--navy" type="button" data-ayes="${esc(names[0])}">사용 중입니다</button>
+                <button class="bigbtn bigbtn--ghost" type="button" id="a-no">사용하지 않습니다</button>
+              </div>`
+            : `${detailHTML(names[0])}
+               <button class="bigbtn bigbtn--navy" type="button" id="a-send">보내기</button>
+               <button class="linkish aq__undo" type="button" id="a-back">사용하지 않습니다</button>`}`
           : `
-            <p class="aq">혹시 지금 쓰고 계신 것이 있을까요?</p>
-            <p class="gform__hint">쓰고 계신 것만 골라 주시면 됩니다. 고르지 않으신 것은 ‘아닙니다’로 넘어갑니다.</p>
+            <p class="aq">우리 학교 비품 중 사용 중이신 것을 골라 주세요</p>
+            <p class="gform__hint">사용하지 않으시는 것은 고르지 않으셔도 됩니다.</p>
             <div class="audpick">
               ${names.map((nm) => `<button class="wizchip ${picked.has(nm) ? 'is-on' : ''}" type="button" data-ayes="${esc(nm)}">${esc(nm)}</button>`).join('')}
-            </div>`}
-
-          ${chose.length ? `
-            <div class="field" style="margin-top:18px">
-              <label class="field__label" for="a-who">성함<span class="req" aria-hidden="true">*</span></label>
-              <input class="input" id="a-who" value="${esc(who)}" placeholder="예: 김하늘" maxlength="30" autocomplete="name">
             </div>
             ${chose.map(detailHTML).join('')}
-            <p class="gate__err" id="a-ferr">${esc(err)}</p>
-            <button class="bigbtn bigbtn--navy" type="button" id="a-send">보내기</button>`
-          : `<p class="gate__err" id="a-ferr">${esc(err)}</p>
-             ${names.length === 1 ? '' : '<button class="bigbtn bigbtn--ghost" type="button" id="a-none">쓰고 있는 것이 없어요</button>'}`}`);
+            <button class="bigbtn bigbtn--navy" type="button" id="a-send" style="margin-top:18px">보내기</button>`}
+
+          <p class="gate__err" id="a-ferr">${esc(err)}</p>`);
       }
 
-      function thanks(msg) {
+      function thanks() {
         root.innerHTML = shell(`
           <span class="waitmark is-done" aria-hidden="true">${icon(ICONS.check)}</span>
           <h1 class="gate__title">감사합니다</h1>
-          <p class="gate__desc">${msg}</p>`);
+          <p class="gate__desc">답변해 주셔서 감사합니다.</p>`);
+      }
+
+      const needName = () => {
+        if (who.trim()) return false;
+        err = '성함을 적어 주세요.';
+        draw();
+        root.querySelector('#a-who')?.focus();
+        return true;
+      };
+
+      async function send(rows) {
+        const btn = root.querySelector('#a-send') || root.querySelector('#a-no');
+        if (btn) btn.disabled = true;
+        const { error: sErr } = await sb.rpc('submit_audit', { link_code: code, submitter: who.trim(), rows });
+        if (btn) btn.disabled = false;
+        if (sErr) {
+          err = String(sErr.message || '').includes('CLOSED')
+            ? '방금 마감되었습니다. 보내 주신 분께 말씀해 주세요.'
+            : '보내지 못했습니다. 잠시 뒤 다시 시도해 주세요.';
+          draw();
+          return;
+        }
+        thanks();
       }
 
       root.addEventListener('input', (e) => {
@@ -8509,34 +8567,39 @@
       });
 
       root.addEventListener('click', async (e) => {
+        // 사용 중이라고 고르기
         const yes = e.target.closest('[data-ayes]');
         if (yes) {
+          if (needName()) return;
           const nm = yes.dataset.ayes;
-          if (picked.has(nm) && names.length > 1) picked.delete(nm);
+          if (picked.has(nm) && !one) picked.delete(nm);
           else picked.set(nm, picked.get(nm) || { tag: '', due: '' });
+          if (one) step = 'fill';
           err = '';
           draw();
           return;
         }
-        if (e.target.closest('#a-none')) {
-          thanks('확인해 주셔서 감사합니다.<br>창을 닫으셔도 됩니다.');
+
+        // 하나짜리에서 되돌아가기
+        if (e.target.closest('#a-back')) {
+          picked.clear(); step = 'ask'; err = ''; draw();
           return;
         }
-        const send = e.target.closest('#a-send');
-        if (send) {
-          if (!who.trim()) { err = '성함을 적어 주세요.'; draw(); root.querySelector('#a-who')?.focus(); return; }
-          send.disabled = true;
-          const rows = [...picked.entries()].map(([nm, v]) => ({ name: nm, tag: (v.tag || '').trim(), due: v.due || '' }));
-          const { data, error: sErr } = await sb.rpc('submit_audit', { link_code: code, submitter: who.trim(), rows });
-          send.disabled = false;
-          if (sErr) {
-            err = String(sErr.message || '').includes('CLOSED')
-              ? '방금 마감됐어요. 보낸 분께 말씀해 주세요.'
-              : '보내지 못했어요. 잠시 뒤 다시 해 주세요.';
-            draw();
-            return;
-          }
-          thanks('알려 주신 내용은 담당 선생님께 전해집니다.<br>창을 닫으셔도 됩니다.');
+
+        // 사용하지 않습니다 (하나짜리)
+        if (e.target.closest('#a-no')) {
+          if (needName()) return;
+          await send(names.map((nm) => ({ name: nm, kind: 'none' })));
+          return;
+        }
+
+        // 보내기
+        if (e.target.closest('#a-send')) {
+          if (needName()) return;
+          const rows = names.map((nm) => (picked.has(nm)
+            ? { name: nm, kind: 'have', tag: (picked.get(nm).tag || '').trim(), due: picked.get(nm).due || '' }
+            : { name: nm, kind: 'none' }));
+          await send(rows);
         }
       });
 
@@ -8565,6 +8628,7 @@
             ${groups.map((g) => `<button class="wizchip" type="button" data-aname="${esc(g.name)}">${esc(g.name)}<small>${n(g.qty)}개</small></button>`).join('')}
           </div>
         </div>
+        <div id="a-photos"></div>
 
         <div class="row" style="margin-top:14px">
           <div class="field">
@@ -8599,7 +8663,7 @@
 
     function auditCardHTML(a) {
       const t = auditTotals(a);
-      const pend = auditReplies().filter((r) => r.auditId === a.id && r.status === 'pending');
+      const pend = auditReplies().filter((r) => r.auditId === a.id && r.status === 'pending' && (r.kind || 'have') === 'have');
       const pct = t.total ? Math.round((t.ok / t.total) * 100) : 0;
 
       return `
@@ -8629,6 +8693,15 @@
             }).join('')}
           </ul>
 
+          ${(() => {
+            const mine = auditReplies().filter((r) => r.auditId === a.id && r.status !== 'rejected');
+            const whoAll = [...new Set(mine.map((r) => r.who).filter(Boolean))];
+            const whoHave = [...new Set(mine.filter((r) => (r.kind || 'have') === 'have').map((r) => r.who))];
+            if (!whoAll.length) return '';
+            return `<p class="aud__ans">답해 주신 분 <b class="num">${n(whoAll.length)}명</b>${whoHave.length ? ` · 사용 중이라고 하신 분 <b class="num">${n(whoHave.length)}명</b>` : ' · 모두 사용하지 않는다고 하셨어요'}
+              <span class="aud__who">${esc(whoAll.join(', '))}</span></p>`;
+          })()}
+
           ${pend.length ? `
             <p class="coll__label" style="margin-top:14px">들어온 답 ${n(pend.length)}건</p>
             <ul class="coll__plist">
@@ -8644,7 +8717,7 @@
                 </li>`;
               }).join('')}
             </ul>`
-          : '<p class="side-empty" style="margin-top:12px">아직 들어온 답이 없어요. 링크를 복사해 선생님들께 보내 주세요.</p>'}
+          : '<p class="side-empty" style="margin-top:12px">아직 사용 중이라고 하신 분이 없어요. 링크를 복사해 선생님들께 보내 주세요.</p>'}
         </div>`;
     }
 
@@ -8652,16 +8725,51 @@
     function mountAudit(view, redraw) {
       const err = () => view.querySelector('#a-err');
       const chosen = new Set();
+      const shots = new Map();      // 품목 → 참고 사진 (줄인 그림)
+
+      // 고른 품목마다 사진 칸을 그린다
+      function drawShots() {
+        const box = view.querySelector('#a-photos');
+        if (!box) return;
+        const list = [...chosen];
+        box.innerHTML = !list.length ? '' : `
+          <p class="field__label" style="margin-top:14px">참고 사진 <small>선택 · 번호가 어디에 붙어 있는지 보여 주면 좋아요</small></p>
+          <div class="ashots">
+            ${list.map((v) => `
+              <div class="ashot">
+                <p class="ashot__name">${esc(v)}</p>
+                ${shots.has(v)
+                  ? `<img class="ashot__img" src="${esc(shots.get(v))}" alt="${esc(v)} 참고 사진">
+                     <button class="mini mini--quiet" type="button" data-ashotdel="${esc(v)}">사진 빼기</button>`
+                  : `<label class="ashot__add">${icon(ICONS.camera)}사진 넣기
+                       <input type="file" accept="image/*" data-ashot="${esc(v)}" hidden>
+                     </label>`}
+              </div>`).join('')}
+          </div>`;
+      }
+
+      view.addEventListener('change', async (e) => {
+        const f = e.target.closest('[data-ashot]');
+        if (!f || !f.files?.[0]) return;
+        try {
+          shots.set(f.dataset.ashot, await shrinkPhoto(f.files[0]));
+          drawShots();
+        } catch { flash('사진을 읽지 못했어요', 'warn'); }
+      });
 
       view.addEventListener('click', async (e) => {
         // 조사할 비품 고르기
         const nm = e.target.closest('[data-aname]');
         if (nm) {
           const v = nm.dataset.aname;
-          chosen.has(v) ? chosen.delete(v) : chosen.add(v);
+          if (chosen.has(v)) { chosen.delete(v); shots.delete(v); } else chosen.add(v);
           nm.classList.toggle('is-on', chosen.has(v));
+          drawShots();
           return;
         }
+
+        const sd = e.target.closest('[data-ashotdel]');
+        if (sd) { shots.delete(sd.dataset.ashotdel); drawShots(); return; }
 
         // 조사 시작
         if (e.target.closest('#a-make')) {
@@ -8671,11 +8779,11 @@
           const a = {
             id: 'aud_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
             code: newCode(), title: title || '비품 소재 확인',
-            names: [...chosen], dueDate: due || null, closed: false,
+            names: [...chosen], photos: Object.fromEntries(shots), dueDate: due || null, closed: false,
             createdAt: new Date().toISOString(),
           };
           commit({ ...state, audits: [...audits(), a] });
-          chosen.clear();
+          chosen.clear(); shots.clear();
           keepAuditOpen = true;
           redraw();
           flash('조사를 시작했어요. 링크를 복사해 보내 주세요');
