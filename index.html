@@ -9020,7 +9020,7 @@
                 <p class="ashot__where">${pls.length ? esc(pls.join(' · ')) : '보관 장소가 적혀 있지 않아요'}</p>
                 <label class="ashot__chk">
                   <input type="checkbox" data-atag="${esc(v)}" ${tagged.get(v) !== false ? 'checked' : ''}>
-                  <span><b>번호가 붙어 있어요</b><small>끄면 설문에서 번호를 묻지 않아요. 빔프로젝터처럼 번호가 없는 비품에 쓰세요.</small></span>
+                  <span><b>번호가 붙어 있어요</b><small>끄면 설문에서 번호를 묻지 않아요.</small></span>
                 </label>
                 ${shots.has(v)
                   ? `<img class="ashot__img" src="${esc(shots.get(v))}" alt="${esc(v)} 참고 사진">
