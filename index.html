@@ -2184,6 +2184,11 @@
       background: #fff; box-shadow: inset 0 0 0 1px var(--line);
     }
     .adet .field + .field { margin-top: 18px; }
+    .acount .stepper { width: 150px; }
+    .aunit { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+    .aunit:first-of-type { margin-top: 0; }
+    .aunit__no { font-size: 13px; font-weight: 800; color: var(--navy); margin-bottom: 10px; }
+    .aunit .field + .field { margin-top: 16px; }
     .adet > .aphoto + .field, .adet > .aphoto__none + .field { margin-top: 18px; }
     .adet__name { font-size: 15px; font-weight: 800; margin-bottom: 14px; }
     .aphoto img { display: block; width: 100%; max-height: 300px; object-fit: contain; border-radius: 12px; background: var(--field); margin-top: 10px; }
@@ -3157,7 +3162,7 @@
                 <button class="bigbtn bigbtn--google" type="button" id="g-google">${GOOGLE_MARK}구글로 계속하기</button>
                 <p class="gate__err" id="g-err"></p>
                 <p class="welcome__note">${icon(ICONS.lock, 'icon welcome__lock')}<span>우리 학교 자료는 같은 학교 선생님에게만 보여요.</span></p>
-                <p class="legal__links">회원가입 및 로그인은 <a href="#/terms">이용약관</a>과 <a href="#/privacy">개인정보처리방침</a>에 동의해야 이용 가능합니다.</p>
+                <p class="legal__links">회원가입 및 로그인은 <a href="#/terms">이용약관</a>과<br><a href="#/privacy">개인정보처리방침</a>에 동의해야 이용 가능합니다.</p>
               </div>
             </div>
           </div>`;
@@ -8595,6 +8600,7 @@
       const photos = info.photos || {};
       const places = info.places || {};
       const tagged = info.tagged || {};
+      const one = names.length === 1;                // 품목이 하나뿐이면 묻는 모양이 다릅니다
       const placesOf = (nm) => (Array.isArray(places[nm]) ? places[nm] : []);
       const hasTag = (nm) => tagged[nm] !== false;   // 담당 선생님이 끄지 않았으면 번호를 묻습니다
       const whereHTML = (nm) => {
@@ -8602,12 +8608,26 @@
         if (!pls.length) return '';
         return `<p class="awhere">${pls.map((pl) => `<span>${esc(pl)}</span>`).join('')}</p>`;
       };
-      const one = names.length === 1;
-      const picked = new Map();     // 품목 이름 → { tag, due }
+
+      // 같은 기기에서 고쳐 다시 보낼 때만 앞 답을 치우기 위한 표시.
+      // 이름이 같을 뿐인 다른 분의 답은 건드리지 않습니다.
+      let sender = '';
+      try {
+        sender = localStorage.getItem('audit-sender') || '';
+        if (!sender) {
+          sender = 'snd_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+          localStorage.setItem('audit-sender', sender);
+        }
+      } catch { sender = ''; }
+
+      const picked = new Map();     // 품목 이름 → { units: [{ tag, due, place }] }
       let who = '';
       let err = '';
       const fErr = new Map();            // 품목 → 빠진 것 안내
-      let step = one ? 'ask' : 'list';   // ask → 쓰는지 묻는 중, fill → 번호 적는 중
+      let step = one ? 'ask' : 'list';   // ask → 쓰는지 묻는 중, fill → 적는 중
+
+      const blankUnit = (nm) => ({ tag: '', due: '', place: placesOf(nm).length === 1 ? placesOf(nm)[0] : '' });
+      const unitsOf = (nm) => (picked.get(nm)?.units || []);
 
       const photoHTML = (nm) => (photos[nm]
         ? `<details class="aphoto">
@@ -8616,29 +8636,45 @@
            </details>`
         : `<p class="aphoto__none">${icon(ICONS.camera, 'icon aphoto__cam')}참고 사진 없음</p>`);
 
+      // 한 대마다 적는 칸
+      const unitHTML = (nm, v, idx, many) => `
+        <div class="aunit" data-aunit="${idx}">
+          ${many ? `<p class="aunit__no">${n(idx + 1)}번째</p>` : ''}
+          ${placesOf(nm).length > 1 ? `
+          <div class="field">
+            <label class="field__label">어디에 있던 ${esc(nm)}인가요?</label>
+            <div class="aplaces">
+              ${placesOf(nm).map((pl) => `<button class="wizchip ${v.place === pl ? 'is-on' : ''}" type="button" data-aplace="${esc(pl)}">${esc(pl)}</button>`).join('')}
+              <button class="wizchip ${v.place === '모름' ? 'is-on' : ''}" type="button" data-aplace="모름">잘 모르겠습니다</button>
+            </div>
+          </div>` : ''}
+          ${hasTag(nm) ? `
+          <div class="field">
+            <label class="field__label" for="ad-t-${esc(nm)}-${idx}">${esc(nm)}의 번호<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
+            <input class="input" id="ad-t-${esc(nm)}-${idx}" data-ak="tag" value="${esc(v.tag)}" placeholder="예: ${esc(nm)}${n(idx + 1)}" maxlength="40" autocomplete="off">
+          </div>` : ''}
+          <div class="field">
+            <label class="field__label" for="ad-d-${esc(nm)}-${idx}">반납 예정일<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
+            <input class="input" id="ad-d-${esc(nm)}-${idx}" data-ak="due" type="date" value="${esc(v.due)}" min="${today()}">
+          </div>
+        </div>`;
+
       const detailHTML = (nm) => {
-        const v = picked.get(nm) || { tag: '', due: '', place: '' };
+        const units = unitsOf(nm);
+        const many = units.length > 1;
         return `
           <div class="adet" data-adet="${esc(nm)}">
             ${one ? '' : `<p class="adet__name">${esc(nm)}</p>`}
             ${photoHTML(nm)}
-            ${placesOf(nm).length > 1 ? `
-            <div class="field">
-              <label class="field__label">어디에 있던 ${esc(nm)}인가요?</label>
-              <div class="aplaces">
-                ${placesOf(nm).map((pl) => `<button class="wizchip ${v.place === pl ? 'is-on' : ''}" type="button" data-aplace="${esc(pl)}">${esc(pl)}</button>`).join('')}
-                <button class="wizchip ${v.place === '모름' ? 'is-on' : ''}" type="button" data-aplace="모름">잘 모르겠습니다</button>
+            <div class="field acount">
+              <label class="field__label" for="ad-c-${esc(nm)}">몇 대를 쓰고 계신가요</label>
+              <div class="stepper">
+                <button type="button" data-acnt="-1" aria-label="하나 빼기" ${units.length <= 1 ? 'disabled' : ''}>${icon(ICONS.minus)}</button>
+                <input id="ad-c-${esc(nm)}" class="num" type="number" inputmode="numeric" min="1" max="20" value="${units.length}" data-ak="count">
+                <button type="button" data-acnt="1" aria-label="하나 더하기" ${units.length >= 20 ? 'disabled' : ''}>${icon(ICONS.add)}</button>
               </div>
-            </div>` : ''}
-            ${hasTag(nm) ? `
-            <div class="field">
-              <label class="field__label" for="ad-t-${esc(nm)}">${esc(nm)}의 번호<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
-              <input class="input" id="ad-t-${esc(nm)}" data-ak="tag" value="${esc(v.tag)}" placeholder="예: ${esc(nm)}5" maxlength="40" autocomplete="off">
-            </div>` : ''}
-            <div class="field">
-              <label class="field__label" for="ad-d-${esc(nm)}">반납 예정일<span class="req" aria-hidden="true">*</span><span class="sr-only">필수</span></label>
-              <input class="input" id="ad-d-${esc(nm)}" data-ak="due" type="date" value="${esc(v.due)}" min="${today()}">
             </div>
+            ${units.map((v, i) => unitHTML(nm, v, i, many)).join('')}
             ${fErr.has(nm) ? `<p class="field__error">${esc(fErr.get(nm))}</p>` : ''}
           </div>`;
       };
@@ -8691,13 +8727,6 @@
           <p class="gate__err" id="a-ferr">${esc(err)}</p>`);
       }
 
-      function thanks() {
-        root.innerHTML = shell(`
-          <span class="waitmark is-done" aria-hidden="true">${icon(ICONS.check)}</span>
-          <h1 class="gate__title">감사합니다</h1>
-          <p class="gate__desc">답변해 주셔서 감사합니다.</p>`);
-      }
-
       const needName = () => {
         if (who.trim()) return false;
         err = '성함을 적어 주세요.';
@@ -8706,16 +8735,20 @@
         return true;
       };
 
-      // 사용 중이라고 하셨으면 번호(있는 비품만)와 반납 예정일을 받아야 합니다
+      // 사용 중이라고 하셨으면 한 대마다 번호(있는 비품만)와 반납 예정일을 받아야 합니다
       const needRest = () => {
         fErr.clear();
         let first = '';
         for (const [nm, v] of picked) {
-          const miss = [];
-          if (hasTag(nm) && !(v.tag || '').trim()) miss.push('번호');
-          if (!v.due) miss.push('반납 예정일');
-          if (miss.length) {
-            fErr.set(nm, `${josa(miss.join('와 '), '을/를')} 적어 주세요.`);
+          const bad = [];
+          v.units.forEach((u, i) => {
+            const miss = [];
+            if (hasTag(nm) && !(u.tag || '').trim()) miss.push('번호');
+            if (!u.due) miss.push('반납 예정일');
+            if (miss.length) bad.push(v.units.length > 1 ? `${n(i + 1)}번째 ${miss.join('와 ')}` : miss.join('와 '));
+          });
+          if (bad.length) {
+            fErr.set(nm, `${josa(bad.join(', '), '을/를')} 적어 주세요.`);
             if (!first) first = nm;
           }
         }
@@ -8723,15 +8756,23 @@
         err = '';
         draw();
         const box = root.querySelector(`[data-adet="${CSS.escape(first)}"]`);
-        box?.querySelector('.input[data-ak]')?.focus();
+        box?.querySelector('.input[data-ak="tag"], .input[data-ak="due"]')?.focus();
         box?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         return true;
       };
 
+      function thanks() {
+        root.innerHTML = shell(`
+          <span class="waitmark is-done" aria-hidden="true">${icon(ICONS.check)}</span>
+          <h1 class="gate__title">감사합니다</h1>
+          <p class="gate__desc">답변해 주셔서 감사합니다.</p>`);
+      }
+
       async function send(rows) {
         const btn = root.querySelector('#a-send') || root.querySelector('#a-no');
         if (btn) btn.disabled = true;
-        const { error: sErr } = await sb.rpc('submit_audit', { link_code: code, submitter: who.trim(), rows });
+        const { error: sErr } = await sb.rpc('submit_audit',
+          { link_code: code, submitter: who.trim(), rows, sender_key: sender });
         if (btn) btn.disabled = false;
         if (sErr) {
           err = String(sErr.message || '').includes('CLOSED')
@@ -8743,6 +8784,14 @@
         thanks();
       }
 
+      // 한 대짜리 칸의 값을 고친다
+      const setUnit = (nm, idx, key, value) => {
+        const cur = picked.get(nm);
+        if (!cur || !cur.units[idx]) return;
+        cur.units[idx] = { ...cur.units[idx], [key]: value };
+        picked.set(nm, cur);
+      };
+
       root.addEventListener('input', (e) => {
         if (e.target.id === 'a-who') {
           who = e.target.value;
@@ -8753,7 +8802,15 @@
         if (!k) return;
         const nm = e.target.closest('[data-adet]')?.dataset.adet;
         if (!nm) return;
-        picked.set(nm, { ...(picked.get(nm) || { tag: '', due: '', place: '' }), [k]: e.target.value });
+
+        if (k === 'count') {
+          const want = Math.min(20, Math.max(1, parseInt(e.target.value, 10) || 1));
+          setCount(nm, want);
+          draw();
+          return;
+        }
+        const idx = Number(e.target.closest('[data-aunit]')?.dataset.aunit || 0);
+        setUnit(nm, idx, k, e.target.value);
         if (fErr.has(nm) && e.target.value) {
           fErr.delete(nm);
           const box = e.target.closest('[data-adet]')?.querySelector('.field__error');
@@ -8761,14 +8818,34 @@
         }
       });
 
+      // 쓰고 계신 대수를 바꾼다
+      function setCount(nm, want) {
+        const cur = picked.get(nm) || { units: [blankUnit(nm)] };
+        const units = cur.units.slice(0, want);
+        while (units.length < want) units.push(blankUnit(nm));
+        picked.set(nm, { ...cur, units });
+      }
+
       root.addEventListener('click', async (e) => {
+        // 대수 늘리고 줄이기
+        const cnt = e.target.closest('[data-acnt]');
+        if (cnt) {
+          const nm = cnt.closest('[data-adet]')?.dataset.adet;
+          if (nm) {
+            setCount(nm, Math.min(20, Math.max(1, unitsOf(nm).length + Number(cnt.dataset.acnt))));
+            draw();
+          }
+          return;
+        }
+
         // 어디에 있던 물건인지 고르기
         const pl = e.target.closest('[data-aplace]');
         if (pl) {
           const nm = pl.closest('[data-adet]')?.dataset.adet;
+          const idx = Number(pl.closest('[data-aunit]')?.dataset.aunit || 0);
           if (nm) {
-            const cur = picked.get(nm) || { tag: '', due: '', place: '' };
-            picked.set(nm, { ...cur, place: cur.place === pl.dataset.aplace ? '' : pl.dataset.aplace });
+            const cur = unitsOf(nm)[idx];
+            setUnit(nm, idx, 'place', cur?.place === pl.dataset.aplace ? '' : pl.dataset.aplace);
             draw();
           }
           return;
@@ -8780,7 +8857,7 @@
           if (needName()) return;
           const nm = yes.dataset.ayes;
           if (picked.has(nm) && !one) picked.delete(nm);
-          else picked.set(nm, picked.get(nm) || { tag: '', due: '', place: placesOf(nm).length === 1 ? placesOf(nm)[0] : '' });
+          else if (!picked.has(nm)) picked.set(nm, { units: [blankUnit(nm)] });
           if (one) step = 'fill';
           err = '';
           draw();
@@ -8789,11 +8866,11 @@
 
         // 하나짜리에서 되돌아가기
         if (e.target.closest('#a-back')) {
-          picked.clear(); step = 'ask'; err = ''; draw();
+          picked.clear(); fErr.clear(); step = 'ask'; err = ''; draw();
           return;
         }
 
-        // 사용하지 않습니다 (하나짜리)
+        // 사용하지 않습니다
         if (e.target.closest('#a-no')) {
           if (needName()) return;
           await send(names.map((nm) => ({ name: nm, kind: 'none' })));
@@ -8804,10 +8881,16 @@
         if (e.target.closest('#a-send')) {
           if (needName()) return;
           if (needRest()) return;
-          const rows = names.map((nm) => (picked.has(nm)
-            ? { name: nm, kind: 'have', tag: (picked.get(nm).tag || '').trim(),
-                place: picked.get(nm).place === '모름' ? '' : (picked.get(nm).place || ''), due: picked.get(nm).due || '' }
-            : { name: nm, kind: 'none' }));
+          const rows = [];
+          for (const nm of names) {
+            if (!picked.has(nm)) { rows.push({ name: nm, kind: 'none' }); continue; }
+            for (const u of unitsOf(nm)) {
+              rows.push({
+                name: nm, kind: 'have', tag: (u.tag || '').trim(),
+                place: u.place === '모름' ? '' : (u.place || ''), due: u.due || '',
+              });
+            }
+          }
           await send(rows);
         }
       });
@@ -9032,7 +9115,7 @@
                 <p class="ashot__where">${pls.length ? esc(pls.join(' · ')) : '보관 장소가 적혀 있지 않아요'}</p>
                 <label class="ashot__chk">
                   <input type="checkbox" data-atag="${esc(v)}" ${tagged.get(v) !== false ? 'checked' : ''}>
-                  <span><b>번호가 붙어 있어요</b><small>끄면 설문에서 번호를 묻지 않아요.</small></span>
+                  <span><b>번호가 붙어 있어요</b><small>비품에 번호가 있으면 체크해주세요.</small></span>
                 </label>
                 ${shots.has(v)
                   ? `<img class="ashot__img" src="${esc(shots.get(v))}" alt="${esc(v)} 참고 사진">
