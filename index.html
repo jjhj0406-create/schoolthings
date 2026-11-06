@@ -2941,6 +2941,7 @@
         audits: auds.map((r) => ({
           id: r.id, code: r.code, title: r.title, names: Array.isArray(r.names) ? r.names : [],
           photos: r.photos || {}, places: r.places || {}, tagged: r.tagged || {},
+          madeBy: r.made_by || '',
           dueDate: r.due_date, closed: !!r.closed, createdAt: r.created_at,
         })),
         auditReplies: arps.map((r) => ({
@@ -3055,6 +3056,7 @@
       diff(prev.audits || [], next.audits || [], 'audits', (x) => ({
         id: x.id, school_id: me.schoolId, code: x.code, title: x.title,
         names: x.names || [], photos: x.photos || {}, places: x.places || {}, tagged: x.tagged || {},
+        made_by: x.madeBy || '',
         due_date: x.dueDate || null, closed: !!x.closed, created_at: x.createdAt,
       }));
       diff(prev.auditReplies || [], next.auditReplies || [], 'audit_replies', (x) => ({
@@ -8609,8 +8611,8 @@
         return `<p class="awhere">${pls.map((pl) => `<span>${esc(pl)}</span>`).join('')}</p>`;
       };
 
-      // 같은 기기에서 고쳐 다시 보낼 때만 앞 답을 치우기 위한 표시.
-      // 이름이 같을 뿐인 다른 분의 답은 건드리지 않습니다.
+      // 어느 기기에서 보냈는지만 남기는 표시입니다. 사람을 알아보는 값이 아닙니다.
+      // 보낸 답은 지워지지 않고 그대로 쌓입니다.
       let sender = '';
       try {
         sender = localStorage.getItem('audit-sender') || '';
@@ -8966,7 +8968,7 @@
             return `<li class="crow">
               <div class="crow__main">
                 <p class="crow__title">${esc(a.title || '비품 소재 확인')}</p>
-                <p class="crow__sub">${n(t.ok)} / ${n(t.total)}개 확인 · ${esc(dateLabel(a.dueDate) || '마감일 없음')}</p>
+                <p class="crow__sub">${n(t.ok)} / ${n(t.total)}개 확인${a.madeBy ? ` · ${esc(a.madeBy)} 선생님` : ''} · ${esc(dateLabel(a.dueDate) || '마감일 없음')}</p>
               </div>
               <button class="mini mini--quiet" type="button" data-adel="${a.id}">지우기</button>
             </li>`;
@@ -8977,13 +8979,18 @@
       const t = auditTotals(a);
       const pend = auditReplies().filter((r) => r.auditId === a.id && r.status === 'pending' && (r.kind || 'have') === 'have');
       const pct = t.total ? Math.round((t.ok / t.total) * 100) : 0;
+      const sub = [
+        a.madeBy ? `${esc(a.madeBy)} 선생님이 시작` : '',
+        a.dueDate ? `${esc(dateLabel(a.dueDate))}까지` : '마감일 없음',
+        esc((a.names || []).join(', ')),
+      ].filter(Boolean).join(' · ');
 
       return `
         <div class="aud" data-aud="${a.id}">
           <div class="aud__head">
             <div>
               <p class="aud__title">${esc(a.title || '비품 소재 확인')}</p>
-              <p class="aud__sub">${esc(dateLabel(a.dueDate) || '마감일 없음')}까지 · ${esc((a.names || []).join(', '))}</p>
+              <p class="aud__sub">${sub}</p>
             </div>
             <span class="aud__count num">${n(t.ok)} / ${n(t.total)}</span>
           </div>
@@ -9164,6 +9171,7 @@
             names: [...chosen], photos: Object.fromEntries(shots),
             places: Object.fromEntries([...chosen].map((v) => [v, placesOfAsset(v)])),
             tagged: Object.fromEntries([...chosen].map((v) => [v, tagged.get(v) !== false])),
+            madeBy: writerName(),
             dueDate: due || null, closed: false,
             createdAt: new Date().toISOString(),
           };
