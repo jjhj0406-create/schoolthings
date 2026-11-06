@@ -2090,6 +2090,12 @@
     .aud__num { flex: none; font-size: 13px; font-weight: 700; color: var(--ink-2); }
     .aud__notag { font-size: 12px; font-weight: 700; color: var(--ink-3); }
     .prow.is-clash { background: #fff6e6; }
+    /* 들어온 설문의 번호를 바로잡는 칸 */
+    .prow--edit { background: #f2f5ff; box-shadow: inset 0 0 0 1.5px var(--navy); }
+    .tagedit { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+    .tagedit .input { flex: 1 1 170px; min-width: 0; height: 40px; }
+    .tagedit .mini { flex: none; }
+    .tagedit__hint { font-size: 12px; color: var(--ink-3); margin-top: 6px; line-height: 1.5; word-break: keep-all; }
 
     /* 링크로 여는 쪽 */
     .give__school { font-size: 13px; font-weight: 700; color: var(--ink-3); margin-bottom: 4px; }
@@ -8397,6 +8403,7 @@
     let keepAuditOpen = false;
     let delAudit = '';        // 지우려고 확인 중인 조사
     let delAuditLoans = false; // 그때 만든 대여 기록까지 지울지
+    let editTag = '';         // 번호를 고치고 있는 설문
 
     // 다른 사람이 낸 물품은 서버에만 있다. 필요할 때 다시 받아 온다.
     async function pullCollects() {
@@ -9019,12 +9026,34 @@
             <ul class="coll__plist">
               ${pend.map((r) => {
                 const clash = auditClash(a, r);
+                if (editTag === r.id) {
+                  const g = assetGroupByName(r.itemName);
+                  const opts = [...new Set([...tagsUsed(g), ...auditReplies()
+                    .filter((x) => x.auditId === a.id && x.itemName === r.itemName && x.unitTag)
+                    .map((x) => x.unitTag)])];
+                  return `<li class="prow prow--edit">
+                    <div class="prow__main">
+                      <p class="prow__name">${esc(r.itemName)}</p>
+                      <p class="prow__sub">${esc(r.who)} 선생님이 적으신 번호를 고칩니다</p>
+                      <div class="tagedit">
+                        <input class="input" id="fix-${r.id}" value="${esc(r.unitTag || '')}"
+                               placeholder="예: ${esc(r.itemName)}5" maxlength="40" autocomplete="off"
+                               list="fixopt-${r.id}" aria-label="비품 번호">
+                        ${opts.length ? `<datalist id="fixopt-${r.id}">${opts.map((v) => `<option value="${esc(v)}"></option>`).join('')}</datalist>` : ''}
+                        <button class="mini mini--go" type="button" data-afixok="${r.id}">저장</button>
+                        <button class="mini mini--quiet" type="button" data-afixno>그만두기</button>
+                      </div>
+                      <p class="tagedit__hint">번호를 비우고 저장하면 ‘번호 없음’이 됩니다.</p>
+                    </div>
+                  </li>`;
+                }
                 return `<li class="prow ${clash ? 'is-clash' : ''}">
                   <div class="prow__main">
                     <p class="prow__name">${esc(r.itemName)}${r.unitTag ? ` <span class="utag">${esc(r.unitTag)}</span>` : ' <span class="aud__notag">번호 없음</span>'}</p>
                     <p class="prow__sub">${esc(r.who)}${r.place ? ` · ${esc(r.place)}` : ''}${r.dueAt ? ` · ${esc(dateLabel(r.dueAt))}까지` : ''}${clash ? ` · ${esc(clash)}` : ''}</p>
                   </div>
                   <button class="mini mini--go" type="button" data-aok="${r.id}">대여로 넣기</button>
+                  <button class="mini mini--quiet" type="button" data-afix="${r.id}">${icon(ICONS.edit)}번호 고치기</button>
                   <button class="mini mini--quiet" type="button" data-ano="${r.id}">빼기</button>
                 </li>`;
               }).join('')}
@@ -9144,6 +9173,19 @@
           shots.set(f.dataset.ashot, await shrinkPhoto(f.files[0]));
           drawShots();
         } catch { flash('사진을 읽지 못했어요', 'warn'); }
+      });
+
+      // 번호 고치는 칸에서 엔터로 저장, ESC로 그만두기
+      view.addEventListener('keydown', (e) => {
+        const box = e.target.closest('.tagedit .input');
+        if (!box) return;
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          box.closest('.tagedit')?.querySelector('[data-afixok]')?.click();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          box.closest('.tagedit')?.querySelector('[data-afixno]')?.click();
+        }
       });
 
       view.addEventListener('click', async (e) => {
@@ -9284,6 +9326,30 @@
           keepAuditOpen = true;
           redraw();
           flash(`${r.itemName}${r.unitTag ? ` ${r.unitTag}` : ''} 대여 기록으로 넣었어요`);
+          return;
+        }
+
+        // 번호 고치기 — 같은 번호가 겹쳐 들어왔을 때 바로잡습니다
+        const te = e.target.closest('[data-afix]');
+        if (te) {
+          editTag = te.dataset.afix; keepAuditOpen = true; redraw();
+          setTimeout(() => {
+            const box = document.querySelector(`#fix-${CSS.escape(editTag)}`);
+            if (box) { box.focus(); box.select(); }
+          }, 60);
+          return;
+        }
+
+        if (e.target.closest('[data-afixno]')) { editTag = ''; keepAuditOpen = true; redraw(); return; }
+
+        const tk = e.target.closest('[data-afixok]');
+        if (tk) {
+          const id = tk.dataset.afixok;
+          const val = (view.querySelector(`#fix-${CSS.escape(id)}`)?.value || '').trim();
+          commit({ ...state, auditReplies: auditReplies().map((x) => (x.id === id ? { ...x, unitTag: val } : x)) });
+          editTag = ''; keepAuditOpen = true;
+          redraw();
+          flash(val ? `번호를 ‘${val}’(으)로 고쳤어요` : '번호를 지웠어요');
           return;
         }
 
