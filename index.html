@@ -2902,12 +2902,24 @@
       return out;
     }
 
-    // 아직 만들지 않은 표가 있어도 앱 전체가 멈추지 않게 한다
+    // '표가 아예 없다'와 '잠깐 못 받아왔다'를 가려냅니다.
+    // 앞의 것만 빈 것으로 넘어가고, 뒤의 것은 통째로 멈춰 세웁니다.
+    const tableGone = (e) => {
+      const code = String(e?.code || '');
+      const msg = String(e?.message || '');
+      return code === 'PGRST205' || code === 'PGRST202' || code === '42P01'
+        || /could not find the table|relation .* does not exist/i.test(msg);
+    };
+
+    // 아직 만들지 않은 표가 있어도 앱 전체가 멈추지 않게 한다.
+    // 다만 잠깐 끊긴 것이라면 빈 화면을 만들지 않고 그대로 멈춥니다.
+    // (빈 화면이 '다 지워졌다'처럼 보이는 일을 막습니다)
     async function fetchMaybe(table) {
       try {
         return await fetchAll(table);
       } catch (e) {
         console.warn(table, e);
+        if (!tableGone(e)) throw e;
         missingTables.add(table);
         return [];
       }
@@ -2927,7 +2939,7 @@
         ]);
       } catch (e) {
         console.error('자료를 받아오지 못했어요', e);
-        flash('자료를 받아오지 못했어요. 새로고침해 주세요', 'warn');
+        flash('자료를 못 받아왔어요. 저장된 자료는 그대로 있으니 잠시 뒤 새로고침해 주세요', 'warn');
         return;   // dataReady 를 올리지 않아, 지우기가 서버로 가지 않습니다
       }
       const [items, loans, hos, pss, cms, cols, subs, auds, arps] = loaded;
@@ -3089,12 +3101,18 @@
       }));
 
       if (JSON.stringify(prev.school) !== JSON.stringify(next.school) && next.school && isAdmin()) {
-        jobs.push(sb.from('schools').update({
+        const row = {
           name: next.school.name, address: next.school.address || '',
           teacher: next.school.teacher, position: next.school.position || '',
           place: next.school.place, tel: next.school.tel,
-          spaces: next.school.spaces || null,   // 건물·층·실 설정도 함께 저장
-        }).eq('id', me.schoolId));
+        };
+        // 공간 배치도는 '있을 때만' 함께 저장합니다.
+        // 어쩌다 이 기기가 배치도를 못 받아온 상태에서 담당 정보를 고쳐도,
+        // 서버에 저장된 배치도가 빈 값으로 덮이지 않게 하기 위해서입니다.
+        // 배치도를 지우는 일은 '학교 공간 설정하기 → 다시 설정'에서만 합니다.
+        const sp = next.school.spaces;
+        if (sp && (sp.buildings?.length || sp.rooms?.length)) row.spaces = sp;
+        jobs.push(sb.from('schools').update(row).eq('id', me.schoolId));
       }
 
       const results = await Promise.all(jobs);
