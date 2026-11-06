@@ -3588,7 +3588,7 @@
     };
     const MENU = [
       { key: 'spaces', label: '학교 공간 설정하기', tab: false, admin: true, action: 'spaces' },
-      { key: 'manager', label: '관리 담당 선생님', href: '#/manager', tab: false, admin: true },
+      { key: 'manager', label: '관리 담당 선생님', href: '#/manager', tab: false, manage: true },
       { key: 'home',  label: '홈',         href: '#/' },
       { key: 'find',  label: '찾기',       href: '#/search' },
       { key: 'place', label: '장소별 보기', href: '#/places', tab: false },
@@ -10798,7 +10798,7 @@
           </div>
           <div class="setupcard__btns">
             ${online() ? `<button class="btn btn--ghost" type="button" id="qr-labels">${icon(ICONS.qr)}실 QR 라벨</button>` : ''}
-            <button class="btn btn--solid" type="button" data-action="spaces">${icon(ICONS.spaces)}${hasSpaces() ? '다시 설정' : '설정 시작'}</button>
+            ${isAdmin() ? `<button class="btn btn--solid" type="button" data-action="spaces">${icon(ICONS.spaces)}${hasSpaces() ? '다시 설정' : '설정 시작'}</button>` : ''}
           </div>
         </section>
 
@@ -10838,6 +10838,7 @@
               <span class="fold__count num" id="team-meta"></span>
             </button>
             <div class="fold-body" id="team-body" hidden>
+              ${isAdmin() ? `
               <div class="teamtop">
                 <p class="sheet__desc">이 코드를 알려 주면 가입을 신청할 수 있어요.</p>
                 <label class="autojoin">
@@ -10852,6 +10853,7 @@
               <button class="mini mini--quiet" type="button" id="code-copy">복사</button>
               <button class="mini mini--quiet" type="button" id="code-reset">새 코드</button>
             </div>
+              ` : `<p class="sheet__desc">가입 신청을 받고 코드를 바꾸는 일은 관리 담당 선생님만 할 수 있어요.</p>`}
             <div id="team-list"></div>
 
             </div>
@@ -10900,6 +10902,7 @@
             <div class="fold-body" id="signs-body" hidden></div>
           </section>
 
+          ${isAdmin() ? `
           <section class="card fold-card">
             <button class="fold" type="button" data-fold="who" aria-expanded="false" aria-controls="who-body">
               ${icon(ICONS.caret, 'icon fold__caret')}
@@ -10951,6 +10954,7 @@
 
             </div>
           </section>
+          ` : ''}
 
           <section class="card fold-card">
             <button class="fold" type="button" data-fold="wipe" aria-expanded="false" aria-controls="wipe-body">
@@ -11294,7 +11298,10 @@
               <p class="mrow__mail">${esc(m2.email)}</p>
             </div>
             <div class="mrow__acts">
-              ${m2.status === 'pending'
+              ${!isAdmin()
+                ? (m2.status === 'pending' ? '<span class="mrow__tag">승인 대기</span>'
+                   : (m2.user_id === session?.user?.id ? '<span class="mrow__tag">나</span>' : ''))
+                : m2.status === 'pending'
                 ? `<button class="mini mini--go" type="button" data-approve="${m2.id}">승인</button>
                    <button class="act act--del" type="button" data-reject="${m2.id}" aria-label="거절">${icon(ICONS.trash)}</button>`
                 : m2.user_id === session?.user?.id
@@ -11373,7 +11380,7 @@
         }
       });
 
-      view.querySelector('#who-form').addEventListener('submit', (e) => {
+      view.querySelector('#who-form')?.addEventListener('submit', (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
         const next = {
@@ -12072,7 +12079,7 @@
       const old = document.getElementById('view');
       const view = old.cloneNode(false);
       old.replaceWith(view);
-      if (route.key === 'manager' && !isAdmin()) { location.hash = '#/'; return; }
+      if (route.key === 'manager' && !canImport()) { location.hash = '#/'; return; }
       if (route.key === 'handover' && (!canImport() || missingTables.has('handovers'))) { location.hash = '#/'; return; }
       view.className = 'main is-' + route.key + (path === '#/lend' ? ' is-add' : '');
       document.body.classList.toggle('is-add', route.key === 'add' || path === '#/lend');
